@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON 数据编辑器</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --danger: #f85149;
+      --success: #3fb950;
+      --warning: #d2991d;
+      --row-hover: #1c2129;
+      --cell-edit: #1f2a37;
+      --cell-computed: #1a1e26;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .header .sep {
+      flex: 1;
+    }
+
+    /* ── toolbar ── */
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    select,
+    button,
+    input[type=text],
+    input[type=file] {
+      font-family: inherit;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+
+    select:hover,
+    button:hover {
+      border-color: var(--accent);
+    }
+
+    button.primary {
+      background: #238636;
+      border-color: #238636;
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: #2ea043;
+    }
+
+    button.danger {
+      background: #da3633;
+      border-color: #da3633;
+      color: #fff;
+    }
+
+    button.danger:hover {
+      background: #f85149;
+    }
+
+    button:disabled {
+      opacity: .4;
+      pointer-events: none;
+    }
+
+    input[type=text] {
+      cursor: text;
+      min-width: 180px;
+    }
+
+    input[type=text]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .file-label {
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px dashed var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+      transition: border-color .15s;
+    }
+
+    .file-label:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .file-label input {
+      display: none;
+    }
+
+    /* ── table area ── */
+    .table-wrap {
+      overflow: auto;
+      max-height: calc(100vh - 100px);
+      margin: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    th {
+      background: var(--surface);
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+      border-bottom: 2px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-muted);
+      transition: color .15s;
+    }
+
+    th:hover {
+      color: var(--accent);
+    }
+
+    th .sort-arrow {
+      margin-left: 4px;
+      font-size: 11px;
+      opacity: .5;
+    }
+
+    th.sort-asc .sort-arrow,
+    th.sort-desc .sort-arrow {
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    th.col-index {
+      width: 48px;
+      min-width: 48px;
+      text-align: center;
+      cursor: default;
+      color: var(--text-muted);
+    }
+
+    th.col-computed {
+      color: #5a6a7e;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      transition: background .1s;
+    }
+
+    tr:hover td {
+      background: var(--row-hover);
+    }
+
+    /* editable cells */
+    td.editable {
+      cursor: text;
+    }
+
+    td.editable:focus-within {
+      background: var(--cell-edit);
+      outline: 1px solid var(--accent);
+      outline-offset: -1px;
+    }
+
+    td.editable input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font: inherit;
+      width: 100%;
+      padding: 0;
+      outline: none;
+    }
+
+    td.editable input:focus {
+      outline: none;
+    }
+
+    /* computed (read-only) cells */
+    td.computed {
+      cursor: default;
+      color: #8b949e;
+      font-style: italic;
+    }
+
+    td.computed:hover {
+      background: var(--cell-computed);
+    }
+
+    /* modified marker */
+    td.modified {
+      position: relative;
+    }
+
+    td.modified::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--warning);
+    }
+
+    td.col-index {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    /* ── delete button ── */
+    .del-btn {
+      padding: 2px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .del-btn:hover {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    /* ── empty state ── */
+    .empty {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .empty p {
+      font-size: 14px;
+    }
+
+    /* ── toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 100;
+      animation: toastIn .25s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .4);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+      }
+    }
+
+    /* ── stats bar ── */
+    .stats {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .stats .dirty {
+      color: var(--warning);
+    }
+
+    .stats .computed-info {
+      color: #5a6a7e;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>📊 JSON 数据编辑器</h1>
+    <div class="sep"></div>
+    <div class="toolbar">
+      <span class="file-label">
+        📂 打开 JSON
+        <input type="file" id="fileInput" accept=".json" onchange="loadFile(this)">
+      </span>
+      <select id="presetSelect" onchange="loadPreset(this.value)">
+        <option value="">— 快速加载项目数据 —</option>
+        <optgroup label="LoLM 分路数据">
+          <option value="lolm/上路.json">上路</option>
+          <option value="lolm/打野.json">打野</option>
+          <option value="lolm/中路.json">中路</option>
+          <option value="lolm/下路.json">下路</option>
+          <option value="lolm/辅助.json">辅助</option>
+        </optgroup>
+        <optgroup label="曙光英雄">
+          <option value="曙光英雄/曙光英雄.json">曙光英雄</option>
+        </optgroup>
+      </select>
+      <button onclick="addRow()" disabled id="addBtn">＋ 添加行</button>
+      <button onclick="showPasteModal()" disabled id="pasteBtn" title="从 Excel 粘贴列数据（兜底方案，优先直接用 Ctrl+V 粘贴）">📋
+        粘贴列</button>
+      <button class="primary" onclick="applyChanges()" disabled id="applyBtn" style="opacity:0.4">✏️ 应用修改</button>
+      <button onclick="undoAll()" disabled id="undoBtn" class="danger" style="display:none">↩ 撤销全部修改</button>
+    </div>
+    <div class="toolbar">
+      <button class="primary" onclick="saveJSON()" disabled id="saveBtn">💾 下载 JSON</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats" style="display:none">
+    <span id="statFile"></span>
+    <span id="statRows"></span>
+    <span id="statDirty" class="dirty"></span>
+    <span id="statComputed" class="computed-info"></span>
+  </div>
+
+  <div class="table-wrap" id="tableWrap">
+    <div class="empty" id="empty">
+      <div class="icon">📂</div>
+      <p>打开一个 JSON 文件开始编辑</p>
+      <p style="font-size:12px;margin-top:4px;">支持从上方菜单加载项目数据，或拖放 / 选择本地 .json 文件</p>
+    </div>
+    <table id="dataTable" style="display:none">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // ── state ──
+    let data = null;           // parsed array of objects
+    let columns = [];          // detected column keys
+    let original = null;       // deep copy for undo
+    let sortKey = null;
+    let sortDir = 1;
+    let currentFile = '';
+    let computedFields = {};   // { fieldName: { dependsOn: [], compute: fn } }
+
+    // ── computed field definitions ──
+    // Add more definitions here when needed. The editor auto-detects which ones
+    // apply based on whether all dependsOn columns exist in the loaded data.
+    const COMPUTED_DEFS = {
+      combatPower: {
+        dependsOn: ['国9战力', '国50战力', '国100战力'],
+        compute: (row) => (Number(row['国9战力']) || 0) + (Number(row['国50战力']) || 0) + (Number(row['国100战力']) || 0),
+        hint: '= 国9 + 国50 + 国100'
+      }
+    };
+
+    // ── helpers ──
+    function $(id) { return document.getElementById(id); }
+
+    function toast(msg) {
+      const el = Object.assign(document.createElement('div'), { className: 'toast', textContent: msg });
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2000);
+    }
+
+    function detectColumns(arr) {
+      if (!arr || !arr.length) return [];
+      const keys = new Set();
+      arr.forEach(obj => Object.keys(obj).forEach(k => keys.add(k)));
+      return Array.from(keys);
+    }
+
+    function normalizeValue(val) {
+      if (val === null || val === undefined) return '';
+      if (typeof val === 'object') return JSON.stringify(val);
+      return String(val);
+    }
+
+    // Check which computed fields apply to the current data
+    function resolveComputedFields() {
+      computedFields = {};
+      if (!data || !data.length) return;
+      const cols = new Set(detectColumns(data));
+      for (const [field, def] of Object.entries(COMPUTED_DEFS)) {
+        if (cols.has(field) && def.dependsOn.every(d => cols.has(d))) {
+          computedFields[field] = def;
+        }
+      }
+    }
+
+    // ── render ──
+    function render() {
+      resolveComputedFields();
+
+      if (!data || !data.length) {
+        $('dataTable').style.display = 'none';
+        $('empty').style.display = '';
+        $('stats').style.display = 'none';
+        $('saveBtn').disabled = true;
+        $('addBtn').disabled = true;
+        $('pasteBtn').disabled = true;
+        $('applyBtn').disabled = true;
+        $('applyBtn').style.opacity = '0.4';
+        return;
+      }
+
+      $('empty').style.display = 'none';
+      $('dataTable').style.display = '';
+      $('saveBtn').disabled = false;
+      $('addBtn').disabled = false;
+      $('pasteBtn').disabled = false;
+      $('applyBtn').disabled = true;
+      $('applyBtn').style.opacity = '0.4';
+      $('stats').style.display = 'flex';
+
+      columns = detectColumns(data);
+
+      // sort
+      let sorted = [...data];
+      if (sortKey && columns.includes(sortKey)) {
+        sorted.sort((a, b) => {
+          let va = a[sortKey], vb = b[sortKey];
+          let na = parseFloat(va), nb = parseFloat(vb);
+          if (!isNaN(na) && !isNaN(nb)) return (na - nb) * sortDir;
+          return String(va ?? '').localeCompare(String(vb ?? ''), 'zh-CN') * sortDir;
+        });
+      }
+
+      // head
+      let headHtml = '<tr><th class="col-index">#</th>';
+      columns.forEach(col => {
+        let cls = '';
+        if (sortKey === col) cls = sortDir === 1 ? 'sort-asc' : 'sort-desc';
+        if (computedFields[col]) cls += ' col-computed';
+        const label = computedFields[col] ? col + ' 🔒' : col;
+        headHtml += `<th class="${cls}" onclick="sortBy('${esc(col)}')">${label}<span class="sort-arrow">${sortKey === col ? (sortDir === 1 ? '▲' : '▼') : ''}</span></th>`;
+      });
+      headHtml += '<th class="col-index" style="cursor:default">✕</th></tr>';
+      $('tableHead').innerHTML = headHtml;
+
+      // body
+      let bodyHtml = '';
+      sorted.forEach((row, sortedIdx) => {
+        const dataIdx = data.indexOf(row);
+        bodyHtml += `<tr>`;
+        bodyHtml += `<td class="col-index">${sortedIdx + 1}</td>`;
+        columns.forEach(col => {
+          if (computedFields[col]) {
+            // ── computed cell (read-only) ──
+            let val = normalizeValue(row[col]);
+            bodyHtml += `<td class="computed">${val}</td>`;
+          } else {
+            // ── editable cell ──
+            let val = normalizeValue(row[col]);
+            let isMod = original && dataIdx >= 0 && dataIdx < original.length &&
+              JSON.stringify(row) !== JSON.stringify(original[dataIdx]);
+            bodyHtml += `<td class="editable${isMod ? ' modified' : ''}">`
+              + `<input value="${val.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"`
+              + ` data-col="${esc(col)}" data-sorted-idx="${sortedIdx}" data-original="${esc(val)}"`
+              + ` oninput="markDirty(this)" onfocus="this.select()">`
+              + `</td>`;
+          }
+        });
+        bodyHtml += `<td><button class="del-btn" onclick="deleteRow(${sortedIdx})" title="删除此行">✕</button></td>`;
+        bodyHtml += `</tr>`;
+      });
+      $('tableBody').innerHTML = bodyHtml;
+
+      // stats
+      $('statFile').textContent = '📄 ' + (currentFile || '未命名数据');
+      $('statRows').textContent = `📋 ${data.length} 行 × ${columns.length} 列`;
+      $('statDirty').textContent = '💡 编辑后点击「✏️ 应用修改」保存到数据模型';
+
+      // Undo button: show if original snapshot exists
+      if (original) {
+        $('undoBtn').style.display = '';
+        $('undoBtn').disabled = false;
+      } else {
+        $('undoBtn').style.display = 'none';
+      }
+
+      let compKeys = Object.keys(computedFields);
+      $('statComputed').textContent = compKeys.length ? `🔒 自动计算: ${compKeys.join(', ')}` : '';
+    }
+
+    function esc(s) {
+      return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // ── edit helpers ──
+    function startEdit(td) {
+      const input = td.querySelector('input');
+      if (!input || document.activeElement === input) return;
+      input.focus();
+    }
+
+    // Mark an input (and its td) as dirty when the user types
+    function markDirty(input) {
+      const td = input.closest('td');
+      if (td) td.classList.add('modified');
+      updateSaveState();
+    }
+
+    // Check if any input differs from its data-original value
+    function hasUnsavedChanges() {
+      const inputs = $('tableBody').querySelectorAll('input');
+      for (const inp of inputs) {
+        if (inp.dataset.col && inp.value.trim() !== (inp.dataset.original || '')) return true;
+      }
+      return false;
+    }
+
+    // Enable/disable save-related UI based on dirty state
+    function updateSaveState() {
+      const dirty = hasUnsavedChanges();
+      $('applyBtn').disabled = !dirty;
+      $('applyBtn').style.opacity = dirty ? '1' : '0.4';
+    }
+
+    // Read all inputs from DOM, write to data, recalc, re-render
+    function applyChanges() {
+      if (!data) return;
+      const inputs = $('tableBody').querySelectorAll('input');
+      let changed = 0;
+
+      if (!original) original = JSON.parse(JSON.stringify(data));
+
+      const sorted = getSortedData();
+
+      inputs.forEach(input => {
+        const col = input.dataset.col;
+        const sortedIdx = parseInt(input.dataset.sortedIdx);
+        const newVal = input.value.trim();
+        const oldVal = (input.dataset.original || '').trim();
+
+        if (!col || newVal === oldVal) return;
+
+        // auto-detect number
+        let val = newVal;
+        if (val !== '' && !isNaN(val) && !/^0\d/.test(val)) val = Number(val);
+
+        // Map sortedIdx → data[]
+        if (sortedIdx >= 0 && sortedIdx < sorted.length) {
+          const row = sorted[sortedIdx];
+          const dataIdx = data.indexOf(row);
+          if (dataIdx >= 0) {
+            data[dataIdx][col] = val;
+            recalcRow(data[dataIdx]);
+            changed++;
+          }
+        }
+      });
+
+      if (changed > 0) {
+        recalcAll(); // ensure cross-row computed consistency
+        render();
+        toast(`已应用 ${changed} 个修改`);
+      } else {
+        toast('没有需要保存的修改');
+      }
+    }
+
+    // Recalculate all computed fields for a single row
+    function recalcRow(row) {
+      for (const [field, def] of Object.entries(computedFields)) {
+        row[field] = def.compute(row);
+      }
+    }
+
+    // Recalculate all computed fields for all rows (e.g. after initial load)
+    function recalcAll() {
+      if (!data) return;
+      resolveComputedFields();
+      data.forEach(row => recalcRow(row));
+    }
+
+    // ── sort ──
+    function getSortedData() {
+      if (!data) return [];
+      let sorted = [...data];
+      if (sortKey && columns.includes(sortKey)) {
+        sorted.sort((a, b) => {
+          let va = a[sortKey], vb = b[sortKey];
+          let na = parseFloat(va), nb = parseFloat(vb);
+          if (!isNaN(na) && !isNaN(nb)) return (na - nb) * sortDir;
+          return String(va ?? '').localeCompare(String(vb ?? ''), 'zh-CN') * sortDir;
+        });
+      }
+      return sorted;
+    }
+
+    function sortBy(col) {
+      if (hasUnsavedChanges()) {
+        if (!confirm('有未保存的修改，排序会导致编辑内容丢失。确定继续排序？')) return;
+      }
+      if (sortKey === col) {
+        sortDir *= -1;
+      } else {
+        sortKey = col;
+        sortDir = 1;
+      }
+      render();
+    }
+
+    // ── row operations ──
+    function addRow() {
+      if (!data) return;
+      if (hasUnsavedChanges()) {
+        if (!confirm('有未保存的修改，添加行会导致编辑内容丢失。确定继续？')) return;
+      }
+      if (!original) original = JSON.parse(JSON.stringify(data));
+      const newRow = {};
+      columns.forEach(col => {
+        // computed fields start empty — will be recalc'd
+        newRow[col] = computedFields[col] ? 0 : '';
+      });
+      data.push(newRow);
+      recalcRow(newRow);
+      render();
+      $('tableWrap').scrollTop = $('tableWrap').scrollHeight;
+      toast('已添加新行');
+    }
+
+    function deleteRow(sortedIdx) {
+      const sorted = getSortedData();
+      const row = sorted[sortedIdx];
+      const dataIdx = data.indexOf(row);
+      if (dataIdx < 0) return;
+      if (!original) original = JSON.parse(JSON.stringify(data));
+      const nameCol = columns.find(c => c.toLowerCase().includes('name') || c === 'heroName') || columns[0];
+      const name = row[nameCol] || `第${dataIdx + 1}行`;
+      if (!confirm(`确定要删除 "${name}" 吗？`)) return;
+      data.splice(dataIdx, 1);
+      render();
+      toast(`已删除: ${name}`);
+    }
+
+    // ── undo ──
+    function undoAll() {
+      if (!original) return;
+      if (!confirm('确定撤销所有修改，恢复到加载时的原始数据吗？此操作不可撤销。')) return;
+      data = JSON.parse(JSON.stringify(original));
+      original = null;
+      sortKey = null;
+      sortDir = 1;
+      recalcAll();
+      render();
+      toast('已恢复到原始数据');
+    }
+
+    // ── load JSON ──
+    function setData(arr, filename) {
+      if (!Array.isArray(arr)) {
+        const found = Object.values(arr).find(v => Array.isArray(v));
+        if (found) arr = found;
+        else {
+          alert('JSON 文件格式不正确：需要包含一个数组，或包含数组的对象。');
+          return;
+        }
+      }
+      data = arr.map(row => {
+        const clone = {};
+        Object.keys(row).forEach(k => { clone[k] = row[k]; });
+        return clone;
+      });
+      original = null;
+      sortKey = null;
+      sortDir = 1;
+      currentFile = filename || '';
+
+      // Apply computed field formulas to ensure consistency on load
+      recalcAll();
+
+      render();
+      toast(`已加载: ${filename || '数据'} (${data.length} 行)`);
+    }
+
+    function loadFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+      currentFile = file.name;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          setData(parsed, file.name);
+        } catch (e) {
+          alert('JSON 解析失败: ' + e.message);
+        }
+      };
+      reader.readAsText(file);
+      input.value = '';
+    }
+
+    function loadPreset(path) {
+      if (!path) return;
+      $('presetSelect').value = '';
+      fetch(path)
+        .then(r => { if (!r.ok) throw new Error(r.status + ' ' + r.statusText); return r.json(); })
+        .then(json => {
+          currentFile = path.split('/').pop();
+          setData(json, currentFile);
+        })
+        .catch(err => alert('加载失败: ' + err.message));
+    }
+
+    // ── save ──
+    function saveJSON() {
+      if (!data) return;
+
+      // Final recalculation before saving to ensure all computed values are correct
+      recalcAll();
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), {
+        href: url,
+        download: currentFile || 'data.json'
+      });
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('JSON 已下载（含自动计算值）');
+    }
+
+    // ── keyboard shortcuts ──
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        applyChanges();  // first apply any pending edits
+        saveJSON();      // then download
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        applyChanges();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undoAll();
+      }
+    });
+
+    // ── drag & drop ──
+    document.body.addEventListener('dragover', e => { e.preventDefault(); });
+    document.body.addEventListener('drop', e => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.json')) {
+        currentFile = file.name;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try { setData(JSON.parse(reader.result), file.name); }
+          catch (err) { alert('JSON 解析失败: ' + err.message); }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // ── click on editable td → focus its input ──
+    document.addEventListener('click', e => {
+      const td = e.target.closest('td.editable');
+      if (td) startEdit(td);
+    });
+
+    // ── Tab navigation: Tab/Shift+Tab moves between editable cells ──
+    $('tableBody').addEventListener('keydown', function (e) {
+      if (e.key === 'Tab') {
+        const input = document.activeElement;
+        if (!input || input.tagName !== 'INPUT' || !input.dataset.col) return;
+        e.preventDefault();
+
+        const td = input.closest('td');
+        const allCells = [...$('tableBody').querySelectorAll('td.editable')];
+        const idx = allCells.indexOf(td);
+        const nextIdx = e.shiftKey ? idx - 1 : idx + 1;
+
+        if (nextIdx >= 0 && nextIdx < allCells.length) {
+          startEdit(allCells[nextIdx]);
+        }
+      }
+
+      // Enter → move to same column, next row
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const input = document.activeElement;
+        if (!input || input.tagName !== 'INPUT' || !input.dataset.col) return;
+        e.preventDefault();
+
+        const col = input.dataset.col;
+        const sortedIdx = parseInt(input.dataset.sortedIdx);
+
+        const allInputs = [...$('tableBody').querySelectorAll('input')];
+        const next = allInputs.find(inp =>
+          inp.dataset.col === col && parseInt(inp.dataset.sortedIdx) === sortedIdx + 1
+        );
+        if (next) { next.focus(); next.select(); }
+      }
+    });
+
+    // ── Paste handler: writes directly to DOM inputs, no data-model changes ──
+    console.log('%c[INIT] %cPaste listener attached to document', 'color:#3fb950;font-weight:bold', '');
+    document.addEventListener('paste', function (e) {
+      // Find the editable input — either the event target itself or the activeElement
+      let input = null;
+      if (e.target.tagName === 'INPUT' && e.target.dataset.col) {
+        input = e.target;
+      } else if (document.activeElement && document.activeElement.tagName === 'INPUT' && document.activeElement.dataset.col) {
+        input = document.activeElement;
+      }
+
+      if (!input) return; // not pasting into our editable cell
+
+      const pasteText = (e.clipboardData || window.clipboardData).getData('text');
+      if (!pasteText) return;
+
+      // Normalize line endings and split
+      const rawLines = pasteText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+
+      // Remove trailing empty lines
+      while (rawLines.length && rawLines[rawLines.length - 1].trim() === '') rawLines.pop();
+
+      // If only one line, let the default paste behavior handle it (single value)
+      if (rawLines.length <= 1) return;
+
+      // ── Multi-value paste: fill DOM inputs in the same column downward ──
+      e.preventDefault();
+
+      const col = input.dataset.col;
+      const sortedIdx = parseInt(input.dataset.sortedIdx);
+      const colInputs = [...$('tableBody').querySelectorAll('input[data-col="' + esc(col) + '"]')]
+        .sort((a, b) => parseInt(a.dataset.sortedIdx) - parseInt(b.dataset.sortedIdx));
+
+      let filled = 0;
+      for (let i = 0; i < rawLines.length; i++) {
+        const val = rawLines[i].trim();
+        if (val === '') continue;
+        const target = colInputs[sortedIdx + i];
+        if (!target) break; // no more rows in this column
+        target.value = val;
+        // 不修改 dataset.original，保留渲染时设置的原始值，
+        // 这样 hasUnsavedChanges() 和 applyChanges() 才能正确检测到粘贴带来的修改
+        filled++;
+      }
+
+      // Mark all filled cells as needing save (they differ from original data)
+      for (let i = 0; i < filled; i++) {
+        const target = colInputs[sortedIdx + i];
+        if (target) {
+          const td = target.closest('td');
+          if (td) td.classList.add('modified');
+        }
+      }
+
+      updateSaveState();
+      toast(`已填入 ${filled} 个值到 "${col}" 列，点击「✏️ 应用修改」保存`);
+    });
+
+    // ── Paste Column button fallback (for browsers that block clipboard API) ──
+    function showPasteModal() {
+      if (!data) { alert('请先加载数据'); return; }
+
+      const col = prompt(
+        '请输入目标列名（当前列: ' + columns.join(', ') + '）',
+        columns[0]
+      );
+      if (!col || !columns.includes(col)) {
+        if (col) alert('列名 "' + col + '" 不存在');
+        return;
+      }
+
+      const text = prompt('请粘贴从 Excel 复制的列数据（每行一个值）：');
+      if (!text) return;
+
+      const rawLines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      const values = [];
+      for (const line of rawLines) {
+        const trimmed = line.trim();
+        if (trimmed !== '') {
+          if (!isNaN(trimmed) && !/^0\d/.test(trimmed)) {
+            values.push(Number(trimmed));
+          } else {
+            values.push(trimmed);
+          }
+        }
+      }
+
+      if (!values.length) return;
+
+      if (!original) original = JSON.parse(JSON.stringify(data));
+
+      for (let i = 0; i < values.length; i++) {
+        if (i < data.length) {
+          data[i][col] = values[i];
+          recalcRow(data[i]);
+        } else {
+          const newRow = {};
+          columns.forEach(c => { newRow[c] = computedFields[c] ? 0 : ''; });
+          newRow[col] = values[i];
+          data.push(newRow);
+          recalcRow(newRow);
+        }
+      }
+
+      render();
+      toast(`已粘贴 ${values.length} 个值到 "${col}" 列`);
+    }
+  </script>
+</body>
+
+</html>

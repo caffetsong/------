@@ -1,0 +1,230 @@
+[
+  {
+    "heroName": "暗夜猎手",
+    "winRate": "54.39%",
+    "pickRate": "1.29%",
+    "banRate": "7.41%"
+  },
+  {
+    "heroName": "狂战士",
+    "winRate": "53.53%",
+    "pickRate": "1.07%",
+    "banRate": "0.87%"
+  },
+  {
+    "heroName": "灵罗娃娃",
+    "winRate": "53.10%",
+    "pickRate": "2.68%",
+    "banRate": "0.39%"
+  },
+  {
+    "heroName": "山隐之焰",
+    "winRate": "52.99%",
+    "pickRate": "2.60%",
+    "banRate": "0.08%"
+  },
+  {
+    "heroName": "封魔剑魂",
+    "winRate": "52.90%",
+    "pickRate": "8.86%",
+    "banRate": "2.72%"
+  },
+  {
+    "heroName": "正义天使",
+    "winRate": "52.48%",
+    "pickRate": "2.38%",
+    "banRate": "0.15%"
+  },
+  {
+    "heroName": "青钢影",
+    "winRate": "52.38%",
+    "pickRate": "3.20%",
+    "banRate": "0.10%"
+  },
+  {
+    "heroName": "齐天大圣",
+    "winRate": "52.36%",
+    "pickRate": "2.21%",
+    "banRate": "0.19%"
+  },
+  {
+    "heroName": "熔岩巨兽",
+    "winRate": "52.35%",
+    "pickRate": "5.92%",
+    "banRate": "6.91%"
+  },
+  {
+    "heroName": "炼金术士",
+    "winRate": "52.14%",
+    "pickRate": "2.07%",
+    "banRate": "0.25%"
+  },
+  {
+    "heroName": "刀锋舞者",
+    "winRate": "51.94%",
+    "pickRate": "2.41%",
+    "banRate": "0.60%"
+  },
+  {
+    "heroName": "未来守护者",
+    "winRate": "51.76%",
+    "pickRate": "3.80%",
+    "banRate": "1.33%"
+  },
+  {
+    "heroName": "不灭狂雷",
+    "winRate": "51.42%",
+    "pickRate": "7.42%",
+    "banRate": "0.92%"
+  },
+  {
+    "heroName": "暮光之眼",
+    "winRate": "51.41%",
+    "pickRate": "2.13%",
+    "banRate": "0.05%"
+  },
+  {
+    "heroName": "铁血狼母",
+    "winRate": "51.32%",
+    "pickRate": "4.32%",
+    "banRate": "2.29%"
+  },
+  {
+    "heroName": "迷失之牙",
+    "winRate": "51.14%",
+    "pickRate": "4.11%",
+    "banRate": "0.18%"
+  },
+  {
+    "heroName": "狂暴之心",
+    "winRate": "51.04%",
+    "pickRate": "1.03%",
+    "banRate": "0.15%"
+  },
+  {
+    "heroName": "武器大师",
+    "winRate": "50.83%",
+    "pickRate": "4.35%",
+    "banRate": "0.23%"
+  },
+  {
+    "heroName": "迅捷斥候",
+    "winRate": "50.80%",
+    "pickRate": "2.94%",
+    "banRate": "5.63%"
+  },
+  {
+    "heroName": "圣锤之毅",
+    "winRate": "50.75%",
+    "pickRate": "3.25%",
+    "banRate": "0.15%"
+  },
+  {
+    "heroName": "符文法师",
+    "winRate": "50.67%",
+    "pickRate": "1.75%",
+    "banRate": "12.72%"
+  },
+  {
+    "heroName": "沙漠死神",
+    "winRate": "50.54%",
+    "pickRate": "7.58%",
+    "banRate": "4.27%"
+  },
+  {
+    "heroName": "腕豪",
+    "winRate": "49.70%",
+    "pickRate": "12.35%",
+    "banRate": "1.59%"
+  },
+  {
+    "heroName": "诺克萨斯之手",
+    "winRate": "49.68%",
+    "pickRate": "16.09%",
+    "banRate": "3.88%"
+  },
+  {
+    "heroName": "放逐之刃",
+    "winRate": "49.59%",
+    "pickRate": "1.76%",
+    "banRate": "0.18%"
+  },
+  {
+    "heroName": "机械公敌",
+    "winRate": "49.51%",
+    "pickRate": "3.39%",
+    "banRate": "0.20%"
+  },
+  {
+    "heroName": "荒漠屠夫",
+    "winRate": "49.41%",
+    "pickRate": "6.62%",
+    "banRate": "0.54%"
+  },
+  {
+    "heroName": "暗裔剑魔",
+    "winRate": "49.33%",
+    "pickRate": "8.05%",
+    "banRate": "3.18%"
+  },
+  {
+    "heroName": "无畏战车",
+    "winRate": "49.10%",
+    "pickRate": "3.29%",
+    "banRate": "0.47%"
+  },
+  {
+    "heroName": "蛮族之王",
+    "winRate": "49.09%",
+    "pickRate": "2.18%",
+    "banRate": "7.51%"
+  },
+  {
+    "heroName": "德玛西亚之力",
+    "winRate": "49.04%",
+    "pickRate": "14.36%",
+    "banRate": "2.07%"
+  },
+  {
+    "heroName": "铁铠冥魂",
+    "winRate": "49.03%",
+    "pickRate": "8.38%",
+    "banRate": "6.53%"
+  },
+  {
+    "heroName": "亡灵战神",
+    "winRate": "48.35%",
+    "pickRate": "6.77%",
+    "banRate": "0.62%"
+  },
+  {
+    "heroName": "祖安狂人",
+    "winRate": "48.15%",
+    "pickRate": "5.93%",
+    "banRate": "0.37%"
+  },
+  {
+    "heroName": "纳祖芒荣耀",
+    "winRate": "47.49%",
+    "pickRate": "9.24%",
+    "banRate": "33.90%"
+  },
+  {
+    "heroName": "疾风剑豪",
+    "winRate": "46.89%",
+    "pickRate": "2.46%",
+    "banRate": "5.90%"
+  },
+  {
+    "heroName": "无双剑姬",
+    "winRate": "46.49%",
+    "pickRate": "2.24%",
+    "banRate": "0.25%"
+  },
+  {
+    "heroName": "诺克萨斯统领",
+    "winRate": "45.25%",
+    "pickRate": "1.02%",
+    "banRate": "2.69%"
+  }
+]

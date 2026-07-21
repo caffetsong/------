@@ -1,0 +1,199 @@
+# MOBA 英雄梯度排行榜
+
+> 多游戏 · 数据驱动 · 算法透明 · 零依赖
+
+基于统计数据的 MOBA 英雄梯度排行仪表盘，支持 **英雄联盟手游（LoLM）** 和 **曙光英雄**。纯静态页面，双击即可在浏览器中打开。
+
+---
+
+## 快速开始
+
+```bash
+# 方式1：本地服务器（推荐，支持 Chrome/Edge）
+cd MOBA游戏梯度
+python -m http.server 8080
+# 浏览器打开 http://localhost:8080
+
+# 方式2：直接双击 index.html（Firefox 支持）
+```
+
+---
+
+## 项目结构
+
+```
+MOBA游戏梯度/
+├── index.html              # 统一入口，游戏选择器 + 渲染壳
+├── css/tier-list.css       # 公共样式（深色主题，响应式）
+├── js/tierlist.js          # 核心引擎（算法 + 渲染 + 搜索 + 排序）
+├── lolm/
+│   ├── config.json         # LoLM 配置（分路、算法参数、列定义）
+│   ├── 上路.json            # 上路数据
+│   ├── 打野.json            # 打野数据
+│   ├── 中路.json            # 中路数据
+│   ├── 下路.json            # ADC 数据
+│   ├── 辅助.json            # 辅助数据
+│   └── HeadIcon/             # 🆕 英雄头像 (PNG, 按名命名)
+├── 曙光英雄/
+│   ├── config.json         # 曙光配置（无分路、加权和算法）
+│   └── 曙光英雄.json        # 全英雄数据
+└── 原任务记录.md            # 历史任务记录（算法设计过程）
+```
+
+---
+
+## 功能
+
+| 功能 | LoLM | 曙光英雄 |
+|------|------|---------|
+| 分路导航 | ✅ 5 路切换 | — 无分路，全量排行 |
+| 算法选择 | Z-score / 简易公式 | 加权和 (0.20/0.50/0.30) |
+| 视图模式 | 分路排名 + 全局排名 | 全量排名 |
+| 搜索 | ✅ 跨分路搜索 | ✅ 全量搜索 |
+| 英雄头像 | ✅ 圆形头像图标 | — |
+| 排序 | ✅ 点击表头排序 | ✅ 点击表头排序 |
+| URL 分享 | ✅ `?game=lolm&lane=mid` | ✅ `?game=sg` |
+| 响应式 | ✅ 768px 断点 | ✅ 768px 断点 |
+| 统计卡片 | 平均胜率/出场率/Ban率 | 平均战力/胜率区间 |
+
+---
+
+## 算法
+
+### LoLM：Z-score 加权
+
+对每个分路独立计算：
+
+```
+Z-score 加权: 0.5×Z(胜率) + 1.0×Z(出场率) + 3.0×Z(Ban率)
+简易公式: 胜率^0.3 × (出场率 + 2.5×Ban率) × 100
+```
+
+- 分路内 min-max 归一化 → 0~100 分路评分
+- 全局 min-max 归一化 → 0~100 全局评分
+- 百分位定 T0~T4
+
+### 曙光英雄：加权和
+
+```
+出场分 = 1 - (出场排名 - 1) / (英雄总数 - 1)
+战力分 = (战力 - min战力) / (max战力 - min战力)   # min-max 归一化
+胜率分 = (胜率 - min胜率) / (max胜率 - min胜率)   # min-max 归一化
+
+rawPower = 0.20 × 出场分 + 0.50 × 战力分 + 0.30 × 胜率分
+最终评分 = (rawPower - min) / (max - min) × 100
+```
+
+**权重设计逻辑：**
+
+| 维度 | 权重 | 理由 |
+|------|------|------|
+| 加权战力分 | **0.50** | 最强信号，高端玩家表现直接反映英雄上限 |
+| 胜率 | **0.30** | 普适强度，但冷门英雄可能被绝活哥拉高 |
+| 出场排名 | **0.20** | 序数数据信息量有限，主要惩罚"没人玩但数据好"的个例 |
+
+### 梯度定义
+
+| 梯度 | 百分位 | 含义 |
+|------|--------|------|
+| T0 | 前 8% | 版本答案，非 Ban 必选 |
+| T0.5 | 前 8%~12% | 强势，接近 T0 |
+| T1 | 前 12%~30% | 优秀，稳定上分 |
+| T2 | 前 30%~60% | 中规中矩，可玩 |
+| T3 | 前 60%~88% | 弱势，需绝活 |
+| T4 | 末 12% | 版本弃子 |
+
+---
+
+## 添加新游戏
+
+只需创建 `新游戏/config.json` + 数据 JSON 即可，无需修改任何代码。
+
+```jsonc
+{
+  "gameId": "新游戏ID",
+  "gameName": "游戏名",
+  "gameIcon": "🎮",
+  "hasLanes": true,          // true=有分路, false=无分路
+  "headIconPath": "HeadIcon/{name}.png",  // 可选，英雄头像路径模板
+
+  // 有分路时的配置：
+  "lanes": [
+    { "id": "top", "name": "上路", "dataFile": "上路.json" }
+  ],
+
+  // 无分路时的配置：
+  "dataFile": "全量数据.json",
+
+  "algorithm": {
+    // 可选: "zscore" | "simple" | "weighted"
+    "type": "weighted",
+    "weights": { "appearance": 0.20, "combat": 0.50, "winrate": 0.30 }
+  },
+
+  "columns": [
+    { "label": "#", "field": "rank", "type": "rank" },
+    { "label": "英雄", "field": "name", "type": "text" },
+    { "label": "梯度", "field": "tier", "type": "tier" },
+    { "label": "评分", "field": "score", "type": "score" }
+    // type: "rank" | "text" | "tier" | "score" | "pct" | "int"
+    // colorClass (可选): "wr" 胜率着色, "cw" 战力着色
+  ],
+
+  "statCards": [
+    { "label": "平均胜率", "field": "wr", "format": "pct" }
+    // format: "pct" | "int" | "text"
+    // 特殊 field: "winRateRange" 胜率区间, "count" 英雄总数
+  ],
+
+  "footer": "页脚文案"
+}
+```
+
+### 数据类型说明
+
+| type | 显示效果 | 适用字段 |
+|------|---------|---------|
+| `rank` | 排名数字（前三名金银铜着色） | rank, globalRank |
+| `tier` | 彩色梯度标签 | tier |
+| `score` | 分数进度条 | score |
+| `pct` | 百分比（可着色） | winRate, pickRate, banRate |
+| `int` | 整数（可着色） | combatPower, appearanceRank |
+| `text` | 纯文本 | heroName, lane |
+
+### 算法配置
+
+| type | 说明 | 必需参数 |
+|------|------|---------|
+| `zscore` | 分路内 Z-score + 全局归一化 | `weights.wr`, `weights.pr`, `weights.br` |
+| `simple` | 简易公式（LOLM 第二算法） | `simpleWrExp`, `simpleBrBoost` |
+| `weighted` | 加权和 + min-max 归一化（曙光算法） | `weights.{维度名}` |
+
+> ⚠️ 目前仅 `zscore`、`weighted` 两种算法已完整实现。添加 `simple` 类型需要在 `tierlist.js` 中补充渲染逻辑。
+
+---
+
+## 技术栈
+
+- **纯原生 HTML/CSS/JS** — 零框架、零构建、零外部依赖
+- **深色主题** — GitHub dark 风格
+- **响应式** — 768px 断点适配移动端
+- **客户端计算** — 所有算法在浏览器中运行
+
+---
+
+## 参考文献
+
+- [hok-meta-analyzer](https://github.com/lnsdeep/hok-meta-analyzer) — 王者荣耀元数据分析器（架构参考）
+- [statsWR](https://github.com/HuiDiHu/statsWR) — Wild Rift 梯度排行（MERN 全栈参考）
+- 原任务记录 — 算法设计推导过程（见 `原任务记录.md`）
+
+---
+
+## 验证结果（曙光英雄）
+
+| 验证项 | 结果 |
+|--------|------|
+| Spearman 秩相关 | 出场排名 ρ=+0.86, 战力分 ρ=+0.82, 胜率 ρ=+0.86 |
+| 敏感性（±0.05 微调） | T0 名单完全不变 |
+| 权重鲁棒性 | 微调不影响 Top10 集合 |

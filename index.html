@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOBA 英雄梯度排行榜</title>
+<link rel="stylesheet" href="css/tier-list.css">
+</head>
+<body>
+
+<div class="header">
+    <h1>⚔️ MOBA 英雄梯度排行榜</h1>
+    <p class="subtitle">多游戏 · 数据驱动 · 算法透明</p>
+    <div class="game-selector">
+        <button class="active" data-game="lolm" onclick="switchGame('lolm')">
+            ⚔️ 英雄联盟手游
+        </button>
+        <button data-game="sg" onclick="switchGame('sg')">
+            ☀️ 曙光英雄
+        </button>
+    </div>
+</div>
+
+<div class="nav" id="nav"></div>
+
+<div class="controls" id="controls"></div>
+
+<div class="container" id="content">
+    <p style="text-align:center;padding:60px;color:#8b949e;">⏳ 加载中...</p>
+</div>
+
+<div class="footer"></div>
+
+<script src="js/tierlist.js"></script>
+</body>
+</html>

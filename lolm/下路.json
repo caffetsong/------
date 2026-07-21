@@ -1,0 +1,134 @@
+[
+  {
+    "heroName": "炽炎雏龙",
+    "winRate": "52.68%",
+    "pickRate": "14.91%",
+    "banRate": "6.71%"
+  },
+  {
+    "heroName": "深渊巨口",
+    "winRate": "52.07%",
+    "pickRate": "2.83%",
+    "banRate": "0.11%"
+  },
+  {
+    "heroName": "赏金猎人",
+    "winRate": "51.79%",
+    "pickRate": "13.28%",
+    "banRate": "0.91%"
+  },
+  {
+    "heroName": "探险家",
+    "winRate": "51.50%",
+    "pickRate": "14.48%",
+    "banRate": "0.32%"
+  },
+  {
+    "heroName": "圣枪游侠",
+    "winRate": "51.36%",
+    "pickRate": "7.28%",
+    "banRate": "0.17%"
+  },
+  {
+    "heroName": "惩戒之箭",
+    "winRate": "50.93%",
+    "pickRate": "9.88%",
+    "banRate": "0.53%"
+  },
+  {
+    "heroName": "沙漠玫瑰",
+    "winRate": "50.92%",
+    "pickRate": "9.36%",
+    "banRate": "1.43%"
+  },
+  {
+    "heroName": "暗夜猎手",
+    "winRate": "50.78%",
+    "pickRate": "9.92%",
+    "banRate": "7.41%"
+  },
+  {
+    "heroName": "戏命师",
+    "winRate": "50.60%",
+    "pickRate": "13.70%",
+    "banRate": "0.18%"
+  },
+  {
+    "heroName": "战争女神",
+    "winRate": "50.44%",
+    "pickRate": "3.36%",
+    "banRate": "0.02%"
+  },
+  {
+    "heroName": "寒冰射手",
+    "winRate": "50.36%",
+    "pickRate": "4.41%",
+    "banRate": "0.03%"
+  },
+  {
+    "heroName": "祖安花火",
+    "winRate": "50.34%",
+    "pickRate": "1.99%",
+    "banRate": "0.01%"
+  },
+  {
+    "heroName": "瘟疫之源",
+    "winRate": "50.20%",
+    "pickRate": "4.32%",
+    "banRate": "0.07%"
+  },
+  {
+    "heroName": "荣耀行刑官",
+    "winRate": "49.86%",
+    "pickRate": "5.82%",
+    "banRate": "0.38%"
+  },
+  {
+    "heroName": "英勇投弹手",
+    "winRate": "49.85%",
+    "pickRate": "1.36%",
+    "banRate": "0.00%"
+  },
+  {
+    "heroName": "复仇之矛",
+    "winRate": "49.62%",
+    "pickRate": "4.25%",
+    "banRate": "0.71%"
+  },
+  {
+    "heroName": "逆羽",
+    "winRate": "49.35%",
+    "pickRate": "5.70%",
+    "banRate": "0.11%"
+  },
+  {
+    "heroName": "虚空之女",
+    "winRate": "48.63%",
+    "pickRate": "16.37%",
+    "banRate": "0.36%"
+  },
+  {
+    "heroName": "不破之誓",
+    "winRate": "48.24%",
+    "pickRate": "23.07%",
+    "banRate": "34.32%"
+  },
+  {
+    "heroName": "皮城女警",
+    "winRate": "47.75%",
+    "pickRate": "12.00%",
+    "banRate": "0.49%"
+  },
+  {
+    "heroName": "暴走萝莉",
+    "winRate": "47.48%",
+    "pickRate": "6.26%",
+    "banRate": "0.05%"
+  },
+  {
+    "heroName": "麦林炮手",
+    "winRate": "47.09%",
+    "pickRate": "3.70%",
+    "banRate": "0.02%"
+  }
+]

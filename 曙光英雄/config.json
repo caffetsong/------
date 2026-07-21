@@ -1,0 +1,40 @@
+{
+  "gameId": "sg",
+  "gameName": "曙光英雄",
+  "gameIcon": "☀️",
+  "hasLanes": false,
+  "dataFile": "曙光英雄.json",
+  "headIconPath": "HeadIcon/{name}.png",
+  "algorithm": {
+    "type": "weighted",
+    "weights": { "appearance": 0.20, "combat": 0.50, "winrate": 0.30 }
+  },
+  "tiers": {
+    "thresholds": [
+      { "tier": "T0",   "pct": 0.92 },
+      { "tier": "T0.5", "pct": 0.88 },
+      { "tier": "T1",   "pct": 0.70 },
+      { "tier": "T2",   "pct": 0.40 },
+      { "tier": "T3",   "pct": 0.12 },
+      { "tier": "T4",   "pct": 0.00 }
+    ],
+    "colors": {
+      "T0": "#ff4d4f", "T0.5": "#ff7a45", "T1": "#ffa940",
+      "T2": "#ffc53d", "T3": "#73d13d", "T4": "#8c8c8c"
+    }
+  },
+  "columns": [
+    { "label": "英雄", "field": "name", "type": "text" },
+    { "label": "梯度", "field": "tier", "type": "tier" },
+    { "label": "评分", "field": "score", "type": "score" },
+    { "label": "出场排名", "field": "appearanceRank", "type": "int" },
+    { "label": "战力分", "field": "combatPower", "type": "int", "colorClass": "cw" },
+    { "label": "胜率", "field": "winRate", "type": "pct", "colorClass": "wr" }
+  ],
+  "statCards": [
+    { "label": "平均战力分", "field": "combatPower", "format": "int" },
+    { "label": "胜率区间", "field": "winRateRange", "format": "text" },
+    { "label": "英雄总数", "field": "count", "format": "int" }
+  ],
+  "footer": "曙光英雄 Hero Tier List · 基于出场排名/战力/胜率加权算法 · 仅供参考"
+}
