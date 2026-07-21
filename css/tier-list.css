@@ -243,6 +243,47 @@ tbody tr.current-highlight { background: rgba(31,111,235,0.08); }
     border-bottom: 1px solid #30363d; color: #8b949e; font-size: 0.85rem;
 }
 
+/* ---- HeroDetail 覆盖层 ---- */
+.hero-detail-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.7); align-items: center; justify-content: center;
+}
+.hero-detail-panel {
+    background: #0d1117; border: 1px solid #30363d; border-radius: 12px;
+    width: 90vw; max-width: 1000px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.hero-detail-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px; border-bottom: 1px solid #30363d;
+    position: sticky; top: 0; background: #0d1117; z-index: 1;
+}
+.hero-detail-title { font-size: 1.1rem; font-weight: 600; flex: 1; }
+.hero-detail-close {
+    padding: 6px 14px; border: 1px solid #f85149; border-radius: 6px;
+    background: transparent; color: #f85149; cursor: pointer;
+    font-size: 14px; font-family: inherit;
+}
+.hero-detail-close:hover { background: rgba(248,81,73,0.15); }
+.hero-detail-body { padding: 20px; }
+.hero-detail-body .chart-box {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 16px; margin-bottom: 16px;
+}
+/* mini-table for hero detail */
+.hero-detail-body .mini-table {
+    width: 100%; border-collapse: collapse; font-size: 0.82rem;
+}
+.hero-detail-body .mini-table th,
+.hero-detail-body .mini-table td {
+    padding: 8px 12px; text-align: center; border: 1px solid #21262d;
+}
+.hero-detail-body .mini-table th { background: #161b22; color: #8b949e; font-weight: 600; }
+.hero-detail-body .mini-table td { background: #0d1117; }
+
+/* In grid/table, make hero names hint they're clickable */
+.hero-detail-body .hero-cell[style*="cursor:pointer"]:hover { opacity: 0.8; }
+
 /* ---- 响应式 ---- */
 @media (max-width: 768px) {
     .header h1 { font-size: 1.3rem; }

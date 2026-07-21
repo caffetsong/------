@@ -3,6 +3,12 @@
   "gameName": "曙光英雄",
   "gameIcon": "☀️",
   "hasLanes": false,
+  "hasDates": true,
+  "dates": [
+    { "date": "2026-07-20", "file": "曙光英雄_2026-07-20.json" },
+    { "date": "2026-07-13", "file": "曙光英雄_2026-07-13.json" }
+  ],
+  "defaultDate": "2026-07-20",
   "dataFile": "曙光英雄.json",
   "headIconPath": "HeadIcon/{name}.png",
   "algorithm": {

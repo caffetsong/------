@@ -12,6 +12,7 @@ let currentMethod = "zscore"; // LOLM: "zscore"|"simple", SG: "weighted"
 let currentView = "lane";   // "lane"|"global"
 let currentLane = null;     // 当前分路名（仅 hasLanes）
 let currentViewMode = "table"; // "table"|"grid" — 展示模式
+let currentDate = null;      // 当前选中的日期 (YYYY-MM-DD)，仅 hasDates 游戏
 
 // ---- 工具函数 ----
 function parsePct(s) {
@@ -276,8 +277,16 @@ async function loadGameData() {
       gameData.lanes[name] = heroes;
     }
   } else {
-    // 曙光：加载单个 JSON
-    const resp = await fetch(base + "/" + gameConfig.dataFile);
+    // 无分路模式：支持多日期或单文件
+    let dataFile;
+    if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length > 0) {
+      const dateEntry = gameConfig.dates.find(d => d.date === currentDate) || gameConfig.dates[0];
+      dataFile = dateEntry.file;
+      if (!currentDate) currentDate = dateEntry.date;
+    } else {
+      dataFile = gameConfig.dataFile;
+    }
+    const resp = await fetch(base + "/" + dataFile);
     if (!resp.ok) throw new Error(`加载数据失败: ${resp.status}`);
     const rawData = await resp.json();
     const data = computeSG(rawData);
@@ -286,6 +295,34 @@ async function loadGameData() {
       heroes: data.heroes,
       sorted: data.sorted
     };
+
+    // 如果有历史数据，加载上一期数据用于梯度变化对比
+    if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length >= 2) {
+      const sortedDates = gameConfig.dates.map(d => d.date).sort();
+      const curIdx = sortedDates.indexOf(currentDate);
+      if (curIdx > 0) {
+        const prevDate = sortedDates[curIdx - 1];
+        const prevEntry = gameConfig.dates.find(d => d.date === prevDate);
+        if (prevEntry) {
+          try {
+            const prevResp = await fetch(base + "/" + prevEntry.file);
+            if (prevResp.ok) {
+              const prevRaw = await prevResp.json();
+              const prevResult = computeSG(prevRaw);
+              const prevMap = new Map(prevResult.heroes.map(h => [h.name, h]));
+              data.heroes.forEach(h => {
+                const prev = prevMap.get(h.name);
+                if (prev) {
+                  h.prevTier = prev.tier;
+                  h.prevScore = prev.score;
+                  h.prevRank = prev.rank;
+                }
+              });
+            }
+          } catch (e) { /* 静默失败，不影响当前数据展示 */ }
+        }
+      }
+    }
   }
 }
 
@@ -384,7 +421,16 @@ function renderTable(heroes, columns, highlightLane) {
       if (col.type === "rank") {
         html += `<td class="rank-num ${getRankClass(displayVal)}">${displayVal}</td>`;
       } else if (col.type === "tier") {
-        html += `<td>${getTierBadge(displayVal)}</td>`;
+        let badge = getTierBadge(displayVal);
+        // 显示与上一期的梯度变化箭头（仅无分路游戏 + 有 prevTier 数据）
+        if (!gameConfig.hasLanes && h.prevTier && h.prevTier !== displayVal) {
+          const tierOrder = ["T4","T3","T2","T1","T0.5","T0"];
+          const arrow = tierOrder.indexOf(displayVal) > tierOrder.indexOf(h.prevTier)
+            ? ' <span style="color:#3fb950;font-size:0.7rem">▲</span>'
+            : ' <span style="color:#f85149;font-size:0.7rem">▼</span>';
+          badge += arrow;
+        }
+        html += `<td>${badge}</td>`;
       } else if (col.type === "score") {
         html += `<td>${getScoreBar(displayVal, h.tier || displayVal)}</td>`;
       } else if (col.type === "pct" && displayVal != null) {
@@ -401,9 +447,11 @@ function renderTable(heroes, columns, highlightLane) {
         let txt = displayVal != null ? displayVal : "-";
         // Render head icon + name for text columns when hero has an icon
         if (col.type === "text" && col.field === "name" && h.headIcon) {
-          txt = `<div class="hero-cell"><img class="hero-icon" src="${h.headIcon}" alt="${h.name}" onerror="this.style.display='none'"> <span class="hero-name">${txt}</span></div>`;
+          const clickable = !gameConfig.hasLanes && gameConfig.hasDates ? ` style="cursor:pointer" onclick="showHeroDetail('${h.name.replace(/'/g, "\\'")}')"` : '';
+          txt = `<div class="hero-cell"${clickable}><img class="hero-icon" src="${h.headIcon}" alt="${h.name}" onerror="this.style.display='none'"> <span class="hero-name">${txt}</span></div>`;
         } else if (col.type === "text" && col.field === "name") {
-          txt = `<span class="hero-name">${txt}</span>`;
+          const clickable = !gameConfig.hasLanes && gameConfig.hasDates ? ` style="cursor:pointer" onclick="showHeroDetail('${h.name.replace(/'/g, "\\'")}')"` : '';
+          txt = `<span class="hero-name"${clickable}>${txt}</span>`;
         }
         html += `<td>${txt}</td>`;
       }
@@ -464,7 +512,7 @@ function renderGridView(heroes, highlightLane) {
     } else {
       list.forEach(h => {
         const name = h.name;
-        html += `<div class="tier-hero" title="${name}" onclick="doSearch('${name.replace(/'/g, "\\'")}')">`;
+        html += `<div class="tier-hero" title="${name}" onclick="showHeroDetail('${name.replace(/'/g, "\\'")}')">`;
         if (h.headIcon) {
           html += `<div class="tier-hero-img-wrap">`;
           html += `<img src="${h.headIcon}" alt="${name}" loading="lazy" onerror="this.style.display='none'">`;
@@ -540,7 +588,6 @@ function renderLaneView(laneName) {
     let html = `<div class="section-header">
       <h2>${gameConfig.gameIcon} ${gameConfig.gameName} 梯度排行</h2>
       <span class="count-badge">${heroes.length} 个英雄</span></div>`;
-    html += renderStatCards(heroes);
     html += renderTable(sorted, gameConfig.columns, null);
     return html;
   }
@@ -800,18 +847,32 @@ function switchViewMode(mode) {
   renderAll();
 }
 
+// ============================================================
+// 日期切换 (hasDates 游戏)
+// ============================================================
+async function switchDate(date) {
+  currentDate = date;
+  syncURL();
+  document.getElementById("content").innerHTML =
+    '<p style="text-align:center;padding:60px;color:#8b949e;">⏳ 加载中...</p>';
+  await loadGameData();
+  buildControls();
+  renderAll();
+}
+
 function buildControls() {
   const controls = document.getElementById("controls");
   if (!controls) return;
 
   let html = "";
+
   if (gameConfig.hasLanes && gameConfig.algorithm.type === "zscore") {
-    html += `<span class="label">算法：</span>
+    html += `<span style="margin-left:16px" class="label">算法：</span>
       <button class="active" onclick="switchMethod('zscore')">Z-score 加权</button>
       <button onclick="switchMethod('simple')">简易公式</button>`;
   } else if (!gameConfig.hasLanes) {
-    html += `<span class="label">算法：</span>
-      <button class="active" onclick="switchMethod('weighted')">加权和 (0.20/0.50/0.30)</button>`;
+    html += `<span style="margin-left:16px" class="label">算法：</span>
+      <button id="btn-weighted" class="active" onclick="switchMethod('weighted')">加权和 (0.20/0.50/0.30)</button>`;
   }
 
   if (gameConfig.hasLanes) {
@@ -872,7 +933,11 @@ async function switchGame(gameId) {
   currentMethod = gameConfig.algorithm.type === "weighted" ? "weighted" : "zscore";
   currentView = "lane";
   currentLane = gameConfig.hasLanes ? gameConfig.lanes[0].name : null;
-
+  currentDate = null;
+  if (gameConfig.hasDates) {
+    currentDate = gameConfig.defaultDate || gameConfig.dates[0].date;
+  }
+  heroTimelineLoaded = false; heroTimeline = null; heroTimelineDates = [];
   // Clear search box
   const searchBox = document.querySelector(".search-box");
   if (searchBox) searchBox.value = "";
@@ -911,10 +976,144 @@ function syncURL() {
   if (currentView) params.set("view", currentView);
   if (currentLane) params.set("lane", currentLane);
   if (currentViewMode !== "table") params.set("viewmode", currentViewMode);
+  if (gameConfig && gameConfig.hasDates && currentDate) params.set("date", currentDate);
   const newUrl = window.location.pathname + "?" + params.toString();
   if (window.location.search !== "?" + params.toString()) {
     window.history.replaceState(null, "", newUrl);
   }
+}
+
+// ============================================================
+// HeroDetail — 英雄多版本趋势图（仅 hasDates 游戏）
+// ============================================================
+let heroTimeline = null;
+let heroTimelineDates = [];
+let heroTimelineLoaded = false;
+
+async function loadHeroTimeline() {
+  if (heroTimelineLoaded) return;
+  if (!gameConfig || !gameConfig.hasDates) return;
+
+  heroTimelineDates = gameConfig.dates.map(d => d.date).sort();
+  heroTimeline = {};
+  const base = gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+
+  for (const dateStr of heroTimelineDates) {
+    const entry = gameConfig.dates.find(e => e.date === dateStr);
+    if (!entry) continue;
+    try {
+      const resp = await fetch(base + "/" + entry.file);
+      if (!resp.ok) continue;
+      const raw = await resp.json();
+      const result = computeSG(raw);
+      const map = {};
+      result.heroes.forEach(h => {
+        map[h.name] = { score: h.score, winRate: h.winRate, combatPower: h.combatPower, rank: h.rank, tier: h.tier, appearanceRank: h.appearanceRank };
+      });
+      heroTimeline[dateStr] = map;
+    } catch (e) {}
+  }
+  heroTimelineLoaded = true;
+}
+
+function showHeroDetail(name) {
+  if (!gameConfig || !gameConfig.hasDates) return;
+
+  let overlay = document.getElementById('heroDetailOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'heroDetailOverlay';
+    overlay.className = 'hero-detail-overlay';
+    overlay.innerHTML = `<div class="hero-detail-panel">
+      <div class="hero-detail-header">
+        <span class="hero-detail-title" id="hdTitle"></span>
+        <button class="hero-detail-close" onclick="closeHeroDetail()">✕</button>
+      </div>
+      <div class="hero-detail-body" id="hdBody"></div>
+    </div>`;
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeHeroDetail(); });
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  document.getElementById('hdTitle').textContent = '📈 ' + name;
+  document.getElementById('hdBody').innerHTML = '<p style="text-align:center;padding:40px;color:#8b949e">⏳ 加载趋势数据...</p>';
+  loadHeroTimeline().then(() => renderHeroDetail(name));
+}
+
+function closeHeroDetail() {
+  const overlay = document.getElementById('heroDetailOverlay');
+  if (overlay) overlay.style.display = 'none';
+  const oldChart = Chart.getChart('chartHeroTimeline');
+  if (oldChart) oldChart.destroy();
+}
+
+function renderHeroDetail(name) {
+  const points = heroTimelineDates.map(d => {
+    const h = heroTimeline[d] ? heroTimeline[d][name] : null;
+    return h ? { date: d, ...h } : null;
+  }).filter(Boolean);
+  if (points.length === 0) {
+    document.getElementById('hdBody').innerHTML = '<p style="text-align:center;padding:40px;color:#8b949e">暂无历史数据</p>';
+    return;
+  }
+
+  const heroCount = Math.max(...heroTimelineDates.map(d => heroTimeline[d] ? Object.keys(heroTimeline[d]).length : 0), 0);
+
+  let gMin = { score: Infinity, winRate: Infinity, combatPower: Infinity, rank: Infinity, appearanceRank: Infinity };
+  let gMax = { score: -Infinity, winRate: -Infinity, combatPower: -Infinity, rank: -Infinity, appearanceRank: -Infinity };
+  for (const d of heroTimelineDates) {
+    if (!heroTimeline[d]) continue;
+    for (const [, h] of Object.entries(heroTimeline[d])) {
+      gMin.score = Math.min(gMin.score, h.score);
+      gMax.score = Math.max(gMax.score, h.score);
+      gMin.winRate = Math.min(gMin.winRate, h.winRate);
+      gMax.winRate = Math.max(gMax.winRate, h.winRate);
+      gMin.combatPower = Math.min(gMin.combatPower, h.combatPower);
+      gMax.combatPower = Math.max(gMax.combatPower, h.combatPower);
+      const invRank = heroCount - h.rank + 1;
+      gMin.rank = Math.min(gMin.rank, invRank);
+      gMax.rank = Math.max(gMax.rank, invRank);
+      const invAR = heroCount - h.appearanceRank + 1;
+      gMin.appearanceRank = Math.min(gMin.appearanceRank, invAR);
+      gMax.appearanceRank = Math.max(gMax.appearanceRank, invAR);
+    }
+  }
+
+  function norm(val, min, max) { return ((val - min) / (max - min || 1)) * 100; }
+
+  let html = '<div class="chart-box"><canvas id="chartHeroTimeline" style="height:360px"></canvas></div>';
+  html += `<table class="mini-table"><thead><tr><th>日期</th><th>梯度</th><th>排名</th><th>评分</th><th>胜率</th><th>战力</th><th>出场排名</th></tr></thead><tbody>`;
+  points.forEach(p => {
+    html += `<tr><td>${p.date}</td><td>${getTierBadge(p.tier)}</td><td>#${p.rank}</td><td>${p.score.toFixed(1)}</td><td>${(p.winRate*100).toFixed(2)}%</td><td>${p.combatPower}</td><td>#${p.appearanceRank}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('hdBody').innerHTML = html;
+
+  new Chart(document.getElementById('chartHeroTimeline'), {
+    type: 'line',
+    data: {
+      labels: points.map(p => p.date),
+      datasets: [
+        { label: '评分', data: points.map(p => norm(p.score, gMin.score, gMax.score)), borderColor: '#58a6ff', backgroundColor: '#58a6ff', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
+        { label: '胜率', data: points.map(p => norm(p.winRate, gMin.winRate, gMax.winRate)), borderColor: '#3fb950', backgroundColor: '#3fb950', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
+        { label: '战力', data: points.map(p => norm(p.combatPower, gMin.combatPower, gMax.combatPower)), borderColor: '#d2991d', backgroundColor: '#d2991d', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
+        { label: '排名', data: points.map(p => norm(heroCount - p.rank + 1, gMin.rank, gMax.rank)), borderColor: '#ff7a45', backgroundColor: '#ff7a45', tension: 0.2, borderWidth: 2.5, pointRadius: 5, borderDash: [6, 3] },
+        { label: '出场排名', data: points.map(p => norm(heroCount - p.appearanceRank + 1, gMin.appearanceRank, gMax.appearanceRank)), borderColor: '#bc8cff', backgroundColor: '#bc8cff', tension: 0.2, borderWidth: 2.5, pointRadius: 5, borderDash: [3, 3] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      backgroundColor: 'transparent',
+      plugins: {
+        title: { display: true, text: `${name} — 全指标趋势（归一化 0~100，越高越好）`, color: '#c9d1d9', font: { size: 14 } },
+        legend: { position: 'bottom', labels: { color: '#c9d1d9', usePointStyle: true, padding: 20 } },
+      },
+      scales: {
+        x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+        y: { min: 0, max: 100, ticks: { color: '#8b949e', callback: v => v.toFixed(0) }, grid: { color: '#21262d' }, title: { display: true, text: '归一化值 (0-100)', color: '#8b949e' } }
+      }
+    }
+  });
 }
 
 // ============================================================
@@ -929,5 +1128,7 @@ async function init() {
   await switchGame(gameId);
 }
 
+// ESC to close hero detail
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeHeroDetail(); });
 // Auto-start
 document.addEventListener("DOMContentLoaded", init);

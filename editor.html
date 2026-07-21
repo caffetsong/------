@@ -357,10 +357,10 @@
     <h1>📊 JSON 数据编辑器</h1>
     <div class="sep"></div>
     <div class="toolbar">
-      <span class="file-label">
+      <span class="file-label" id="openFileBtn" onclick="openLocalFile()" title="打开本地 JSON 文件">
         📂 打开 JSON
-        <input type="file" id="fileInput" accept=".json" onchange="loadFile(this)">
       </span>
+      <input type="file" id="fileInput" accept=".json" onchange="loadFile(this)" style="display:none">
       <select id="presetSelect" onchange="loadPreset(this.value)">
         <option value="">— 快速加载项目数据 —</option>
         <optgroup label="LoLM 分路数据">
@@ -370,13 +370,11 @@
           <option value="lolm/下路.json">下路</option>
           <option value="lolm/辅助.json">辅助</option>
         </optgroup>
-        <optgroup label="曙光英雄">
-          <option value="曙光英雄/曙光英雄.json">曙光英雄</option>
+        <optgroup label="曙光英雄" id="sgOptgroup">
+          <option value="">加载中...</option>
         </optgroup>
       </select>
       <button onclick="addRow()" disabled id="addBtn">＋ 添加行</button>
-      <button onclick="showPasteModal()" disabled id="pasteBtn" title="从 Excel 粘贴列数据（兜底方案，优先直接用 Ctrl+V 粘贴）">📋
-        粘贴列</button>
       <button class="primary" onclick="applyChanges()" disabled id="applyBtn" style="opacity:0.4">✏️ 应用修改</button>
       <button onclick="undoAll()" disabled id="undoBtn" class="danger" style="display:none">↩ 撤销全部修改</button>
     </div>
@@ -412,6 +410,7 @@
     let sortKey = null;
     let sortDir = 1;
     let currentFile = '';
+    let currentFileHandle = null; // FileSystemFileHandle for direct write-back
     let computedFields = {};   // { fieldName: { dependsOn: [], compute: fn } }
 
     // ── computed field definitions ──
@@ -469,7 +468,6 @@
         $('stats').style.display = 'none';
         $('saveBtn').disabled = true;
         $('addBtn').disabled = true;
-        $('pasteBtn').disabled = true;
         $('applyBtn').disabled = true;
         $('applyBtn').style.opacity = '0.4';
         return;
@@ -479,7 +477,6 @@
       $('dataTable').style.display = '';
       $('saveBtn').disabled = false;
       $('addBtn').disabled = false;
-      $('pasteBtn').disabled = false;
       $('applyBtn').disabled = true;
       $('applyBtn').style.opacity = '0.4';
       $('stats').style.display = 'flex';
@@ -523,8 +520,10 @@
           } else {
             // ── editable cell ──
             let val = normalizeValue(row[col]);
-            let isMod = original && dataIdx >= 0 && dataIdx < original.length &&
-              JSON.stringify(row) !== JSON.stringify(original[dataIdx]);
+            // Compare only this cell's value, not the whole row
+            let origVal = original && dataIdx >= 0 && dataIdx < original.length
+              ? original[dataIdx][col] : undefined;
+            let isMod = origVal !== undefined && String(row[col] ?? '') !== String(origVal ?? '');
             bodyHtml += `<td class="editable${isMod ? ' modified' : ''}">`
               + `<input value="${val.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}"`
               + ` data-col="${esc(col)}" data-sorted-idx="${sortedIdx}" data-original="${esc(val)}"`
@@ -584,6 +583,7 @@
     // Enable/disable save-related UI based on dirty state
     function updateSaveState() {
       const dirty = hasUnsavedChanges();
+      console.log('[SAVE-STATE] dirty:', dirty, 'applyBtn disabled:', !dirty);
       $('applyBtn').disabled = !dirty;
       $('applyBtn').style.opacity = dirty ? '1' : '0.4';
     }
@@ -708,7 +708,18 @@
 
     // ── undo ──
     function undoAll() {
-      if (!original) return;
+      // DOM-only 修改（如 Ctrl+V 粘贴但未应用）：直接重新渲染即可清除
+      if (!original) {
+        if (!hasUnsavedChanges()) {
+          toast('没有需要撤销的修改');
+          return;
+        }
+        if (!confirm('确定撤销所有未保存的编辑吗？此操作不可撤销。')) return;
+        render();
+        toast('已撤销所有编辑');
+        return;
+      }
+      // 数据级修改（已应用）：从快照恢复
       if (!confirm('确定撤销所有修改，恢复到加载时的原始数据吗？此操作不可撤销。')) return;
       data = JSON.parse(JSON.stringify(original));
       original = null;
@@ -738,12 +749,36 @@
       sortKey = null;
       sortDir = 1;
       currentFile = filename || '';
+      currentFileHandle = null; // clear — only openLocalFile() sets this
 
       // Apply computed field formulas to ensure consistency on load
       recalcAll();
 
       render();
       toast(`已加载: ${filename || '数据'} (${data.length} 行)`);
+    }
+
+    // ── Open local file with File System Access API (direct write-back) ──
+    async function openLocalFile() {
+      if ('showOpenFilePicker' in window) {
+        try {
+          const [handle] = await window.showOpenFilePicker({
+            types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }],
+            multiple: false
+          });
+          const file = await handle.getFile();
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          setData(parsed, file.name);
+          currentFileHandle = handle;
+          toast(`已打开: ${file.name}（保存时将直接写回原文件）`);
+        } catch (e) {
+          if (e.name !== 'AbortError') alert('打开文件失败: ' + e.message);
+        }
+      } else {
+        // Fallback for browsers without File System Access API
+        $('fileInput').click();
+      }
     }
 
     function loadFile(input) {
@@ -776,13 +811,51 @@
     }
 
     // ── save ──
-    function saveJSON() {
+    async function saveJSON() {
       if (!data) return;
 
       // Final recalculation before saving to ensure all computed values are correct
       recalcAll();
 
       const json = JSON.stringify(data, null, 2);
+
+      if (currentFileHandle) {
+        // Direct write-back to the file that was opened (no download dialog)
+        try {
+          const writable = await currentFileHandle.createWritable();
+          await writable.write(json);
+          await writable.close();
+          toast(`已保存到 ${currentFile || '文件'}`);
+        } catch (e) {
+          alert('直接保存失败: ' + e.message + '\n将使用下载方式保存。');
+          downloadJSON(json);
+        }
+      } else if ('showSaveFilePicker' in window) {
+        // No handle yet → ask user to pick a save location once, then remember it
+        try {
+          currentFileHandle = await window.showSaveFilePicker({
+            suggestedName: currentFile || 'data.json',
+            types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }]
+          });
+          const writable = await currentFileHandle.createWritable();
+          await writable.write(json);
+          await writable.close();
+          toast(`已保存到 ${currentFile || '文件'}（后续 Ctrl+S 将直接写回此位置）`);
+        } catch (e) {
+          if (e.name === 'AbortError') {
+            downloadJSON(json);  // user cancelled — fall back to download
+          } else {
+            alert('保存失败: ' + e.message + '\n将使用下载方式保存。');
+            downloadJSON(json);
+          }
+        }
+      } else {
+        // File System Access API not available → download
+        downloadJSON(json);
+      }
+    }
+
+    function downloadJSON(json) {
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement('a'), {
@@ -878,9 +951,11 @@
         input = document.activeElement;
       }
 
+      console.log('[PASTE] target input:', input ? `col=${input.dataset.col}, sortedIdx=${input.dataset.sortedIdx}` : 'NOT FOUND');
       if (!input) return; // not pasting into our editable cell
 
       const pasteText = (e.clipboardData || window.clipboardData).getData('text');
+      console.log('[PASTE] raw text length:', pasteText ? pasteText.length : 0, 'first 100 chars:', JSON.stringify(pasteText ? pasteText.substring(0, 100) : ''));
       if (!pasteText) return;
 
       // Normalize line endings and split
@@ -889,11 +964,24 @@
       // Remove trailing empty lines
       while (rawLines.length && rawLines[rawLines.length - 1].trim() === '') rawLines.pop();
 
+      console.log('[PASTE] line count:', rawLines.length, 'lines:', JSON.stringify(rawLines.slice(0, 5)));
       // If only one line, let the default paste behavior handle it (single value)
-      if (rawLines.length <= 1) return;
+      if (rawLines.length <= 1) {
+        console.log('[PASTE] single line, letting default paste handle it (oninput will fire markDirty)');
+        return;
+      }
 
       // ── Multi-value paste: fill DOM inputs in the same column downward ──
       e.preventDefault();
+
+      // Create undo snapshot before modifying DOM, so the user can revert
+      if (!original) {
+        original = JSON.parse(JSON.stringify(data));
+        // Show undo button immediately — can't call render() because it would
+        // rebuild the table and wipe the DOM values we're about to fill.
+        $('undoBtn').style.display = '';
+        $('undoBtn').disabled = false;
+      }
 
       const col = input.dataset.col;
       const sortedIdx = parseInt(input.dataset.sortedIdx);
@@ -922,58 +1010,39 @@
       }
 
       updateSaveState();
+      console.log('[PASTE] filled:', filled, 'values into column:', col);
       toast(`已填入 ${filled} 个值到 "${col}" 列，点击「✏️ 应用修改」保存`);
     });
 
-    // ── Paste Column button fallback (for browsers that block clipboard API) ──
-    function showPasteModal() {
-      if (!data) { alert('请先加载数据'); return; }
-
-      const col = prompt(
-        '请输入目标列名（当前列: ' + columns.join(', ') + '）',
-        columns[0]
-      );
-      if (!col || !columns.includes(col)) {
-        if (col) alert('列名 "' + col + '" 不存在');
-        return;
-      }
-
-      const text = prompt('请粘贴从 Excel 复制的列数据（每行一个值）：');
-      if (!text) return;
-
-      const rawLines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-      const values = [];
-      for (const line of rawLines) {
-        const trimmed = line.trim();
-        if (trimmed !== '') {
-          if (!isNaN(trimmed) && !/^0\d/.test(trimmed)) {
-            values.push(Number(trimmed));
-          } else {
-            values.push(trimmed);
-          }
+    // ── 动态加载曙光英雄日期预设 ──
+    async function initSGPresets() {
+      const optgroup = document.getElementById('sgOptgroup');
+      if (!optgroup) return;
+      try {
+        const resp = await fetch('曙光英雄/config.json');
+        if (!resp.ok) throw new Error('Config fetch failed');
+        const config = await resp.json();
+        optgroup.innerHTML = '';
+        if (config.hasDates && config.dates && config.dates.length > 0) {
+          config.dates.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = '曙光英雄/' + d.file;
+            opt.textContent = config.gameName + ' ' + d.date;
+            optgroup.appendChild(opt);
+          });
+        } else if (config.dataFile) {
+          const opt = document.createElement('option');
+          opt.value = '曙光英雄/' + config.dataFile;
+          opt.textContent = config.gameName;
+          optgroup.appendChild(opt);
         }
+      } catch (e) {
+        optgroup.innerHTML = '<option value="曙光英雄/曙光英雄.json">曙光英雄</option>';
+        console.warn('Failed to load SG config for presets, using fallback:', e);
       }
-
-      if (!values.length) return;
-
-      if (!original) original = JSON.parse(JSON.stringify(data));
-
-      for (let i = 0; i < values.length; i++) {
-        if (i < data.length) {
-          data[i][col] = values[i];
-          recalcRow(data[i]);
-        } else {
-          const newRow = {};
-          columns.forEach(c => { newRow[c] = computedFields[c] ? 0 : ''; });
-          newRow[col] = values[i];
-          data.push(newRow);
-          recalcRow(newRow);
-        }
-      }
-
-      render();
-      toast(`已粘贴 ${values.length} 个值到 "${col}" 列`);
     }
+    document.addEventListener('DOMContentLoaded', initSGPresets);
+
   </script>
 </body>
 
