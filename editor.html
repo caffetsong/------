@@ -375,6 +375,7 @@
         </optgroup>
       </select>
       <button onclick="addRow()" disabled id="addBtn">＋ 添加行</button>
+      <button onclick="createTemplate()" disabled id="templateBtn" title="基于当前数据创建仅含英雄名和职业的模板文件（需含「职业」列）">🧩 创建模板</button>
       <button class="primary" onclick="applyChanges()" disabled id="applyBtn" style="opacity:0.4">✏️ 应用修改</button>
       <button onclick="undoAll()" disabled id="undoBtn" class="danger" style="display:none">↩ 撤销全部修改</button>
     </div>
@@ -402,6 +403,7 @@
     </table>
   </div>
 
+  <script src="js/dataSource.js"></script>
   <script>
     // ── state ──
     let data = null;           // parsed array of objects
@@ -410,6 +412,7 @@
     let sortKey = null;
     let sortDir = 1;
     let currentFile = '';
+    let currentBase = '';        // 数据所属游戏目录（如 lolm / 曙光英雄），服务器保存用
     let currentFileHandle = null; // FileSystemFileHandle for direct write-back
     let computedFields = {};   // { fieldName: { dependsOn: [], compute: fn } }
 
@@ -468,6 +471,7 @@
         $('stats').style.display = 'none';
         $('saveBtn').disabled = true;
         $('addBtn').disabled = true;
+        $('templateBtn').disabled = true;
         $('applyBtn').disabled = true;
         $('applyBtn').style.opacity = '0.4';
         return;
@@ -482,6 +486,9 @@
       $('stats').style.display = 'flex';
 
       columns = detectColumns(data);
+
+      // Template button: only enabled when data has a 职业 column (曙光英雄 style)
+      $('templateBtn').disabled = !columns.includes('职业');
 
       // sort
       let sorted = [...data];
@@ -769,6 +776,7 @@
           const file = await handle.getFile();
           const text = await file.text();
           const parsed = JSON.parse(text);
+          currentBase = ''; // FS Access 打开的文件走文件句柄保存，不走服务器路径
           setData(parsed, file.name);
           currentFileHandle = handle;
           toast(`已打开: ${file.name}（保存时将直接写回原文件）`);
@@ -784,6 +792,7 @@
     function loadFile(input) {
       const file = input.files[0];
       if (!file) return;
+      currentBase = '';        // 本地文件不知归属目录，服务器保存不可用
       currentFile = file.name;
       const reader = new FileReader();
       reader.onload = () => {
@@ -804,7 +813,9 @@
       fetch(path)
         .then(r => { if (!r.ok) throw new Error(r.status + ' ' + r.statusText); return r.json(); })
         .then(json => {
-          currentFile = path.split('/').pop();
+          const parts = path.split('/');
+          currentBase = parts.length > 1 ? parts[0] : '';
+          currentFile = parts.length > 1 ? parts.slice(1).join('/') : path;
           setData(json, currentFile);
         })
         .catch(err => alert('加载失败: ' + err.message));
@@ -818,6 +829,19 @@
       recalcAll();
 
       const json = JSON.stringify(data, null, 2);
+
+      // 服务器模式：直接写回项目文件（最优先，前提是从预设加载、知道归属目录）
+      if (currentBase) {
+        const saved = await DataSource.saveToDisk(currentBase, currentFile, data);
+        if (saved && saved.ok) {
+          toast(`✅ 已保存到 ${currentBase}/${currentFile}（${saved.rows} 行）`);
+          return;
+        }
+        if (saved && !saved.ok) {
+          alert('写回项目文件失败: ' + (saved.error || '未知错误') + '\n将改用下载方式保存。');
+        }
+        // saved === null（服务器不可用）→ 继续走下方原有逻辑
+      }
 
       if (currentFileHandle) {
         // Direct write-back to the file that was opened (no download dialog)
@@ -865,6 +889,104 @@
       a.click();
       URL.revokeObjectURL(url);
       toast('JSON 已下载（含自动计算值）');
+    }
+
+    // ── create template (heroName + 职业 only) ──
+    function createTemplate() {
+      if (!data || !data.length) return;
+      const cols = detectColumns(data);
+      if (!cols.includes('职业')) {
+        alert('当前数据没有「职业」列，仅支持曙光英雄类数据创建模板。');
+        return;
+      }
+      // Name column: keep the original key used in the data (heroName or name)
+      const nameCol = cols.find(c => c === 'heroName' || c.toLowerCase().includes('name')) || 'heroName';
+      const template = data.map(row => {
+        const obj = {};
+        // Keep all columns; only name + 职业 keep their values, everything else is empty
+        cols.forEach(col => {
+          obj[col] = (col === nameCol || col === '职业') ? (row[col] ?? '') : '';
+        });
+        return obj;
+      });
+      const json = JSON.stringify(template, null, 2);
+      saveTemplateFile(json);
+    }
+
+    async function saveTemplateFile(json) {
+      // Fallback for browsers without File System Access API
+      if (!('showDirectoryPicker' in window)) {
+        const suggested = '曙光英雄_模板.json';
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = Object.assign(document.createElement('a'), { href: url, download: suggested });
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('模板已下载');
+        return;
+      }
+
+      try {
+        // 1. Pick the game data directory (e.g. 曙光英雄). Browser remembers via id.
+        const dirHandle = await window.showDirectoryPicker({
+          id: 'sg-template-dir',
+          mode: 'readwrite'
+        });
+
+        // 2. Build filename: 曙光英雄_YYYY-MM-DD.json, bump suffix if taken
+        const d = new Date();
+        const dateStr = d.getFullYear() + '-' +
+          String(d.getMonth() + 1).padStart(2, '0') + '-' +
+          String(d.getDate()).padStart(2, '0');
+        let fileName = `曙光英雄_${dateStr}.json`;
+        let counter = 1;
+        while (true) {
+          const testName = counter === 1
+            ? `曙光英雄_${dateStr}.json`
+            : `曙光英雄_${dateStr}_${counter}.json`;
+          try {
+            await dirHandle.getFileHandle(testName); // throws if not found
+            counter++;
+          } catch (e) {
+            fileName = testName;
+            break;
+          }
+        }
+
+        // 3. Write the template file
+        const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(json);
+        await writable.close();
+
+        // 4. Register the new file in config.json so the preset dropdown shows it
+        const registered = await registerTemplateInConfig(dirHandle, fileName, dateStr);
+        toast(registered
+          ? `模板已创建并登记到预设: ${fileName}`
+          : `模板已创建: ${fileName}（未找到 config.json，预设未登记）`);
+      } catch (e) {
+        if (e.name !== 'AbortError') alert('创建模板失败: ' + e.message);
+      }
+    }
+
+    // Add { date, file } to config.json dates array, preserving existing entries
+    async function registerTemplateInConfig(dirHandle, fileName, dateStr) {
+      try {
+        const configHandle = await dirHandle.getFileHandle('config.json');
+        const file = await configHandle.getFile();
+        const config = JSON.parse(await file.text());
+        if (!Array.isArray(config.dates)) config.dates = [];
+        if (!config.dates.some(d => d.file === fileName)) {
+          config.dates.push({ date: dateStr, file: fileName });
+          const writable = await configHandle.createWritable();
+          await writable.write(JSON.stringify(config, null, 2));
+          await writable.close();
+        }
+        return true;
+      } catch (e) {
+        console.warn('registerTemplateInConfig failed:', e);
+        return false;
+      }
     }
 
     // ── keyboard shortcuts ──
@@ -1019,21 +1141,22 @@
       const optgroup = document.getElementById('sgOptgroup');
       if (!optgroup) return;
       try {
-        const resp = await fetch('曙光英雄/config.json');
-        if (!resp.ok) throw new Error('Config fetch failed');
-        const config = await resp.json();
+        // 走数据层：服务器可用时自动扫出目录里最新日期文件，无需手改 config.json
+        const config = await DataSource.loadConfig('曙光英雄');
         optgroup.innerHTML = '';
+        const gameName = config.gameName || '曙光英雄';
         if (config.hasDates && config.dates && config.dates.length > 0) {
-          config.dates.forEach(d => {
+          const sorted = [...config.dates].sort((a, b) => b.date.localeCompare(a.date));
+          sorted.forEach(d => {
             const opt = document.createElement('option');
             opt.value = '曙光英雄/' + d.file;
-            opt.textContent = config.gameName + ' ' + d.date;
+            opt.textContent = gameName + ' ' + d.date;
             optgroup.appendChild(opt);
           });
         } else if (config.dataFile) {
           const opt = document.createElement('option');
           opt.value = '曙光英雄/' + config.dataFile;
-          opt.textContent = config.gameName;
+          opt.textContent = gameName;
           optgroup.appendChild(opt);
         }
       } catch (e) {

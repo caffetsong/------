@@ -1,260 +1,260 @@
 [
   {
-    "heroName": "不羁之悦",
-    "winRate": "56.54%",
-    "pickRate": "2.01%",
-    "banRate": "2.10%"
-  },
-  {
-    "heroName": "雪原双子",
-    "winRate": "54.43%",
-    "pickRate": "2.48%",
-    "banRate": "2.61%"
-  },
-  {
     "heroName": "狂野女猎手",
-    "winRate": "54.30%",
-    "pickRate": "3.84%",
-    "banRate": "15.67%"
+    "winRate": "57.46%",
+    "pickRate": "3.64%",
+    "banRate": "43.84%"
   },
   {
-    "heroName": "殇之木乃伊",
-    "winRate": "53.72%",
-    "pickRate": "2.56%",
-    "banRate": "0.04%"
-  },
-  {
-    "heroName": "披甲龙龟",
-    "winRate": "53.62%",
-    "pickRate": "4.65%",
-    "banRate": "2.54%"
+    "heroName": "不羁之悦",
+    "winRate": "56.49%",
+    "pickRate": "2.30%",
+    "banRate": "13.41%"
   },
   {
     "heroName": "祖安怒兽",
-    "winRate": "53.49%",
-    "pickRate": "5.27%",
-    "banRate": "3.17%"
+    "winRate": "54.13%",
+    "pickRate": "5.01%",
+    "banRate": "7.91%"
   },
   {
     "heroName": "战争之影",
-    "winRate": "52.76%",
-    "pickRate": "6.58%",
-    "banRate": "21.51%"
-  },
-  {
-    "heroName": "刀锋之影",
-    "winRate": "52.54%",
-    "pickRate": "3.37%",
-    "banRate": "0.44%"
-  },
-  {
-    "heroName": "狂战士",
-    "winRate": "52.31%",
-    "pickRate": "1.97%",
-    "banRate": "0.87%"
-  },
-  {
-    "heroName": "皮城执法官",
-    "winRate": "52.24%",
-    "pickRate": "9.57%",
-    "banRate": "0.99%"
-  },
-  {
-    "heroName": "不屈之枪",
-    "winRate": "52.10%",
-    "pickRate": "7.10%",
-    "banRate": "1.62%"
-  },
-  {
-    "heroName": "远古恐惧",
-    "winRate": "51.88%",
-    "pickRate": "3.61%",
-    "banRate": "3.57%"
-  },
-  {
-    "heroName": "铁血狼母",
-    "winRate": "51.69%",
-    "pickRate": "1.68%",
-    "banRate": "2.29%"
-  },
-  {
-    "heroName": "影流之镰",
-    "winRate": "51.68%",
-    "pickRate": "5.61%",
-    "banRate": "0.43%"
-  },
-  {
-    "heroName": "皎月女神",
-    "winRate": "50.94%",
-    "pickRate": "4.05%",
-    "banRate": "0.95%"
-  },
-  {
-    "heroName": "德邦总管",
-    "winRate": "50.88%",
-    "pickRate": "8.24%",
-    "banRate": "0.57%"
-  },
-  {
-    "heroName": "灵罗娃娃",
-    "winRate": "50.86%",
-    "pickRate": "1.45%",
-    "banRate": "0.39%"
-  },
-  {
-    "heroName": "德玛西亚皇子",
-    "winRate": "50.86%",
-    "pickRate": "7.26%",
-    "banRate": "0.18%"
-  },
-  {
-    "heroName": "永恒梦魇",
-    "winRate": "50.59%",
-    "pickRate": "6.24%",
-    "banRate": "12.75%"
-  },
-  {
-    "heroName": "傲之追猎者",
-    "winRate": "50.50%",
-    "pickRate": "2.02%",
-    "banRate": "1.05%"
-  },
-  {
-    "heroName": "含羞蓓蕾",
-    "winRate": "50.27%",
-    "pickRate": "5.07%",
-    "banRate": "1.20%"
-  },
-  {
-    "heroName": "永猎双子",
-    "winRate": "50.19%",
-    "pickRate": "2.18%",
-    "banRate": "0.12%"
-  },
-  {
-    "heroName": "放逐之刃",
-    "winRate": "50.12%",
-    "pickRate": "1.38%",
-    "banRate": "0.18%"
-  },
-  {
-    "heroName": "诺克萨斯之手",
-    "winRate": "50.11%",
-    "pickRate": "5.10%",
-    "banRate": "3.88%"
-  },
-  {
-    "heroName": "痛苦之拥",
-    "winRate": "50.08%",
-    "pickRate": "3.94%",
-    "banRate": "3.32%"
-  },
-  {
-    "heroName": "龙血武姬",
-    "winRate": "49.62%",
-    "pickRate": "7.74%",
-    "banRate": "1.98%"
-  },
-  {
-    "heroName": "齐天大圣",
-    "winRate": "49.57%",
-    "pickRate": "3.14%",
-    "banRate": "0.19%"
-  },
-  {
-    "heroName": "酒桶",
-    "winRate": "49.51%",
-    "pickRate": "1.09%",
-    "banRate": "0.05%"
-  },
-  {
-    "heroName": "影流之主",
-    "winRate": "49.40%",
-    "pickRate": "2.23%",
-    "banRate": "1.44%"
+    "winRate": "53.29%",
+    "pickRate": "5.86%",
+    "banRate": "53.06%"
   },
   {
     "heroName": "岩雀",
-    "winRate": "49.34%",
-    "pickRate": "1.55%",
-    "banRate": "12.12%"
+    "winRate": "53.28%",
+    "pickRate": "1.27%",
+    "banRate": "14.87%"
   },
   {
-    "heroName": "上古领主",
-    "winRate": "49.23%",
-    "pickRate": "1.83%",
-    "banRate": "0.36%"
-  },
-  {
-    "heroName": "蛮族之王",
-    "winRate": "49.12%",
-    "pickRate": "5.44%",
-    "banRate": "7.51%"
-  },
-  {
-    "heroName": "虚空掠夺者",
-    "winRate": "48.96%",
-    "pickRate": "3.78%",
-    "banRate": "0.05%"
-  },
-  {
-    "heroName": "封魔剑魂",
-    "winRate": "48.07%",
-    "pickRate": "2.47%",
-    "banRate": "2.72%"
+    "heroName": "远古恐惧",
+    "winRate": "53.25%",
+    "pickRate": "3.47%",
+    "banRate": "7.98%"
   },
   {
     "heroName": "武器大师",
-    "winRate": "47.90%",
-    "pickRate": "1.75%",
-    "banRate": "0.23%"
+    "winRate": "52.62%",
+    "pickRate": "1.91%",
+    "banRate": "0.54%"
   },
   {
-    "heroName": "潮汐海灵",
-    "winRate": "47.73%",
-    "pickRate": "3.29%",
-    "banRate": "1.53%"
+    "heroName": "傲之追猎者",
+    "winRate": "52.61%",
+    "pickRate": "2.14%",
+    "banRate": "2.60%"
   },
   {
-    "heroName": "不灭狂雷",
-    "winRate": "47.59%",
+    "heroName": "雪原双子",
+    "winRate": "52.43%",
+    "pickRate": "2.40%",
+    "banRate": "5.57%"
+  },
+  {
+    "heroName": "不屈之枪",
+    "winRate": "52.32%",
+    "pickRate": "7.99%",
+    "banRate": "3.60%"
+  },
+  {
+    "heroName": "刀锋之影",
+    "winRate": "52.29%",
+    "pickRate": "6.53%",
+    "banRate": "3.29%"
+  },
+  {
+    "heroName": "披甲龙龟",
+    "winRate": "52.12%",
+    "pickRate": "3.90%",
+    "banRate": "3.24%"
+  },
+  {
+    "heroName": "灵罗娃娃",
+    "winRate": "52.04%",
+    "pickRate": "3.15%",
+    "banRate": "4.04%"
+  },
+  {
+    "heroName": "永猎双子",
+    "winRate": "51.99%",
+    "pickRate": "2.30%",
+    "banRate": "0.40%"
+  },
+  {
+    "heroName": "皎月女神",
+    "winRate": "51.74%",
+    "pickRate": "4.61%",
+    "banRate": "1.04%"
+  },
+  {
+    "heroName": "殇之木乃伊",
+    "winRate": "51.50%",
+    "pickRate": "2.17%",
+    "banRate": "0.08%"
+  },
+  {
+    "heroName": "齐天大圣",
+    "winRate": "51.32%",
+    "pickRate": "3.22%",
+    "banRate": "0.34%"
+  },
+  {
+    "heroName": "铁血狼母",
+    "winRate": "50.88%",
     "pickRate": "2.27%",
-    "banRate": "0.92%"
+    "banRate": "6.57%"
   },
   {
-    "heroName": "无极剑圣",
-    "winRate": "47.45%",
-    "pickRate": "10.58%",
-    "banRate": "46.47%"
+    "heroName": "永恒梦魇",
+    "winRate": "50.81%",
+    "pickRate": "5.25%",
+    "banRate": "35.74%"
   },
   {
-    "heroName": "时间刺客",
-    "winRate": "47.45%",
-    "pickRate": "3.00%",
+    "heroName": "德玛西亚皇子",
+    "winRate": "50.70%",
+    "pickRate": "7.42%",
+    "banRate": "0.38%"
+  },
+  {
+    "heroName": "德邦总管",
+    "winRate": "50.68%",
+    "pickRate": "9.84%",
+    "banRate": "1.16%"
+  },
+  {
+    "heroName": "狂战士",
+    "winRate": "50.42%",
+    "pickRate": "2.37%",
+    "banRate": "2.48%"
+  },
+  {
+    "heroName": "皮城执法官",
+    "winRate": "50.34%",
+    "pickRate": "9.32%",
+    "banRate": "4.17%"
+  },
+  {
+    "heroName": "封魔剑魂",
+    "winRate": "50.17%",
+    "pickRate": "2.96%",
+    "banRate": "8.16%"
+  },
+  {
+    "heroName": "痛苦之拥",
+    "winRate": "50.15%",
+    "pickRate": "3.78%",
+    "banRate": "5.65%"
+  },
+  {
+    "heroName": "含羞蓓蕾",
+    "winRate": "50.15%",
+    "pickRate": "5.62%",
+    "banRate": "3.25%"
+  },
+  {
+    "heroName": "酒桶",
+    "winRate": "49.67%",
+    "pickRate": "1.02%",
+    "banRate": "0.07%"
+  },
+  {
+    "heroName": "影流之镰",
+    "winRate": "49.47%",
+    "pickRate": "6.16%",
+    "banRate": "1.66%"
+  },
+  {
+    "heroName": "虚空掠夺者",
+    "winRate": "49.26%",
+    "pickRate": "4.53%",
+    "banRate": "0.07%"
+  },
+  {
+    "heroName": "影流之主",
+    "winRate": "49.16%",
+    "pickRate": "2.89%",
+    "banRate": "3.76%"
+  },
+  {
+    "heroName": "诺克萨斯之手",
+    "winRate": "48.98%",
+    "pickRate": "5.25%",
+    "banRate": "9.47%"
+  },
+  {
+    "heroName": "龙血武姬",
+    "winRate": "48.91%",
+    "pickRate": "6.50%",
+    "banRate": "2.92%"
+  },
+  {
+    "heroName": "青钢影",
+    "winRate": "48.54%",
+    "pickRate": "1.32%",
+    "banRate": "0.49%"
+  },
+  {
+    "heroName": "放逐之刃",
+    "winRate": "47.93%",
+    "pickRate": "2.10%",
+    "banRate": "0.51%"
+  },
+  {
+    "heroName": "枪火狂徒",
+    "winRate": "47.71%",
+    "pickRate": "5.36%",
     "banRate": "0.31%"
   },
   {
     "heroName": "盲僧",
-    "winRate": "47.01%",
-    "pickRate": "12.02%",
-    "banRate": "4.95%"
+    "winRate": "47.28%",
+    "pickRate": "12.49%",
+    "banRate": "10.33%"
+  },
+  {
+    "heroName": "无极剑圣",
+    "winRate": "47.20%",
+    "pickRate": "7.53%",
+    "banRate": "46.26%"
+  },
+  {
+    "heroName": "蛮族之王",
+    "winRate": "47.12%",
+    "pickRate": "3.59%",
+    "banRate": "8.63%"
+  },
+  {
+    "heroName": "时间刺客",
+    "winRate": "47.10%",
+    "pickRate": "2.61%",
+    "banRate": "0.22%"
   },
   {
     "heroName": "破败之王",
-    "winRate": "46.90%",
-    "pickRate": "5.35%",
-    "banRate": "2.60%"
+    "winRate": "47.03%",
+    "pickRate": "5.48%",
+    "banRate": "3.74%"
   },
   {
     "heroName": "暗裔剑魔",
-    "winRate": "46.31%",
-    "pickRate": "1.31%",
-    "banRate": "3.18%"
+    "winRate": "46.56%",
+    "pickRate": "1.60%",
+    "banRate": "6.61%"
   },
   {
-    "heroName": "枪火狂徒",
-    "winRate": "46.27%",
-    "pickRate": "6.20%",
-    "banRate": "0.20%"
+    "heroName": "不灭狂雷",
+    "winRate": "46.34%",
+    "pickRate": "2.26%",
+    "banRate": "2.35%"
+  },
+  {
+    "heroName": "潮汐海灵",
+    "winRate": "43.47%",
+    "pickRate": "3.17%",
+    "banRate": "1.52%"
   }
 ]

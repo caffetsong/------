@@ -1,0 +1,1022 @@
+[
+  {
+    "heroName": "艾璐妮",
+    "appearanceRank": 2,
+    "estimatedPickRate": 24.11,
+    "combatPower": 185.0,
+    "winRate": 49.48,
+    "predictedBanRate": 23.23,
+    "banPropensity": 83.1,
+    "cpBoost": 4.93
+  },
+  {
+    "heroName": "刘备",
+    "appearanceRank": 4,
+    "estimatedPickRate": 10.49,
+    "combatPower": 181.0,
+    "winRate": 48.44,
+    "predictedBanRate": 15.12,
+    "banPropensity": 79.3,
+    "cpBoost": 4.8
+  },
+  {
+    "heroName": "约修亚",
+    "appearanceRank": 6,
+    "estimatedPickRate": 6.45,
+    "combatPower": 169.0,
+    "winRate": 44.1,
+    "predictedBanRate": 14.93,
+    "banPropensity": 67.1,
+    "cpBoost": 4.4
+  },
+  {
+    "heroName": "诸葛亮",
+    "appearanceRank": 50,
+    "estimatedPickRate": 0.51,
+    "combatPower": 187.0,
+    "winRate": 56.71,
+    "predictedBanRate": 10.42,
+    "banPropensity": 77.7,
+    "cpBoost": 5.0
+  },
+  {
+    "heroName": "青木",
+    "appearanceRank": 33,
+    "estimatedPickRate": 0.83,
+    "combatPower": 183.0,
+    "winRate": 56.44,
+    "predictedBanRate": 9.7,
+    "banPropensity": 84.0,
+    "cpBoost": 4.87
+  },
+  {
+    "heroName": "阿尔忒弥斯",
+    "appearanceRank": 5,
+    "estimatedPickRate": 8.03,
+    "combatPower": 170.0,
+    "winRate": 51.03,
+    "predictedBanRate": 8.35,
+    "banPropensity": 82.6,
+    "cpBoost": 4.44
+  },
+  {
+    "heroName": "布伦希尔德",
+    "appearanceRank": 35,
+    "estimatedPickRate": 0.78,
+    "combatPower": 170.0,
+    "winRate": 54.7,
+    "predictedBanRate": 8.3,
+    "banPropensity": 77.2,
+    "cpBoost": 4.44
+  },
+  {
+    "heroName": "亚历山大",
+    "appearanceRank": 55,
+    "estimatedPickRate": 0.45,
+    "combatPower": 152.0,
+    "winRate": 54.68,
+    "predictedBanRate": 7.93,
+    "banPropensity": 65.2,
+    "cpBoost": 3.84
+  },
+  {
+    "heroName": "爱丽丝",
+    "appearanceRank": 10,
+    "estimatedPickRate": 3.49,
+    "combatPower": 160.0,
+    "winRate": 44.85,
+    "predictedBanRate": 7.73,
+    "banPropensity": 65.4,
+    "cpBoost": 4.11
+  },
+  {
+    "heroName": "关羽",
+    "appearanceRank": 28,
+    "estimatedPickRate": 1.02,
+    "combatPower": 165.0,
+    "winRate": 53.65,
+    "predictedBanRate": 7.4,
+    "banPropensity": 77.2,
+    "cpBoost": 4.27
+  },
+  {
+    "heroName": "南丁格尔",
+    "appearanceRank": 18,
+    "estimatedPickRate": 1.73,
+    "combatPower": 168.0,
+    "winRate": 53.93,
+    "predictedBanRate": 7.28,
+    "banPropensity": 82.8,
+    "cpBoost": 4.37
+  },
+  {
+    "heroName": "艾蒙",
+    "appearanceRank": 15,
+    "estimatedPickRate": 2.15,
+    "combatPower": 174.0,
+    "winRate": 53.08,
+    "predictedBanRate": 7.08,
+    "banPropensity": 83.3,
+    "cpBoost": 4.57
+  },
+  {
+    "heroName": "白泽",
+    "appearanceRank": 68,
+    "estimatedPickRate": 0.35,
+    "combatPower": 144.0,
+    "winRate": 53.69,
+    "predictedBanRate": 7.03,
+    "banPropensity": 56.0,
+    "cpBoost": 3.58
+  },
+  {
+    "heroName": "铁扇公主",
+    "appearanceRank": 12,
+    "estimatedPickRate": 2.81,
+    "combatPower": 174.0,
+    "winRate": 54.67,
+    "predictedBanRate": 6.93,
+    "banPropensity": 88.0,
+    "cpBoost": 4.57
+  },
+  {
+    "heroName": "赵云",
+    "appearanceRank": 11,
+    "estimatedPickRate": 3.12,
+    "combatPower": 163.0,
+    "winRate": 46.66,
+    "predictedBanRate": 6.92,
+    "banPropensity": 69.4,
+    "cpBoost": 4.21
+  },
+  {
+    "heroName": "黛西",
+    "appearanceRank": 9,
+    "estimatedPickRate": 3.97,
+    "combatPower": 177.0,
+    "winRate": 52.46,
+    "predictedBanRate": 6.88,
+    "banPropensity": 85.1,
+    "cpBoost": 4.67
+  },
+  {
+    "heroName": "祝融",
+    "appearanceRank": 7,
+    "estimatedPickRate": 5.36,
+    "combatPower": 173.0,
+    "winRate": 52.2,
+    "predictedBanRate": 6.79,
+    "banPropensity": 84.8,
+    "cpBoost": 4.54
+  },
+  {
+    "heroName": "桑榆",
+    "appearanceRank": 8,
+    "estimatedPickRate": 4.57,
+    "combatPower": 166.0,
+    "winRate": 51.77,
+    "predictedBanRate": 6.79,
+    "banPropensity": 82.2,
+    "cpBoost": 4.3
+  },
+  {
+    "heroName": "贞德",
+    "appearanceRank": 49,
+    "estimatedPickRate": 0.52,
+    "combatPower": 143.0,
+    "winRate": 53.46,
+    "predictedBanRate": 6.76,
+    "banPropensity": 63.8,
+    "cpBoost": 3.54
+  },
+  {
+    "heroName": "鲁班",
+    "appearanceRank": 16,
+    "estimatedPickRate": 1.99,
+    "combatPower": 167.0,
+    "winRate": 51.36,
+    "predictedBanRate": 6.47,
+    "banPropensity": 77.9,
+    "cpBoost": 4.34
+  },
+  {
+    "heroName": "黄泉",
+    "appearanceRank": 13,
+    "estimatedPickRate": 2.55,
+    "combatPower": 171.0,
+    "winRate": 48.03,
+    "predictedBanRate": 6.42,
+    "banPropensity": 72.8,
+    "cpBoost": 4.47
+  },
+  {
+    "heroName": "荆轲",
+    "appearanceRank": 19,
+    "estimatedPickRate": 1.62,
+    "combatPower": 175.0,
+    "winRate": 49.54,
+    "predictedBanRate": 6.0,
+    "banPropensity": 74.0,
+    "cpBoost": 4.6
+  },
+  {
+    "heroName": "西施",
+    "appearanceRank": 14,
+    "estimatedPickRate": 2.33,
+    "combatPower": 163.0,
+    "winRate": 47.51,
+    "predictedBanRate": 5.82,
+    "banPropensity": 69.9,
+    "cpBoost": 4.21
+  },
+  {
+    "heroName": "岚",
+    "appearanceRank": 48,
+    "estimatedPickRate": 0.53,
+    "combatPower": 140.0,
+    "winRate": 52.02,
+    "predictedBanRate": 5.7,
+    "banPropensity": 60.6,
+    "cpBoost": 3.44
+  },
+  {
+    "heroName": "布斯",
+    "appearanceRank": 22,
+    "estimatedPickRate": 1.36,
+    "combatPower": 172.0,
+    "winRate": 49.3,
+    "predictedBanRate": 5.61,
+    "banPropensity": 71.6,
+    "cpBoost": 4.5
+  },
+  {
+    "heroName": "班",
+    "appearanceRank": 29,
+    "estimatedPickRate": 0.97,
+    "combatPower": 172.0,
+    "winRate": 49.69,
+    "predictedBanRate": 5.51,
+    "banPropensity": 69.4,
+    "cpBoost": 4.5
+  },
+  {
+    "heroName": "张出尘",
+    "appearanceRank": 34,
+    "estimatedPickRate": 0.8,
+    "combatPower": 159.0,
+    "winRate": 50.49,
+    "predictedBanRate": 5.43,
+    "banPropensity": 66.7,
+    "cpBoost": 4.07
+  },
+  {
+    "heroName": "女魃",
+    "appearanceRank": 30,
+    "estimatedPickRate": 0.94,
+    "combatPower": 174.0,
+    "winRate": 49.35,
+    "predictedBanRate": 5.36,
+    "banPropensity": 68.5,
+    "cpBoost": 4.57
+  },
+  {
+    "heroName": "阿尔弗雷德",
+    "appearanceRank": 62,
+    "estimatedPickRate": 0.39,
+    "combatPower": 122.0,
+    "winRate": 52.19,
+    "predictedBanRate": 5.22,
+    "banPropensity": 51.8,
+    "cpBoost": 2.85
+  },
+  {
+    "heroName": "花荣",
+    "appearanceRank": 43,
+    "estimatedPickRate": 0.61,
+    "combatPower": 151.0,
+    "winRate": 50.69,
+    "predictedBanRate": 5.21,
+    "banPropensity": 61.8,
+    "cpBoost": 3.81
+  },
+  {
+    "heroName": "西王母",
+    "appearanceRank": 76,
+    "estimatedPickRate": 0.31,
+    "combatPower": 130.0,
+    "winRate": 51.52,
+    "predictedBanRate": 5.0,
+    "banPropensity": 45.4,
+    "cpBoost": 3.11
+  },
+  {
+    "heroName": "貂蝉",
+    "appearanceRank": 1,
+    "estimatedPickRate": 55.39,
+    "combatPower": 184.0,
+    "winRate": 56.95,
+    "predictedBanRate": 4.9,
+    "banPropensity": 99.5,
+    "cpBoost": 4.9
+  },
+  {
+    "heroName": "白浩",
+    "appearanceRank": 3,
+    "estimatedPickRate": 14.82,
+    "combatPower": 176.0,
+    "winRate": 53.1,
+    "predictedBanRate": 4.64,
+    "banPropensity": 89.0,
+    "cpBoost": 4.64
+  },
+  {
+    "heroName": "露西亚",
+    "appearanceRank": 23,
+    "estimatedPickRate": 1.29,
+    "combatPower": 176.0,
+    "winRate": 46.57,
+    "predictedBanRate": 4.64,
+    "banPropensity": 66.0,
+    "cpBoost": 4.64
+  },
+  {
+    "heroName": "嫦娥",
+    "appearanceRank": 44,
+    "estimatedPickRate": 0.59,
+    "combatPower": 126.0,
+    "winRate": 51.08,
+    "predictedBanRate": 4.63,
+    "banPropensity": 58.1,
+    "cpBoost": 2.98
+  },
+  {
+    "heroName": "精卫",
+    "appearanceRank": 17,
+    "estimatedPickRate": 1.85,
+    "combatPower": 159.0,
+    "winRate": 45.71,
+    "predictedBanRate": 4.53,
+    "banPropensity": 64.0,
+    "cpBoost": 4.07
+  },
+  {
+    "heroName": "范蠡",
+    "appearanceRank": 67,
+    "estimatedPickRate": 0.36,
+    "combatPower": 142.0,
+    "winRate": 50.2,
+    "predictedBanRate": 4.46,
+    "banPropensity": 48.6,
+    "cpBoost": 3.51
+  },
+  {
+    "heroName": "齐格飞",
+    "appearanceRank": 60,
+    "estimatedPickRate": 0.41,
+    "combatPower": 138.0,
+    "winRate": 50.35,
+    "predictedBanRate": 4.46,
+    "banPropensity": 51.4,
+    "cpBoost": 3.38
+  },
+  {
+    "heroName": "望舒",
+    "appearanceRank": 21,
+    "estimatedPickRate": 1.43,
+    "combatPower": 160.0,
+    "winRate": 47.06,
+    "predictedBanRate": 4.36,
+    "banPropensity": 65.3,
+    "cpBoost": 4.11
+  },
+  {
+    "heroName": "弗兰肯斯坦",
+    "appearanceRank": 61,
+    "estimatedPickRate": 0.4,
+    "combatPower": 133.0,
+    "winRate": 50.42,
+    "predictedBanRate": 4.34,
+    "banPropensity": 50.2,
+    "cpBoost": 3.21
+  },
+  {
+    "heroName": "王昭君",
+    "appearanceRank": 40,
+    "estimatedPickRate": 0.66,
+    "combatPower": 148.0,
+    "winRate": 49.29,
+    "predictedBanRate": 4.25,
+    "banPropensity": 59.6,
+    "cpBoost": 3.71
+  },
+  {
+    "heroName": "忘川",
+    "appearanceRank": 32,
+    "estimatedPickRate": 0.87,
+    "combatPower": 161.0,
+    "winRate": 44.5,
+    "predictedBanRate": 4.14,
+    "banPropensity": 55.0,
+    "cpBoost": 4.14
+  },
+  {
+    "heroName": "黄忠",
+    "appearanceRank": 31,
+    "estimatedPickRate": 0.9,
+    "combatPower": 159.0,
+    "winRate": 47.04,
+    "predictedBanRate": 4.07,
+    "banPropensity": 60.6,
+    "cpBoost": 4.07
+  },
+  {
+    "heroName": "华佗",
+    "appearanceRank": 78,
+    "estimatedPickRate": 0.3,
+    "combatPower": 121.0,
+    "winRate": 50.65,
+    "predictedBanRate": 4.06,
+    "banPropensity": 41.2,
+    "cpBoost": 2.81
+  },
+  {
+    "heroName": "黄月英",
+    "appearanceRank": 27,
+    "estimatedPickRate": 1.06,
+    "combatPower": 155.0,
+    "winRate": 45.35,
+    "predictedBanRate": 3.94,
+    "banPropensity": 58.1,
+    "cpBoost": 3.94
+  },
+  {
+    "heroName": "羲和",
+    "appearanceRank": 24,
+    "estimatedPickRate": 1.22,
+    "combatPower": 154.0,
+    "winRate": 43.49,
+    "predictedBanRate": 3.91,
+    "banPropensity": 55.2,
+    "cpBoost": 3.91
+  },
+  {
+    "heroName": "北斗",
+    "appearanceRank": 37,
+    "estimatedPickRate": 0.73,
+    "combatPower": 153.0,
+    "winRate": 46.86,
+    "predictedBanRate": 3.87,
+    "banPropensity": 56.6,
+    "cpBoost": 3.87
+  },
+  {
+    "heroName": "夏尔美",
+    "appearanceRank": 41,
+    "estimatedPickRate": 0.64,
+    "combatPower": 151.0,
+    "winRate": 46.17,
+    "predictedBanRate": 3.81,
+    "banPropensity": 53.0,
+    "cpBoost": 3.81
+  },
+  {
+    "heroName": "美杜莎",
+    "appearanceRank": 39,
+    "estimatedPickRate": 0.68,
+    "combatPower": 150.0,
+    "winRate": 44.74,
+    "predictedBanRate": 3.77,
+    "banPropensity": 50.6,
+    "cpBoost": 3.77
+  },
+  {
+    "heroName": "李清照",
+    "appearanceRank": 38,
+    "estimatedPickRate": 0.7,
+    "combatPower": 147.0,
+    "winRate": 46.28,
+    "predictedBanRate": 3.68,
+    "banPropensity": 53.9,
+    "cpBoost": 3.68
+  },
+  {
+    "heroName": "残影",
+    "appearanceRank": 25,
+    "estimatedPickRate": 1.16,
+    "combatPower": 147.0,
+    "winRate": 43.85,
+    "predictedBanRate": 3.68,
+    "banPropensity": 54.4,
+    "cpBoost": 3.68
+  },
+  {
+    "heroName": "法修",
+    "appearanceRank": 36,
+    "estimatedPickRate": 0.75,
+    "combatPower": 146.0,
+    "winRate": 46.88,
+    "predictedBanRate": 3.64,
+    "banPropensity": 55.9,
+    "cpBoost": 3.64
+  },
+  {
+    "heroName": "李靖",
+    "appearanceRank": 20,
+    "estimatedPickRate": 1.52,
+    "combatPower": 144.0,
+    "winRate": 45.67,
+    "predictedBanRate": 3.58,
+    "banPropensity": 60.1,
+    "cpBoost": 3.58
+  },
+  {
+    "heroName": "妇好",
+    "appearanceRank": 56,
+    "estimatedPickRate": 0.44,
+    "combatPower": 127.0,
+    "winRate": 49.54,
+    "predictedBanRate": 3.55,
+    "banPropensity": 49.6,
+    "cpBoost": 3.01
+  },
+  {
+    "heroName": "梅朵",
+    "appearanceRank": 45,
+    "estimatedPickRate": 0.57,
+    "combatPower": 143.0,
+    "winRate": 46.79,
+    "predictedBanRate": 3.54,
+    "banPropensity": 51.2,
+    "cpBoost": 3.54
+  },
+  {
+    "heroName": "奇奇",
+    "appearanceRank": 51,
+    "estimatedPickRate": 0.49,
+    "combatPower": 143.0,
+    "winRate": 45.57,
+    "predictedBanRate": 3.54,
+    "banPropensity": 45.9,
+    "cpBoost": 3.54
+  },
+  {
+    "heroName": "尤妮卡",
+    "appearanceRank": 42,
+    "estimatedPickRate": 0.62,
+    "combatPower": 142.0,
+    "winRate": 45.06,
+    "predictedBanRate": 3.51,
+    "banPropensity": 48.6,
+    "cpBoost": 3.51
+  },
+  {
+    "heroName": "敖璃",
+    "appearanceRank": 53,
+    "estimatedPickRate": 0.47,
+    "combatPower": 140.0,
+    "winRate": 44.86,
+    "predictedBanRate": 3.44,
+    "banPropensity": 43.0,
+    "cpBoost": 3.44
+  },
+  {
+    "heroName": "雅典娜",
+    "appearanceRank": 46,
+    "estimatedPickRate": 0.56,
+    "combatPower": 140.0,
+    "winRate": 43.97,
+    "predictedBanRate": 3.44,
+    "banPropensity": 44.2,
+    "cpBoost": 3.44
+  },
+  {
+    "heroName": "杨戬",
+    "appearanceRank": 26,
+    "estimatedPickRate": 1.11,
+    "combatPower": 140.0,
+    "winRate": 43.87,
+    "predictedBanRate": 3.44,
+    "banPropensity": 52.8,
+    "cpBoost": 3.44
+  },
+  {
+    "heroName": "飞廉",
+    "appearanceRank": 85,
+    "estimatedPickRate": 0.27,
+    "combatPower": 109.0,
+    "winRate": 50.28,
+    "predictedBanRate": 3.37,
+    "banPropensity": 35.3,
+    "cpBoost": 2.42
+  },
+  {
+    "heroName": "拉姆",
+    "appearanceRank": 71,
+    "estimatedPickRate": 0.33,
+    "combatPower": 135.0,
+    "winRate": 47.76,
+    "predictedBanRate": 3.28,
+    "banPropensity": 40.4,
+    "cpBoost": 3.28
+  },
+  {
+    "heroName": "吕洞宾",
+    "appearanceRank": 102,
+    "estimatedPickRate": 0.22,
+    "combatPower": 135.0,
+    "winRate": 43.79,
+    "predictedBanRate": 3.28,
+    "banPropensity": 18.0,
+    "cpBoost": 3.28
+  },
+  {
+    "heroName": "伏羲",
+    "appearanceRank": 59,
+    "estimatedPickRate": 0.42,
+    "combatPower": 133.0,
+    "winRate": 44.71,
+    "predictedBanRate": 3.21,
+    "banPropensity": 38.8,
+    "cpBoost": 3.21
+  },
+  {
+    "heroName": "火莲",
+    "appearanceRank": 79,
+    "estimatedPickRate": 0.29,
+    "combatPower": 130.0,
+    "winRate": 48.3,
+    "predictedBanRate": 3.11,
+    "banPropensity": 37.1,
+    "cpBoost": 3.11
+  },
+  {
+    "heroName": "猪八戒",
+    "appearanceRank": 47,
+    "estimatedPickRate": 0.55,
+    "combatPower": 126.0,
+    "winRate": 47.86,
+    "predictedBanRate": 2.98,
+    "banPropensity": 49.8,
+    "cpBoost": 2.98
+  },
+  {
+    "heroName": "雷震子",
+    "appearanceRank": 77,
+    "estimatedPickRate": 0.3,
+    "combatPower": 125.0,
+    "winRate": 46.45,
+    "predictedBanRate": 2.95,
+    "banPropensity": 33.2,
+    "cpBoost": 2.95
+  },
+  {
+    "heroName": "穆桂英",
+    "appearanceRank": 97,
+    "estimatedPickRate": 0.23,
+    "combatPower": 99.0,
+    "winRate": 50.17,
+    "predictedBanRate": 2.94,
+    "banPropensity": 28.0,
+    "cpBoost": 2.09
+  },
+  {
+    "heroName": "杨玉环",
+    "appearanceRank": 52,
+    "estimatedPickRate": 0.48,
+    "combatPower": 124.0,
+    "winRate": 47.35,
+    "predictedBanRate": 2.91,
+    "banPropensity": 46.1,
+    "cpBoost": 2.91
+  },
+  {
+    "heroName": "奥黛丽",
+    "appearanceRank": 54,
+    "estimatedPickRate": 0.46,
+    "combatPower": 123.0,
+    "winRate": 43.44,
+    "predictedBanRate": 2.88,
+    "banPropensity": 36.6,
+    "cpBoost": 2.88
+  },
+  {
+    "heroName": "哪吒",
+    "appearanceRank": 58,
+    "estimatedPickRate": 0.42,
+    "combatPower": 120.0,
+    "winRate": 46.98,
+    "predictedBanRate": 2.78,
+    "banPropensity": 42.0,
+    "cpBoost": 2.78
+  },
+  {
+    "heroName": "蔡文姬",
+    "appearanceRank": 74,
+    "estimatedPickRate": 0.32,
+    "combatPower": 119.0,
+    "winRate": 43.32,
+    "predictedBanRate": 2.75,
+    "banPropensity": 26.8,
+    "cpBoost": 2.75
+  },
+  {
+    "heroName": "特斯拉",
+    "appearanceRank": 81,
+    "estimatedPickRate": 0.28,
+    "combatPower": 118.0,
+    "winRate": 47.23,
+    "predictedBanRate": 2.72,
+    "banPropensity": 32.0,
+    "cpBoost": 2.72
+  },
+  {
+    "heroName": "瑞恩",
+    "appearanceRank": 64,
+    "estimatedPickRate": 0.38,
+    "combatPower": 118.0,
+    "winRate": 43.61,
+    "predictedBanRate": 2.72,
+    "banPropensity": 31.7,
+    "cpBoost": 2.72
+  },
+  {
+    "heroName": "欧冶子",
+    "appearanceRank": 70,
+    "estimatedPickRate": 0.34,
+    "combatPower": 114.0,
+    "winRate": 46.11,
+    "predictedBanRate": 2.58,
+    "banPropensity": 33.8,
+    "cpBoost": 2.58
+  },
+  {
+    "heroName": "鳗鳗",
+    "appearanceRank": 87,
+    "estimatedPickRate": 0.26,
+    "combatPower": 114.0,
+    "winRate": 43.81,
+    "predictedBanRate": 2.58,
+    "banPropensity": 21.2,
+    "cpBoost": 2.58
+  },
+  {
+    "heroName": "孙悟空",
+    "appearanceRank": 57,
+    "estimatedPickRate": 0.43,
+    "combatPower": 113.0,
+    "winRate": 43.52,
+    "predictedBanRate": 2.55,
+    "banPropensity": 33.8,
+    "cpBoost": 2.55
+  },
+  {
+    "heroName": "张飞",
+    "appearanceRank": 63,
+    "estimatedPickRate": 0.38,
+    "combatPower": 113.0,
+    "winRate": 43.84,
+    "predictedBanRate": 2.55,
+    "banPropensity": 31.8,
+    "cpBoost": 2.55
+  },
+  {
+    "heroName": "马可波罗",
+    "appearanceRank": 91,
+    "estimatedPickRate": 0.25,
+    "combatPower": 102.0,
+    "winRate": 49.48,
+    "predictedBanRate": 2.53,
+    "banPropensity": 29.7,
+    "cpBoost": 2.19
+  },
+  {
+    "heroName": "莱因哈特",
+    "appearanceRank": 80,
+    "estimatedPickRate": 0.29,
+    "combatPower": 108.0,
+    "winRate": 49.15,
+    "predictedBanRate": 2.52,
+    "banPropensity": 34.9,
+    "cpBoost": 2.38
+  },
+  {
+    "heroName": "帕提多",
+    "appearanceRank": 73,
+    "estimatedPickRate": 0.32,
+    "combatPower": 109.0,
+    "winRate": 43.12,
+    "predictedBanRate": 2.42,
+    "banPropensity": 25.2,
+    "cpBoost": 2.42
+  },
+  {
+    "heroName": "曹操",
+    "appearanceRank": 72,
+    "estimatedPickRate": 0.33,
+    "combatPower": 108.0,
+    "winRate": 47.48,
+    "predictedBanRate": 2.38,
+    "banPropensity": 34.8,
+    "cpBoost": 2.38
+  },
+  {
+    "heroName": "王羲之",
+    "appearanceRank": 93,
+    "estimatedPickRate": 0.24,
+    "combatPower": 105.0,
+    "winRate": 44.87,
+    "predictedBanRate": 2.28,
+    "banPropensity": 19.4,
+    "cpBoost": 2.28
+  },
+  {
+    "heroName": "陆逊",
+    "appearanceRank": 92,
+    "estimatedPickRate": 0.24,
+    "combatPower": 102.0,
+    "winRate": 46.33,
+    "predictedBanRate": 2.19,
+    "banPropensity": 22.5,
+    "cpBoost": 2.19
+  },
+  {
+    "heroName": "姜子牙",
+    "appearanceRank": 84,
+    "estimatedPickRate": 0.27,
+    "combatPower": 101.0,
+    "winRate": 43.28,
+    "predictedBanRate": 2.15,
+    "banPropensity": 19.3,
+    "cpBoost": 2.15
+  },
+  {
+    "heroName": "玄奘",
+    "appearanceRank": 65,
+    "estimatedPickRate": 0.37,
+    "combatPower": 101.0,
+    "winRate": 43.05,
+    "predictedBanRate": 2.15,
+    "banPropensity": 27.2,
+    "cpBoost": 2.15
+  },
+  {
+    "heroName": "墨翟",
+    "appearanceRank": 82,
+    "estimatedPickRate": 0.28,
+    "combatPower": 92.0,
+    "winRate": 49.33,
+    "predictedBanRate": 2.12,
+    "banPropensity": 31.7,
+    "cpBoost": 1.85
+  },
+  {
+    "heroName": "牛魔王",
+    "appearanceRank": 69,
+    "estimatedPickRate": 0.34,
+    "combatPower": 100.0,
+    "winRate": 43.25,
+    "predictedBanRate": 2.12,
+    "banPropensity": 25.7,
+    "cpBoost": 2.12
+  },
+  {
+    "heroName": "孙武",
+    "appearanceRank": 90,
+    "estimatedPickRate": 0.25,
+    "combatPower": 98.0,
+    "winRate": 44.75,
+    "predictedBanRate": 2.05,
+    "banPropensity": 19.3,
+    "cpBoost": 2.05
+  },
+  {
+    "heroName": "花木兰",
+    "appearanceRank": 88,
+    "estimatedPickRate": 0.26,
+    "combatPower": 94.0,
+    "winRate": 43.68,
+    "predictedBanRate": 1.92,
+    "banPropensity": 17.2,
+    "cpBoost": 1.92
+  },
+  {
+    "heroName": "梅林",
+    "appearanceRank": 83,
+    "estimatedPickRate": 0.28,
+    "combatPower": 94.0,
+    "winRate": 43.18,
+    "predictedBanRate": 1.92,
+    "banPropensity": 18.3,
+    "cpBoost": 1.92
+  },
+  {
+    "heroName": "胖达",
+    "appearanceRank": 86,
+    "estimatedPickRate": 0.26,
+    "combatPower": 93.0,
+    "winRate": 43.77,
+    "predictedBanRate": 1.89,
+    "banPropensity": 18.1,
+    "cpBoost": 1.89
+  },
+  {
+    "heroName": "乌雅",
+    "appearanceRank": 75,
+    "estimatedPickRate": 0.31,
+    "combatPower": 93.0,
+    "winRate": 43.36,
+    "predictedBanRate": 1.89,
+    "banPropensity": 22.1,
+    "cpBoost": 1.89
+  },
+  {
+    "heroName": "托尔",
+    "appearanceRank": 98,
+    "estimatedPickRate": 0.23,
+    "combatPower": 90.0,
+    "winRate": 46.54,
+    "predictedBanRate": 1.79,
+    "banPropensity": 18.3,
+    "cpBoost": 1.79
+  },
+  {
+    "heroName": "李文",
+    "appearanceRank": 95,
+    "estimatedPickRate": 0.23,
+    "combatPower": 87.0,
+    "winRate": 43.14,
+    "predictedBanRate": 1.69,
+    "banPropensity": 11.8,
+    "cpBoost": 1.69
+  },
+  {
+    "heroName": "鲁智深",
+    "appearanceRank": 94,
+    "estimatedPickRate": 0.24,
+    "combatPower": 80.0,
+    "winRate": 43.71,
+    "predictedBanRate": 1.46,
+    "banPropensity": 12.3,
+    "cpBoost": 1.46
+  },
+  {
+    "heroName": "展昭",
+    "appearanceRank": 96,
+    "estimatedPickRate": 0.23,
+    "combatPower": 65.0,
+    "winRate": 46.77,
+    "predictedBanRate": 0.96,
+    "banPropensity": 15.5,
+    "cpBoost": 0.96
+  },
+  {
+    "heroName": "许褚",
+    "appearanceRank": 89,
+    "estimatedPickRate": 0.25,
+    "combatPower": 62.0,
+    "winRate": 43.95,
+    "predictedBanRate": 0.86,
+    "banPropensity": 12.0,
+    "cpBoost": 0.86
+  },
+  {
+    "heroName": "尉迟炎",
+    "appearanceRank": 100,
+    "estimatedPickRate": 0.22,
+    "combatPower": 62.0,
+    "winRate": 45.24,
+    "predictedBanRate": 0.86,
+    "banPropensity": 9.9,
+    "cpBoost": 0.86
+  },
+  {
+    "heroName": "图坦卡蒙",
+    "appearanceRank": 101,
+    "estimatedPickRate": 0.22,
+    "combatPower": 59.0,
+    "winRate": 43.41,
+    "predictedBanRate": 0.76,
+    "banPropensity": 5.0,
+    "cpBoost": 0.76
+  },
+  {
+    "heroName": "白玉堂",
+    "appearanceRank": 99,
+    "estimatedPickRate": 0.22,
+    "combatPower": 54.0,
+    "winRate": 43.09,
+    "predictedBanRate": 0.6,
+    "banPropensity": 4.4,
+    "cpBoost": 0.6
+  },
+  {
+    "heroName": "洛克",
+    "appearanceRank": 66,
+    "estimatedPickRate": 0.36,
+    "combatPower": 36.0,
+    "winRate": 48.54,
+    "predictedBanRate": 0.0,
+    "banPropensity": 27.9,
+    "cpBoost": 0.0
+  }
+]

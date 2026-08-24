@@ -1,200 +1,188 @@
 [
   {
     "heroName": "琴瑟仙女",
-    "winRate": "55.25%",
-    "pickRate": "10.66%",
-    "banRate": "0.60%"
+    "winRate": "56.82%",
+    "pickRate": "19.77%",
+    "banRate": "14.32%"
   },
   {
     "heroName": "时光守护者",
-    "winRate": "54.03%",
-    "pickRate": "2.16%",
-    "banRate": "2.14%"
-  },
-  {
-    "heroName": "血港鬼影",
-    "winRate": "52.76%",
-    "pickRate": "4.46%",
-    "banRate": "0.88%"
-  },
-  {
-    "heroName": "星界游神",
-    "winRate": "52.46%",
-    "pickRate": "1.29%",
-    "banRate": "0.21%"
-  },
-  {
-    "heroName": "唤潮鲛姬",
-    "winRate": "51.76%",
-    "pickRate": "7.28%",
-    "banRate": "0.09%"
-  },
-  {
-    "heroName": "魂锁典狱长",
-    "winRate": "51.75%",
-    "pickRate": "16.33%",
-    "banRate": "5.75%"
-  },
-  {
-    "heroName": "涤魂圣枪",
-    "winRate": "51.69%",
-    "pickRate": "3.36%",
-    "banRate": "0.26%"
-  },
-  {
-    "heroName": "幻翎",
-    "winRate": "51.68%",
-    "pickRate": "3.18%",
-    "banRate": "0.13%"
-  },
-  {
-    "heroName": "复仇焰魂",
-    "winRate": "51.64%",
-    "pickRate": "1.55%",
-    "banRate": "3.27%"
-  },
-  {
-    "heroName": "堕落天使",
-    "winRate": "51.50%",
-    "pickRate": "6.50%",
-    "banRate": "22.40%"
-  },
-  {
-    "heroName": "山隐之焰",
-    "winRate": "51.06%",
-    "pickRate": "1.80%",
-    "banRate": "0.08%"
-  },
-  {
-    "heroName": "牛头酋长",
-    "winRate": "50.68%",
-    "pickRate": "4.85%",
-    "banRate": "0.31%"
-  },
-  {
-    "heroName": "镕铁少女",
-    "winRate": "50.68%",
-    "pickRate": "4.26%",
-    "banRate": "1.02%"
-  },
-  {
-    "heroName": "天启者",
-    "winRate": "50.63%",
-    "pickRate": "6.05%",
-    "banRate": "0.17%"
-  },
-  {
-    "heroName": "曙光女神",
-    "winRate": "50.51%",
-    "pickRate": "7.25%",
-    "banRate": "2.44%"
-  },
-  {
-    "heroName": "明烛",
-    "winRate": "50.49%",
-    "pickRate": "7.83%",
-    "banRate": "4.66%"
-  },
-  {
-    "heroName": "众星之子",
-    "winRate": "50.38%",
-    "pickRate": "5.08%",
-    "banRate": "0.66%"
-  },
-  {
-    "heroName": "熔岩巨兽",
-    "winRate": "50.37%",
-    "pickRate": "5.17%",
-    "banRate": "6.91%"
-  },
-  {
-    "heroName": "腕豪",
-    "winRate": "50.21%",
-    "pickRate": "1.86%",
-    "banRate": "1.59%"
-  },
-  {
-    "heroName": "星籁歌姬",
-    "winRate": "50.20%",
-    "pickRate": "7.56%",
-    "banRate": "0.34%"
-  },
-  {
-    "heroName": "扭曲树精",
-    "winRate": "50.11%",
-    "pickRate": "4.39%",
-    "banRate": "0.23%"
-  },
-  {
-    "heroName": "仙灵女巫",
-    "winRate": "50.03%",
-    "pickRate": "17.09%",
-    "banRate": "12.72%"
-  },
-  {
-    "heroName": "蒸汽机器人",
-    "winRate": "49.99%",
-    "pickRate": "6.61%",
-    "banRate": "0.81%"
-  },
-  {
-    "heroName": "深海泰坦",
-    "winRate": "49.72%",
-    "pickRate": "6.73%",
-    "banRate": "1.35%"
+    "winRate": "54.62%",
+    "pickRate": "3.29%",
+    "banRate": "8.06%"
   },
   {
     "heroName": "弗雷尔卓德之心",
-    "winRate": "49.71%",
-    "pickRate": "3.22%",
-    "banRate": "0.39%"
+    "winRate": "52.27%",
+    "pickRate": "3.17%",
+    "banRate": "0.51%"
+  },
+  {
+    "heroName": "幻翎",
+    "winRate": "52.25%",
+    "pickRate": "4.11%",
+    "banRate": "0.25%"
+  },
+  {
+    "heroName": "涤魂圣枪",
+    "winRate": "52.11%",
+    "pickRate": "4.50%",
+    "banRate": "0.55%"
+  },
+  {
+    "heroName": "星界游神",
+    "winRate": "51.90%",
+    "pickRate": "1.71%",
+    "banRate": "0.38%"
+  },
+  {
+    "heroName": "牛头酋长",
+    "winRate": "51.47%",
+    "pickRate": "4.15%",
+    "banRate": "0.41%"
+  },
+  {
+    "heroName": "扭曲树精",
+    "winRate": "51.15%",
+    "pickRate": "4.93%",
+    "banRate": "0.27%"
+  },
+  {
+    "heroName": "星籁歌姬",
+    "winRate": "51.13%",
+    "pickRate": "10.10%",
+    "banRate": "0.73%"
+  },
+  {
+    "heroName": "曙光女神",
+    "winRate": "50.91%",
+    "pickRate": "5.02%",
+    "banRate": "1.81%"
+  },
+  {
+    "heroName": "众星之子",
+    "winRate": "50.86%",
+    "pickRate": "5.45%",
+    "banRate": "0.78%"
+  },
+  {
+    "heroName": "魂锁典狱长",
+    "winRate": "50.73%",
+    "pickRate": "15.15%",
+    "banRate": "11.34%"
+  },
+  {
+    "heroName": "唤潮鲛姬",
+    "winRate": "50.65%",
+    "pickRate": "9.12%",
+    "banRate": "0.15%"
+  },
+  {
+    "heroName": "镕铁少女",
+    "winRate": "50.65%",
+    "pickRate": "3.48%",
+    "banRate": "1.28%"
+  },
+  {
+    "heroName": "血港鬼影",
+    "winRate": "50.48%",
+    "pickRate": "5.05%",
+    "banRate": "2.20%"
+  },
+  {
+    "heroName": "山隐之焰",
+    "winRate": "50.29%",
+    "pickRate": "2.83%",
+    "banRate": "0.13%"
+  },
+  {
+    "heroName": "堕落天使",
+    "winRate": "50.03%",
+    "pickRate": "8.15%",
+    "banRate": "42.23%"
+  },
+  {
+    "heroName": "复仇焰魂",
+    "winRate": "49.92%",
+    "pickRate": "1.07%",
+    "banRate": "3.80%"
+  },
+  {
+    "heroName": "天启者",
+    "winRate": "49.57%",
+    "pickRate": "11.99%",
+    "banRate": "0.37%"
+  },
+  {
+    "heroName": "蒸汽机器人",
+    "winRate": "48.83%",
+    "pickRate": "6.19%",
+    "banRate": "0.97%"
+  },
+  {
+    "heroName": "腕豪",
+    "winRate": "48.65%",
+    "pickRate": "1.73%",
+    "banRate": "1.98%"
+  },
+  {
+    "heroName": "仙灵女巫",
+    "winRate": "48.40%",
+    "pickRate": "11.46%",
+    "banRate": "17.17%"
   },
   {
     "heroName": "正义巨像",
-    "winRate": "49.62%",
-    "pickRate": "2.38%",
-    "banRate": "1.32%"
-  },
-  {
-    "heroName": "虚空之眼",
-    "winRate": "49.48%",
-    "pickRate": "1.18%",
-    "banRate": "0.18%"
-  },
-  {
-    "heroName": "荆棘之兴",
-    "winRate": "48.86%",
-    "pickRate": "4.73%",
-    "banRate": "18.58%"
+    "winRate": "48.28%",
+    "pickRate": "3.31%",
+    "banRate": "3.63%"
   },
   {
     "heroName": "光辉女郎",
-    "winRate": "48.09%",
-    "pickRate": "5.32%",
-    "banRate": "3.91%"
+    "winRate": "47.87%",
+    "pickRate": "5.04%",
+    "banRate": "3.46%"
+  },
+  {
+    "heroName": "深海泰坦",
+    "winRate": "47.70%",
+    "pickRate": "6.03%",
+    "banRate": "1.59%"
   },
   {
     "heroName": "风暴之怒",
-    "winRate": "47.64%",
-    "pickRate": "1.93%",
-    "banRate": "0.05%"
+    "winRate": "47.65%",
+    "pickRate": "2.88%",
+    "banRate": "0.07%"
   },
   {
-    "heroName": "邪恶小法师",
-    "winRate": "47.26%",
-    "pickRate": "1.51%",
-    "banRate": "4.13%"
+    "heroName": "熔岩巨兽",
+    "winRate": "47.48%",
+    "pickRate": "4.04%",
+    "banRate": "6.43%"
+  },
+  {
+    "heroName": "荆棘之兴",
+    "winRate": "47.13%",
+    "pickRate": "5.08%",
+    "banRate": "19.65%"
+  },
+  {
+    "heroName": "明烛",
+    "winRate": "46.60%",
+    "pickRate": "5.51%",
+    "banRate": "6.23%"
   },
   {
     "heroName": "诺克萨斯统领",
-    "winRate": "46.33%",
-    "pickRate": "2.55%",
-    "banRate": "2.69%"
+    "winRate": "46.05%",
+    "pickRate": "2.28%",
+    "banRate": "5.79%"
   },
   {
     "heroName": "魔法猫咪",
-    "winRate": "43.43%",
-    "pickRate": "16.95%",
-    "banRate": "32.92%"
+    "winRate": "39.58%",
+    "pickRate": "7.06%",
+    "banRate": "36.67%"
   }
 ]

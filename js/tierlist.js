@@ -580,14 +580,93 @@ function renderStatCards(heroes) {
   return html;
 }
 
+// ============================================================
+// 大幅波动横幅（曙光英雄表格页）
+// 英雄名次相比上一期变化达到 VOLATILITY_THRESHOLD 及以上时，
+// 在表格上方横幅展示。可切换 VOLATILITY_METRIC 改为按梯度分(0~100)波动。
+//   'rank'  = 名次变化（delta < 0 = 排名上升/变好，绿色）
+//   'score' = 梯度分变化（delta > 0 = 分数上升，绿色）
+//   箭头统一语义：▲=上升(变好/绿) ▼=下降(变差/红)。如名次 11→32 显示 ▼21。
+// ============================================================
+const VOLATILITY_METRIC = 'rank';   // 'rank' | 'score'
+const VOLATILITY_THRESHOLD = 10;    // 波动 ≥ 该值才进横幅
+
+function renderVolatilityBanner(heroes) {
+  if (!gameConfig || gameConfig.hasLanes) return "";   // 仅无分路游戏
+  if (!heroes || !heroes.length) return "";
+  if (!gameConfig.hasDates) return "";                 // 需有日期对比（上一期数据）
+
+  const useScore = VOLATILITY_METRIC === 'score';
+  const metricName = useScore ? "梯度分" : "名次";
+
+  // 筛选波动 ≥ 阈值
+  const movers = [];
+  heroes.forEach(h => {
+    if (useScore) {
+      if (h.prevScore == null || h.score == null) return;
+      const delta = h.score - h.prevScore;
+      if (Math.abs(delta) < VOLATILITY_THRESHOLD) return;
+      movers.push({ h, delta });
+    } else {
+      if (h.prevRank == null || h.rank == null) return;
+      const delta = h.rank - h.prevRank;
+      if (Math.abs(delta) < VOLATILITY_THRESHOLD) return;
+      movers.push({ h, delta });
+    }
+  });
+  if (!movers.length) return "";
+
+  // 按波动幅度降序
+  movers.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+  // 名次：delta<0 上升(变好) / delta>0 下降(变差)
+  // 分数：delta>0 上升 / delta<0 下降
+  const isUp = m => (useScore ? m.delta > 0 : m.delta < 0);
+
+  // 箭头跟随语义：▲=上升(变好/绿)，▼=下降(变差/红)，不随 delta 数值符号翻转
+  const fmtDelta = m => (isUp(m) ? "▲" : "▼") + Math.abs(m.delta).toFixed(useScore ? 1 : 0);
+  const fmtVal = m => useScore
+    ? `${m.h.prevScore.toFixed(1)}→${m.h.score.toFixed(1)}`
+    : `${m.h.prevRank}→${m.h.rank}`;
+  const chip = m => {
+    const cls = isUp(m) ? "up" : "down";
+    const icon = m.h.headIcon
+      ? `<img class="volatility-icon" src="${m.h.headIcon}" alt="" onerror="this.style.display='none'">`
+      : "";
+    // 副信息：名次模式附梯度分变化，分数模式附名次变化
+    const sub = useScore
+      ? (m.h.prevRank != null ? `名次 ${m.h.prevRank}→${m.h.rank}` : "")
+      : (m.h.prevScore != null ? `梯度分 ${m.h.prevScore.toFixed(1)}→${m.h.score.toFixed(1)}` : "");
+    // 英雄名可点击查看详情（与表格一致）
+    const clickable = gameConfig.hasDates
+      ? ` style="cursor:pointer" onclick="showHeroDetail('${m.h.name.replace(/'/g, "\\'")}')"`
+      : "";
+    return `<span class="volatility-chip ${cls}" title="${sub}">${icon}<b class="hero-name"${clickable}>${m.h.name}</b>` +
+      `<span class="volatility-val">${fmtVal(m)}</span><em class="volatility-delta ${cls}">${fmtDelta(m)}</em></span>`;
+  };
+
+  let html = `<div class="volatility-banner">`;
+  html += `<div class="volatility-head">`;
+  html += `<span class="volatility-title">📊 大幅波动</span>`;
+  html += `<span class="volatility-count">${movers.length}</span>`;
+  html += `<span class="volatility-note">${metricName}较上一期变化 ≥ ${VOLATILITY_THRESHOLD}</span>`;
+  html += `</div>`;
+  // 合并展示：全部波动英雄排在同一列表，按各自方向着色
+  html += `<div class="volatility-chips">${movers.map(chip).join("")}</div>`;
+  html += `</div>`;
+  return html;
+}
+
 function renderLaneView(laneName) {
   if (!gameData.hasLanes) {
     // 曙光：无分路，直接全量渲染
     const heroes = gameData.heroes;
     const sorted = [...heroes].sort((a, b) => a.rank - b.rank);
+    const dateBadge = currentDate ? `<span class="count-badge" style="background:#238636">📅 ${currentDate}</span>` : '';
     let html = `<div class="section-header">
       <h2>${gameConfig.gameIcon} ${gameConfig.gameName} 梯度排行</h2>
-      <span class="count-badge">${heroes.length} 个英雄</span></div>`;
+      <span class="count-badge">${heroes.length} 个英雄</span>${dateBadge}</div>`;
+    html += renderVolatilityBanner(heroes);   // 大幅波动横幅（无则空串）
     html += renderTable(sorted, gameConfig.columns, null);
     return html;
   }
@@ -654,9 +733,10 @@ function renderAll() {
 
     let titleHtml;
     if (!gameData.hasLanes) {
+      const dateBadge = currentDate ? `<span class="count-badge" style="background:#238636">📅 ${currentDate}</span>` : '';
       titleHtml = `<div class="section-header">
         <h2>${gameConfig.gameIcon} ${gameConfig.gameName} 梯度排行</h2>
-        <span class="count-badge">${heroes.length} 个英雄</span></div>`;
+        <span class="count-badge">${heroes.length} 个英雄</span>${dateBadge}</div>`;
     } else if (currentView === "global") {
       titleHtml = `<div class="section-header">
         <h2>🌍 全局排名（跨分路对比）</h2>
@@ -881,6 +961,16 @@ function buildControls() {
       <button id="btn-global" onclick="switchView('global')">🌍 全局排名</button>`;
   }
 
+  // 日期切换 (hasDates 游戏)
+  if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length > 1) {
+    const sortedDates = [...gameConfig.dates].sort((a, b) => b.date.localeCompare(a.date));
+    html += `<span style="margin-left:16px" class="label">日期：</span>`;
+    sortedDates.forEach(d => {
+      const active = d.date === currentDate ? 'active' : '';
+      html += `<button class="${active}" onclick="switchDate('${d.date}')">${d.date}</button>`;
+    });
+  }
+
   // 展示模式切换
   html += `<span style="margin-left:16px" class="label">展示：</span>
     <button id="btn-table" class="active" onclick="switchViewMode('table')">📋 表格</button>
@@ -923,11 +1013,13 @@ async function switchGame(gameId) {
     b.className = b.dataset.game === gameId ? "active" : "";
   });
 
-  // Load config
+  // Load config (via data source layer — 服务器可用时自动扫最新日期)
   const base = gameId === "lolm" ? "lolm" : "曙光英雄";
-  const configResp = await fetch(base + "/config.json");
-  if (!configResp.ok) throw new Error(`加载 ${gameId} 配置失败: ${configResp.status}`);
-  gameConfig = await configResp.json();
+  try {
+    gameConfig = await DataSource.loadConfig(base);
+  } catch (e) {
+    throw new Error(`加载 ${gameId} 配置失败: ${e.message}`);
+  }
 
   // Reset state
   currentMethod = gameConfig.algorithm.type === "weighted" ? "weighted" : "zscore";
@@ -1117,6 +1209,66 @@ function renderHeroDetail(name) {
 }
 
 // ============================================================
+// 自动刷新：订阅 server.js 的文件监听，数据变化时自动重载
+// 用 ?watch=0 关闭；无服务器时 EventSource 不可用则静默跳过。
+// ============================================================
+async function setupWatch() {
+  if (new URLSearchParams(location.search).get("watch") === "0") return;
+  if (typeof EventSource !== "function") return;
+  if (!(await DataSource.isServerReady())) return; // 无服务器时不订阅，避免无谓重连
+  let es;
+  try { es = new EventSource("/api/watch"); } catch { return; }
+
+  let timer = null;
+  es.onmessage = ev => {
+    let msg;
+    try { msg = JSON.parse(ev.data); } catch { return; }
+    const base = gameConfig && gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+    if (msg.dir !== base) return; // 只关心当前游戏
+    clearTimeout(timer);
+    timer = setTimeout(reloadFromDisk, 400);
+  };
+  es.onerror = () => { /* EventSource 会自动重连 */ };
+}
+
+let watchReloading = false;
+async function reloadFromDisk() {
+  if (!gameConfig || watchReloading) return;
+  watchReloading = true;
+  const base = gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+  try {
+    const cfg = await DataSource.loadConfig(base);
+    // 保存当前搜索词（buildControls 会重建搜索框）
+    const searchBox = document.querySelector(".search-box");
+    const searchVal = searchBox ? searchBox.value : "";
+
+    // 日期列表是否有变化（新增/删除日期文件 → 重建日期按钮）
+    const oldDates = (gameConfig.dates || []).map(d => d.date).join(",");
+    const newDates = (cfg.dates || []).map(d => d.date).join(",");
+    const datesChanged = oldDates !== newDates;
+
+    gameConfig = cfg;
+    if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length) {
+      // 当前日期已不在列表（比如新增了日期文件）→ 跳到服务器默认（最新）
+      if (!gameConfig.dates.some(d => d.date === currentDate)) {
+        currentDate = gameConfig.defaultDate;
+      }
+    }
+    await loadGameData();
+    if (datesChanged) {
+      buildControls();
+      const nb = document.querySelector(".search-box");
+      if (nb) nb.value = searchVal;
+    }
+    renderAll();
+  } catch (e) {
+    console.warn("[watch] 重载失败:", e);
+  } finally {
+    watchReloading = false;
+  }
+}
+
+// ============================================================
 // 启动
 // ============================================================
 async function init() {
@@ -1124,8 +1276,19 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   const gameId = params.get("game") || "lolm";
   if (params.get("viewmode") === "grid") currentViewMode = "grid";
+  const urlDate = params.get("date");
 
   await switchGame(gameId);
+
+  // URL 里指定了日期且属于该游戏的日期列表 → 切换到它
+  if (urlDate && gameConfig && gameConfig.hasDates) {
+    const validDates = (gameConfig.dates || []).map(d => d.date);
+    if (validDates.includes(urlDate) && urlDate !== currentDate) {
+      await switchDate(urlDate);
+    }
+  }
+
+  setupWatch();
 }
 
 // ESC to close hero detail

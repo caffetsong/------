@@ -237,6 +237,52 @@ tbody tr.current-highlight { background: rgba(31,111,235,0.08); }
     .tier-row { min-height: 52px; }
 }
 
+/* ---- 大幅波动横幅（曙光英雄表格页） ---- */
+.volatility-banner {
+    background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+}
+.volatility-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; flex-wrap: wrap;
+}
+.volatility-title { font-weight: 700; color: #f0f6fc; font-size: 0.95rem; }
+.volatility-count {
+    background: #1f6feb; color: #fff; border-radius: 10px;
+    padding: 1px 8px; font-size: 0.78rem; font-weight: 600;
+}
+.volatility-note { color: #8b949e; font-size: 0.78rem; }
+.volatility-group {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 6px; flex-wrap: wrap;
+}
+.volatility-group:last-child { margin-bottom: 0; }
+.volatility-group-label {
+    font-size: 0.78rem; font-weight: 600; padding: 4px 10px;
+    border-radius: 4px; white-space: nowrap;
+}
+.volatility-group-label.up { background: rgba(63,185,80,0.15); color: #3fb950; }
+.volatility-group-label.down { background: rgba(248,81,73,0.15); color: #f85149; }
+.volatility-chips { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+.volatility-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #21262d; border: 1px solid #30363d; border-radius: 6px;
+    padding: 4px 10px; font-size: 0.82rem; cursor: default;
+}
+.volatility-chip:hover { border-color: #484f58; }
+.volatility-chip b { color: #f0f6fc; font-weight: 600; }
+.volatility-val { color: #8b949e; font-size: 0.78rem; }
+.volatility-delta { font-weight: 700; font-style: normal; }
+.volatility-delta.up { color: #3fb950; }
+.volatility-delta.down { color: #f85149; }
+.volatility-icon {
+    width: 24px; height: 24px; border-radius: 50%;
+    object-fit: cover; background: #161b22; flex-shrink: 0;
+}
+
 /* ---- 无分路提示 ---- */
 .no-lanes-notice {
     text-align: center; padding: 16px 24px; background: #161b22;
