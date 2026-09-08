@@ -1153,6 +1153,12 @@
             opt.textContent = gameName + ' ' + d.date;
             optgroup.appendChild(opt);
           });
+        } else if (config.hasDates) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.disabled = true;
+          opt.textContent = gameName + '（未发现日期文件：请用 bun server.js 启动）';
+          optgroup.appendChild(opt);
         } else if (config.dataFile) {
           const opt = document.createElement('option');
           opt.value = '曙光英雄/' + config.dataFile;
@@ -1160,7 +1166,7 @@
           optgroup.appendChild(opt);
         }
       } catch (e) {
-        optgroup.innerHTML = '<option value="曙光英雄/曙光英雄.json">曙光英雄</option>';
+        optgroup.innerHTML = '<option value="" disabled>曙光英雄（配置加载失败，请用 bun server.js 启动）</option>';
         console.warn('Failed to load SG config for presets, using fallback:', e);
       }
     }

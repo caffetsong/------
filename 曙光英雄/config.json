@@ -4,33 +4,17 @@
   "gameIcon": "☀️",
   "hasLanes": false,
   "hasDates": true,
-  "dates": [
-    {
-      "date": "2026-08-17",
-      "file": "曙光英雄_2026-08-17.json"
-    },
-    {
-      "date": "2026-07-27",
-      "file": "曙光英雄_2026-07-27.json"
-    },
-    {
-      "date": "2026-07-20",
-      "file": "曙光英雄_2026-07-20.json"
-    },
-    {
-      "date": "2026-07-06",
-      "file": "曙光英雄_2026-07-06.json"
-    }
-  ],
-  "defaultDate": "2026-08-17",
   "dataFile": "曙光英雄.json",
   "headIconPath": "HeadIcon/{name}.png",
+  "introFile": "英雄介绍.json",
+  "bannerDir": "banner",
   "algorithm": {
     "type": "weighted",
+    "combatField": "国9战力",
     "weights": {
-      "appearance": 0.2,
-      "combat": 0.5,
-      "winrate": 0.3
+      "appearance": 0.15,
+      "combat": 0.7,
+      "winrate": 0.15
     }
   },
   "tiers": {
@@ -91,8 +75,8 @@
       "type": "int"
     },
     {
-      "label": "战力分",
-      "field": "combatPower",
+      "label": "国9战力",
+      "field": "国9战力",
       "type": "int",
       "colorClass": "cw"
     },
@@ -120,5 +104,11 @@
       "format": "int"
     }
   ],
-  "footer": "曙光英雄 Hero Tier List · 基于出场排名/战力/胜率加权算法 · 仅供参考"
+  "footer": "曙光英雄 Hero Tier List · 基于出场排名/战力/胜率加权算法 · 仅供参考",
+  "dates": [
+    {
+      "date": "2026-09-04",
+      "file": "曙光英雄_2026-09-04.json"
+    }
+  ]
 }

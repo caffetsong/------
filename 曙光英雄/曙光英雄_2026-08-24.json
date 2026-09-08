@@ -1,0 +1,818 @@
+[
+  {
+    "heroName": "貂蝉",
+    "职业": "游侠",
+    "appearanceRank": 2,
+    "国9战力": 65,
+    "combatPower": 65,
+    "winRate": "56.88%"
+  },
+  {
+    "heroName": "诸葛亮",
+    "职业": "法师",
+    "appearanceRank": 43,
+    "国9战力": 77,
+    "combatPower": 77,
+    "winRate": "55.99%"
+  },
+  {
+    "heroName": "青木",
+    "职业": "射手",
+    "appearanceRank": 41,
+    "国9战力": 72,
+    "combatPower": 72,
+    "winRate": "56.15%"
+  },
+  {
+    "heroName": "布伦希尔德",
+    "职业": "法师",
+    "appearanceRank": 58,
+    "国9战力": 70,
+    "combatPower": 70,
+    "winRate": "47.24%"
+  },
+  {
+    "heroName": "铁扇公主",
+    "职业": "辅助",
+    "appearanceRank": 10,
+    "国9战力": 76,
+    "combatPower": 76,
+    "winRate": "55.05%"
+  },
+  {
+    "heroName": "南丁格尔",
+    "职业": "辅助",
+    "appearanceRank": 20,
+    "国9战力": 69,
+    "combatPower": 69,
+    "winRate": "54.84%"
+  },
+  {
+    "heroName": "白泽",
+    "职业": "法师",
+    "appearanceRank": 65,
+    "国9战力": 73,
+    "combatPower": 73,
+    "winRate": "54.98%"
+  },
+  {
+    "heroName": "艾蒙",
+    "职业": "法师",
+    "appearanceRank": 14,
+    "国9战力": 69,
+    "combatPower": 69,
+    "winRate": "53.77%"
+  },
+  {
+    "heroName": "亚历山大",
+    "职业": "战士",
+    "appearanceRank": 60,
+    "国9战力": 71,
+    "combatPower": 71,
+    "winRate": "54.92%"
+  },
+  {
+    "heroName": "关羽",
+    "职业": "战士",
+    "appearanceRank": 22,
+    "国9战力": 71,
+    "combatPower": 71,
+    "winRate": "53.81%"
+  },
+  {
+    "heroName": "白浩",
+    "职业": "战士",
+    "appearanceRank": 3,
+    "国9战力": 73,
+    "combatPower": 73,
+    "winRate": "53.43%"
+  },
+  {
+    "heroName": "阿尔弗雷德",
+    "职业": "战士",
+    "appearanceRank": 54,
+    "国9战力": 68,
+    "combatPower": 68,
+    "winRate": "52.49%"
+  },
+  {
+    "heroName": "贞德",
+    "职业": "辅助",
+    "appearanceRank": 48,
+    "国9战力": 71,
+    "combatPower": 71,
+    "winRate": "53.70%"
+  },
+  {
+    "heroName": "鲁班",
+    "职业": "辅助",
+    "appearanceRank": 18,
+    "国9战力": 69,
+    "combatPower": 69,
+    "winRate": "51.85%"
+  },
+  {
+    "heroName": "祝融",
+    "职业": "射手",
+    "appearanceRank": 12,
+    "国9战力": 70,
+    "combatPower": 70,
+    "winRate": "52.16%"
+  },
+  {
+    "heroName": "西王母",
+    "职业": "法师",
+    "appearanceRank": 77,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "51.95%"
+  },
+  {
+    "heroName": "华佗",
+    "职业": "辅助",
+    "appearanceRank": 76,
+    "国9战力": 56,
+    "combatPower": 56,
+    "winRate": "51.62%"
+  },
+  {
+    "heroName": "黛西",
+    "职业": "法师",
+    "appearanceRank": 9,
+    "国9战力": 70,
+    "combatPower": 70,
+    "winRate": "51.43%"
+  },
+  {
+    "heroName": "范蠡",
+    "职业": "法师",
+    "appearanceRank": 70,
+    "国9战力": 63,
+    "combatPower": 63,
+    "winRate": "50.30%"
+  },
+  {
+    "heroName": "张出尘",
+    "职业": "战士",
+    "appearanceRank": 34,
+    "国9战力": 72,
+    "combatPower": 72,
+    "winRate": "49.03%"
+  },
+  {
+    "heroName": "马可波罗",
+    "职业": "辅助",
+    "appearanceRank": 95,
+    "国9战力": 54,
+    "combatPower": 54,
+    "winRate": "51.69%"
+  },
+  {
+    "heroName": "弗兰肯斯坦",
+    "职业": "坦克",
+    "appearanceRank": 51,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "50.74%"
+  },
+  {
+    "heroName": "雷震子",
+    "职业": "游侠",
+    "appearanceRank": 84,
+    "国9战力": 69,
+    "combatPower": 69,
+    "winRate": "44.43%"
+  },
+  {
+    "heroName": "桑榆",
+    "职业": "辅助",
+    "appearanceRank": 5,
+    "国9战力": 63,
+    "combatPower": 63,
+    "winRate": "52.15%"
+  },
+  {
+    "heroName": "阿尔忒弥斯",
+    "职业": "射手",
+    "appearanceRank": 6,
+    "国9战力": 65,
+    "combatPower": 65,
+    "winRate": "51.15%"
+  },
+  {
+    "heroName": "嫦娥",
+    "职业": "法师",
+    "appearanceRank": 46,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "52.23%"
+  },
+  {
+    "heroName": "王昭君",
+    "职业": "射手",
+    "appearanceRank": 40,
+    "国9战力": 61,
+    "combatPower": 61,
+    "winRate": "49.21%"
+  },
+  {
+    "heroName": "莱因哈特",
+    "职业": "战士",
+    "appearanceRank": 85,
+    "国9战力": 56,
+    "combatPower": 56,
+    "winRate": "49.65%"
+  },
+  {
+    "heroName": "花荣",
+    "职业": "射手",
+    "appearanceRank": 56,
+    "国9战力": 62,
+    "combatPower": 62,
+    "winRate": "51.24%"
+  },
+  {
+    "heroName": "飞廉",
+    "职业": "射手",
+    "appearanceRank": 90,
+    "国9战力": 58,
+    "combatPower": 58,
+    "winRate": "47.77%"
+  },
+  {
+    "heroName": "岚",
+    "职业": "坦克",
+    "appearanceRank": 35,
+    "国9战力": 72,
+    "combatPower": 72,
+    "winRate": "53.23%"
+  },
+  {
+    "heroName": "展昭",
+    "职业": "战士",
+    "appearanceRank": 94,
+    "国9战力": 49,
+    "combatPower": 49,
+    "winRate": "44.33%"
+  },
+  {
+    "heroName": "火莲",
+    "职业": "法师",
+    "appearanceRank": 75,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "51.23%"
+  },
+  {
+    "heroName": "布斯",
+    "职业": "射手",
+    "appearanceRank": 23,
+    "国9战力": 70,
+    "combatPower": 70,
+    "winRate": "49.75%"
+  },
+  {
+    "heroName": "班",
+    "职业": "战士",
+    "appearanceRank": 28,
+    "国9战力": 75,
+    "combatPower": 75,
+    "winRate": "51.16%"
+  },
+  {
+    "heroName": "齐格飞",
+    "职业": "战士",
+    "appearanceRank": 57,
+    "国9战力": 70,
+    "combatPower": 70,
+    "winRate": "51.13%"
+  },
+  {
+    "heroName": "荆轲",
+    "职业": "游侠",
+    "appearanceRank": 13,
+    "国9战力": 73,
+    "combatPower": 73,
+    "winRate": "52.47%"
+  },
+  {
+    "heroName": "艾璐妮",
+    "职业": "辅助",
+    "appearanceRank": 1,
+    "国9战力": 77,
+    "combatPower": 77,
+    "winRate": "50.08%"
+  },
+  {
+    "heroName": "女魃",
+    "职业": "法师",
+    "appearanceRank": 30,
+    "国9战力": 75,
+    "combatPower": 75,
+    "winRate": "49.56%"
+  },
+  {
+    "heroName": "穆桂英",
+    "职业": "战士",
+    "appearanceRank": 100,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "53.92%"
+  },
+  {
+    "heroName": "猪八戒",
+    "职业": "战士",
+    "appearanceRank": 50,
+    "国9战力": 58,
+    "combatPower": 58,
+    "winRate": "48.25%"
+  },
+  {
+    "heroName": "拉姆",
+    "职业": "战士",
+    "appearanceRank": 69,
+    "国9战力": 63,
+    "combatPower": 63,
+    "winRate": "47.45%"
+  },
+  {
+    "heroName": "刘备",
+    "职业": "战士",
+    "appearanceRank": 4,
+    "国9战力": 74,
+    "combatPower": 74,
+    "winRate": "48.75%"
+  },
+  {
+    "heroName": "黄泉",
+    "职业": "法师",
+    "appearanceRank": 15,
+    "国9战力": 72,
+    "combatPower": 72,
+    "winRate": "50.06%"
+  },
+  {
+    "heroName": "墨翟",
+    "职业": "战士",
+    "appearanceRank": 93,
+    "国9战力": 49,
+    "combatPower": 49,
+    "winRate": "50.59%"
+  },
+  {
+    "heroName": "特斯拉",
+    "职业": "法师",
+    "appearanceRank": 80,
+    "国9战力": 63,
+    "combatPower": 63,
+    "winRate": "48.38%"
+  },
+  {
+    "heroName": "法修",
+    "职业": "射手",
+    "appearanceRank": 39,
+    "国9战力": 58,
+    "combatPower": 58,
+    "winRate": "48.31%"
+  },
+  {
+    "heroName": "许褚",
+    "职业": "坦克",
+    "appearanceRank": 97,
+    "国9战力": 49,
+    "combatPower": 49,
+    "winRate": "47.53%"
+  },
+  {
+    "heroName": "哪吒",
+    "职业": "战士",
+    "appearanceRank": 42,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "48.94%"
+  },
+  {
+    "heroName": "吕洞宾",
+    "职业": "法师",
+    "appearanceRank": 79,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "53.68%"
+  },
+  {
+    "heroName": "露西亚",
+    "职业": "游侠",
+    "appearanceRank": 27,
+    "国9战力": 76,
+    "combatPower": 76,
+    "winRate": "46.17%"
+  },
+  {
+    "heroName": "托尔",
+    "职业": "射手",
+    "appearanceRank": 99,
+    "国9战力": 51,
+    "combatPower": 51,
+    "winRate": "47.50%"
+  },
+  {
+    "heroName": "妇好",
+    "职业": "战士",
+    "appearanceRank": 61,
+    "国9战力": 64,
+    "combatPower": 64,
+    "winRate": "48.54%"
+  },
+  {
+    "heroName": "鲁智深",
+    "职业": "战士",
+    "appearanceRank": 86,
+    "国9战力": 49,
+    "combatPower": 49,
+    "winRate": "47.39%"
+  },
+  {
+    "heroName": "西施",
+    "职业": "游侠",
+    "appearanceRank": 21,
+    "国9战力": 70,
+    "combatPower": 70,
+    "winRate": "49.65%"
+  },
+  {
+    "heroName": "黄忠",
+    "职业": "射手",
+    "appearanceRank": 29,
+    "国9战力": 62,
+    "combatPower": 62,
+    "winRate": "46.54%"
+  },
+  {
+    "heroName": "望舒",
+    "职业": "法师",
+    "appearanceRank": 19,
+    "国9战力": 61,
+    "combatPower": 61,
+    "winRate": "48.88%"
+  },
+  {
+    "heroName": "孙武",
+    "职业": "法师",
+    "appearanceRank": 89,
+    "国9战力": 51,
+    "combatPower": 51,
+    "winRate": "47.24%"
+  },
+  {
+    "heroName": "赵云",
+    "职业": "游侠",
+    "appearanceRank": 7,
+    "国9战力": 75,
+    "combatPower": 75,
+    "winRate": "49.80%"
+  },
+  {
+    "heroName": "孙悟空",
+    "职业": "战士",
+    "appearanceRank": 45,
+    "国9战力": 65,
+    "combatPower": 65,
+    "winRate": "47.60%"
+  },
+  {
+    "heroName": "北斗",
+    "职业": "战士",
+    "appearanceRank": 38,
+    "国9战力": 69,
+    "combatPower": 69,
+    "winRate": "46.54%"
+  },
+  {
+    "heroName": "梅朵",
+    "职业": "法师",
+    "appearanceRank": 52,
+    "国9战力": 58,
+    "combatPower": 58,
+    "winRate": "44.92%"
+  },
+  {
+    "heroName": "杨玉环",
+    "职业": "战士",
+    "appearanceRank": 44,
+    "国9战力": 57,
+    "combatPower": 57,
+    "winRate": "46.83%"
+  },
+  {
+    "heroName": "夏尔美",
+    "职业": "游侠",
+    "appearanceRank": 49,
+    "国9战力": 64,
+    "combatPower": 64,
+    "winRate": "47.69%"
+  },
+  {
+    "heroName": "美杜莎",
+    "职业": "射手",
+    "appearanceRank": 37,
+    "国9战力": 57,
+    "combatPower": 57,
+    "winRate": "46.42%"
+  },
+  {
+    "heroName": "王羲之",
+    "职业": "法师",
+    "appearanceRank": 88,
+    "国9战力": 55,
+    "combatPower": 55,
+    "winRate": "45.35%"
+  },
+  {
+    "heroName": "奇奇",
+    "职业": "射手",
+    "appearanceRank": 55,
+    "国9战力": 61,
+    "combatPower": 61,
+    "winRate": "50.32%"
+  },
+  {
+    "heroName": "李清照",
+    "职业": "法师",
+    "appearanceRank": 33,
+    "国9战力": 58,
+    "combatPower": 58,
+    "winRate": "48.58%"
+  },
+  {
+    "heroName": "曹操",
+    "职业": "战士",
+    "appearanceRank": 68,
+    "国9战力": 57,
+    "combatPower": 57,
+    "winRate": "45.78%"
+  },
+  {
+    "heroName": "精卫",
+    "职业": "射手",
+    "appearanceRank": 17,
+    "国9战力": 68,
+    "combatPower": 68,
+    "winRate": "47.00%"
+  },
+  {
+    "heroName": "尉迟炎",
+    "职业": "坦克",
+    "appearanceRank": 102,
+    "国9战力": 38,
+    "combatPower": 38,
+    "winRate": "43.66%"
+  },
+  {
+    "heroName": "伏羲",
+    "职业": "坦克",
+    "appearanceRank": 53,
+    "国9战力": 56,
+    "combatPower": 56,
+    "winRate": "44.84%"
+  },
+  {
+    "heroName": "李靖",
+    "职业": "战士",
+    "appearanceRank": 25,
+    "国9战力": 67,
+    "combatPower": 67,
+    "winRate": "45.01%"
+  },
+  {
+    "heroName": "黄月英",
+    "职业": "射手",
+    "appearanceRank": 24,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "48.19%"
+  },
+  {
+    "heroName": "洛克",
+    "职业": "战士",
+    "appearanceRank": 74,
+    "国9战力": 64,
+    "combatPower": 64,
+    "winRate": "49.50%"
+  },
+  {
+    "heroName": "胖达",
+    "职业": "战士",
+    "appearanceRank": 82,
+    "国9战力": 53,
+    "combatPower": 53,
+    "winRate": "45.50%"
+  },
+  {
+    "heroName": "敖璃",
+    "职业": "法师",
+    "appearanceRank": 66,
+    "国9战力": 61,
+    "combatPower": 61,
+    "winRate": "45.20%"
+  },
+  {
+    "heroName": "尤妮卡",
+    "职业": "战士",
+    "appearanceRank": 47,
+    "国9战力": 61,
+    "combatPower": 61,
+    "winRate": "48.32%"
+  },
+  {
+    "heroName": "李文",
+    "职业": "战士",
+    "appearanceRank": 92,
+    "国9战力": 50,
+    "combatPower": 50,
+    "winRate": "43.52%"
+  },
+  {
+    "heroName": "张飞",
+    "职业": "辅助",
+    "appearanceRank": 62,
+    "国9战力": 55,
+    "combatPower": 55,
+    "winRate": "45.35%"
+  },
+  {
+    "heroName": "瑞恩",
+    "职业": "游侠",
+    "appearanceRank": 64,
+    "国9战力": 59,
+    "combatPower": 59,
+    "winRate": "45.79%"
+  },
+  {
+    "heroName": "帕提多",
+    "职业": "射手",
+    "appearanceRank": 78,
+    "国9战力": 54,
+    "combatPower": 54,
+    "winRate": "43.46%"
+  },
+  {
+    "heroName": "爱丽丝",
+    "职业": "法师",
+    "appearanceRank": 16,
+    "国9战力": 60,
+    "combatPower": 60,
+    "winRate": "45.21%"
+  },
+  {
+    "heroName": "雅典娜",
+    "职业": "战士",
+    "appearanceRank": 36,
+    "国9战力": 66,
+    "combatPower": 66,
+    "winRate": "45.14%"
+  },
+  {
+    "heroName": "约修亚",
+    "职业": "射手",
+    "appearanceRank": 11,
+    "国9战力": 74,
+    "combatPower": 74,
+    "winRate": "44.29%"
+  },
+  {
+    "heroName": "忘川",
+    "职业": "法师",
+    "appearanceRank": 32,
+    "国9战力": 66,
+    "combatPower": 66,
+    "winRate": "45.11%"
+  },
+  {
+    "heroName": "欧冶子",
+    "职业": "战士",
+    "appearanceRank": 71,
+    "国9战力": 56,
+    "combatPower": 56,
+    "winRate": "48.02%"
+  },
+  {
+    "heroName": "鳗鳗",
+    "职业": "法师",
+    "appearanceRank": 91,
+    "国9战力": 53,
+    "combatPower": 53,
+    "winRate": "43.71%"
+  },
+  {
+    "heroName": "杨戬",
+    "职业": "战士",
+    "appearanceRank": 31,
+    "国9战力": 57,
+    "combatPower": 57,
+    "winRate": "44.40%"
+  },
+  {
+    "heroName": "羲和",
+    "职业": "法师",
+    "appearanceRank": 8,
+    "国9战力": 63,
+    "combatPower": 63,
+    "winRate": "46.96%"
+  },
+  {
+    "heroName": "牛魔王",
+    "职业": "坦克",
+    "appearanceRank": 72,
+    "国9战力": 51,
+    "combatPower": 51,
+    "winRate": "45.94%"
+  },
+  {
+    "heroName": "残影",
+    "职业": "游侠",
+    "appearanceRank": 26,
+    "国9战力": 65,
+    "combatPower": 65,
+    "winRate": "44.47%"
+  },
+  {
+    "heroName": "图坦卡蒙",
+    "职业": "法师",
+    "appearanceRank": 101,
+    "国9战力": 41,
+    "combatPower": 41,
+    "winRate": "43.14%"
+  },
+  {
+    "heroName": "蔡文姬",
+    "职业": "法师",
+    "appearanceRank": 67,
+    "国9战力": 58,
+    "combatPower": 58,
+    "winRate": "43.81%"
+  },
+  {
+    "heroName": "花木兰",
+    "职业": "战士",
+    "appearanceRank": 83,
+    "国9战力": 49,
+    "combatPower": 49,
+    "winRate": "43.51%"
+  },
+  {
+    "heroName": "姜子牙",
+    "职业": "法师",
+    "appearanceRank": 81,
+    "国9战力": 55,
+    "combatPower": 55,
+    "winRate": "43.57%"
+  },
+  {
+    "heroName": "梅林",
+    "职业": "法师",
+    "appearanceRank": 87,
+    "国9战力": 55,
+    "combatPower": 55,
+    "winRate": "43.86%"
+  },
+  {
+    "heroName": "奥黛丽",
+    "职业": "战士",
+    "appearanceRank": 59,
+    "国9战力": 61,
+    "combatPower": 61,
+    "winRate": "46.82%"
+  },
+  {
+    "heroName": "陆逊",
+    "职业": "法师",
+    "appearanceRank": 96,
+    "国9战力": 56,
+    "combatPower": 56,
+    "winRate": "49.07%"
+  },
+  {
+    "heroName": "乌雅",
+    "职业": "法师",
+    "appearanceRank": 73,
+    "国9战力": 52,
+    "combatPower": 52,
+    "winRate": "43.98%"
+  },
+  {
+    "heroName": "白玉堂",
+    "职业": "辅助",
+    "appearanceRank": 98,
+    "国9战力": 45,
+    "combatPower": 45,
+    "winRate": "43.25%"
+  },
+  {
+    "heroName": "玄奘",
+    "职业": "法师",
+    "appearanceRank": 63,
+    "国9战力": 53,
+    "combatPower": 53,
+    "winRate": "43.39%"
+  }
+]

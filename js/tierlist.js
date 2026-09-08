@@ -13,6 +13,7 @@ let currentView = "lane";   // "lane"|"global"
 let currentLane = null;     // 当前分路名（仅 hasLanes）
 let currentViewMode = "table"; // "table"|"grid" — 展示模式
 let currentDate = null;      // 当前选中的日期 (YYYY-MM-DD)，仅 hasDates 游戏
+let currentGridLane = null;  // 曙光网格视图：常用分路过滤（null=全部），取自 英雄介绍.json
 
 // ---- 工具函数 ----
 function parsePct(s) {
@@ -191,14 +192,23 @@ function computeLOLM(rawData) {
 // 曙光英雄算法（从 Python validate_pure.py 移植）
 // ============================================================
 function computeSG(rawData) {
-  const heroes = rawData.map(h => ({
-    name: h.heroName,
-    headIcon: gameConfig.headIconPath ? ("曙光英雄/" + gameConfig.headIconPath.replace("{name}", h.heroName)) : null,
-    appearanceRank: parseInt(h.appearanceRank),
-    combatPower: parseFloat(h.combatPower),
-    winRate: parseFloat(String(h.winRate).replace("%", "")) / 100,
-    lane: null
-  }));
+  // 战力信号字段可配置：combatField 默认取展示用 combatPower（国9+50+100 求和）；
+  // 设为 "国9战力" 等原始字段时，算法用该字段打分（高端局信号），展示列仍用 combatPower。
+  const combatField = (gameConfig.algorithm && gameConfig.algorithm.combatField) || "combatPower";
+  const heroes = rawData.map(h => {
+    const rawCombat = h[combatField];
+    return {
+      name: h.heroName,
+      headIcon: gameConfig.headIconPath ? ("曙光英雄/" + gameConfig.headIconPath.replace("{name}", h.heroName)) : null,
+      appearanceRank: parseInt(h.appearanceRank),
+      combatPower: parseFloat(h.combatPower),
+      combatSignal: parseFloat(rawCombat != null && rawCombat !== "" ? rawCombat : h.combatPower),
+      // 暴露战力信号原始字段（如 国9战力），供 columns 配置引用展示/排序
+      [combatField]: parseFloat(rawCombat != null && rawCombat !== "" ? rawCombat : h.combatPower),
+      winRate: parseFloat(String(h.winRate).replace("%", "")) / 100,
+      lane: null
+    };
+  });
 
   const N = heroes.length;
   const weights = gameConfig.algorithm.weights;
@@ -207,7 +217,7 @@ function computeSG(rawData) {
   const appearanceScores = heroes.map(h => 1 - (h.appearanceRank - 1) / (N - 1));
 
   // 战力分 min-max 归一化
-  const combatVals = heroes.map(h => h.combatPower);
+  const combatVals = heroes.map(h => h.combatSignal);
   const combatMin = Math.min(...combatVals), combatMax = Math.max(...combatVals);
   const combatRange = combatMax - combatMin || 1;
   const combatScores = combatVals.map(v => (v - combatMin) / combatRange);
@@ -221,8 +231,8 @@ function computeSG(rawData) {
   // 加权和
   heroes.forEach((h, i) => {
     h.raw_weighted = weights.appearance * appearanceScores[i]
-                   + weights.combat * combatScores[i]
-                   + weights.winrate * wrScores[i];
+      + weights.combat * combatScores[i]
+      + weights.winrate * wrScores[i];
   });
 
   // 最终 min-max 归一化 → 0~100
@@ -283,6 +293,8 @@ async function loadGameData() {
       const dateEntry = gameConfig.dates.find(d => d.date === currentDate) || gameConfig.dates[0];
       dataFile = dateEntry.file;
       if (!currentDate) currentDate = dateEntry.date;
+    } else if (gameConfig.hasDates) {
+      throw new Error("未发现日期数据：请用 bun server.js 启动后访问（日期文件由服务器自动扫描）");
     } else {
       dataFile = gameConfig.dataFile;
     }
@@ -424,7 +436,7 @@ function renderTable(heroes, columns, highlightLane) {
         let badge = getTierBadge(displayVal);
         // 显示与上一期的梯度变化箭头（仅无分路游戏 + 有 prevTier 数据）
         if (!gameConfig.hasLanes && h.prevTier && h.prevTier !== displayVal) {
-          const tierOrder = ["T4","T3","T2","T1","T0.5","T0"];
+          const tierOrder = ["T4", "T3", "T2", "T1", "T0.5", "T0"];
           const arrow = tierOrder.indexOf(displayVal) > tierOrder.indexOf(h.prevTier)
             ? ' <span style="color:#3fb950;font-size:0.7rem">▲</span>'
             : ' <span style="color:#f85149;font-size:0.7rem">▼</span>';
@@ -486,10 +498,10 @@ function renderGridView(heroes, highlightLane) {
         "| 梯度字段:", tierField,
         "| 梯度值:", tier,
         "| 有效字段存在:", {
-          tier_zscore: "tier_zscore" in h ? h.tier_zscore : "缺失",
-          tier_simple: "tier_simple" in h ? h.tier_simple : "缺失",
-          tier: "tier" in h ? h.tier : "缺失"
-        });
+        tier_zscore: "tier_zscore" in h ? h.tier_zscore : "缺失",
+        tier_simple: "tier_simple" in h ? h.tier_simple : "缺失",
+        tier: "tier" in h ? h.tier : "缺失"
+      });
       unknownGroup.push(h);
     }
   });
@@ -716,6 +728,47 @@ function renderGlobalView() {
   return html;
 }
 
+// ---- 曙光网格：常用分路筛选（分路来自 英雄介绍.json 的「常用分路」字段） ----
+function getIntroLaneOptions() {
+  const counts = new Map();
+  if (heroIntroMap) {
+    for (const h of Object.values(heroIntroMap)) {
+      for (const lane of (Array.isArray(h["常用分路"]) ? h["常用分路"] : [])) {
+        if (lane) counts.set(lane, (counts.get(lane) || 0) + 1);
+      }
+    }
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])))
+    .map(e => e[0]);
+}
+
+function gridLaneTabsHtml() {
+  const lanes = getIntroLaneOptions();
+  if (lanes.length === 0) return "";
+  let html = '<div class="grid-lane-tabs"><span class="label">分路：</span>';
+  html += `<button class="${currentGridLane === null ? "active" : ""}" onclick="switchGridLane(null)">全部</button>`;
+  lanes.forEach(l => {
+    const safe = String(l).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/'/g, "\\'");
+    html += `<button class="${currentGridLane === l ? "active" : ""}" onclick="switchGridLane('${safe}')">${String(l).replace(/&/g, "&amp;").replace(/</g, "&lt;")}</button>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function filterByGridLane(heroes) {
+  if (!currentGridLane || !heroIntroMap) return heroes;
+  return heroes.filter(h => {
+    const e = heroIntroMap[h.name];
+    return e && Array.isArray(e["常用分路"]) && e["常用分路"].indexOf(currentGridLane) !== -1;
+  });
+}
+
+function switchGridLane(lane) {
+  currentGridLane = lane;
+  renderAll();
+}
+
 function renderAll() {
   if (!gameData) return;
   const content = document.getElementById("content");
@@ -724,7 +777,7 @@ function renderAll() {
   if (currentViewMode === "grid") {
     let heroes;
     if (!gameData.hasLanes) {
-      heroes = gameData.heroes;
+      heroes = filterByGridLane(gameData.heroes);
     } else if (currentView === "global") {
       heroes = currentMethod === "zscore" ? gameData.globalZ : gameData.globalSimple;
     } else {
@@ -734,9 +787,10 @@ function renderAll() {
     let titleHtml;
     if (!gameData.hasLanes) {
       const dateBadge = currentDate ? `<span class="count-badge" style="background:#238636">📅 ${currentDate}</span>` : '';
+      const laneBadge = currentGridLane ? `<span class="count-badge" style="background:#8957e5">${currentGridLane}</span>` : '';
       titleHtml = `<div class="section-header">
         <h2>${gameConfig.gameIcon} ${gameConfig.gameName} 梯度排行</h2>
-        <span class="count-badge">${heroes.length} 个英雄</span>${dateBadge}</div>`;
+        <span class="count-badge">${heroes.length} 个英雄</span>${laneBadge}${dateBadge}</div>`;
     } else if (currentView === "global") {
       titleHtml = `<div class="section-header">
         <h2>🌍 全局排名（跨分路对比）</h2>
@@ -747,7 +801,7 @@ function renderAll() {
         <h2>${currentLane}</h2>
         <span class="count-badge">${heroes.length} 个英雄</span></div>`;
     }
-    content.innerHTML = titleHtml + renderGridView(heroes, null);
+    content.innerHTML = titleHtml + gridLaneTabsHtml() + renderGridView(heroes, null);
     return;
   }
 
@@ -887,21 +941,6 @@ function sortTable(th, colIdx) {
 // ============================================================
 // 导航与控制
 // ============================================================
-function switchMethod(method) {
-  currentMethod = method;
-  // Update buttons
-  document.querySelectorAll(".controls button").forEach(b => {
-    const txt = b.textContent;
-    if (txt.includes("Z-score") || txt.includes("简易公式") || txt.includes("加权和")) {
-      const isZ = txt.includes("Z-score");
-      const isS = txt.includes("简易公式");
-      const isW = txt.includes("加权和");
-      b.className = (isZ && method === "zscore") || (isS && method === "simple") || (isW && method === "weighted") ? "active" : "";
-    }
-  });
-  renderAll();
-}
-
 function switchView(view) {
   currentView = view;
   document.getElementById("btn-lane").className = view === "lane" ? "active" : "";
@@ -946,35 +985,28 @@ function buildControls() {
 
   let html = "";
 
-  if (gameConfig.hasLanes && gameConfig.algorithm.type === "zscore") {
-    html += `<span style="margin-left:16px" class="label">算法：</span>
-      <button class="active" onclick="switchMethod('zscore')">Z-score 加权</button>
-      <button onclick="switchMethod('simple')">简易公式</button>`;
-  } else if (!gameConfig.hasLanes) {
-    html += `<span style="margin-left:16px" class="label">算法：</span>
-      <button id="btn-weighted" class="active" onclick="switchMethod('weighted')">加权和 (0.20/0.50/0.30)</button>`;
-  }
-
   if (gameConfig.hasLanes) {
     html += `<span style="margin-left:16px" class="label">视图：</span>
-      <button id="btn-lane" class="active" onclick="switchView('lane')">📋 分路排名</button>
-      <button id="btn-global" onclick="switchView('global')">🌍 全局排名</button>`;
+      <button id="btn-lane" class="${currentView === "lane" ? "active" : ""}" onclick="switchView('lane')">📋 分路排名</button>
+      <button id="btn-global" class="${currentView === "global" ? "active" : ""}" onclick="switchView('global')">🌍 全局排名</button>`;
   }
 
-  // 日期切换 (hasDates 游戏)
+  // 日期切换 (hasDates 游戏) — 下拉列表
   if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length > 1) {
     const sortedDates = [...gameConfig.dates].sort((a, b) => b.date.localeCompare(a.date));
-    html += `<span style="margin-left:16px" class="label">日期：</span>`;
-    sortedDates.forEach(d => {
-      const active = d.date === currentDate ? 'active' : '';
-      html += `<button class="${active}" onclick="switchDate('${d.date}')">${d.date}</button>`;
-    });
+    html += `<span style="margin-left:16px" class="label">日期：</span>
+      <select class="date-select" onchange="switchDate(this.value)" title="切换数据日期">
+        ${sortedDates.map(d => {
+          const label = d.date + (d.date === gameConfig.defaultDate ? "（最新）" : "");
+          return `<option value="${d.date}"${d.date === currentDate ? " selected" : ""}>${label}</option>`;
+        }).join("")}
+      </select>`;
   }
 
   // 展示模式切换
   html += `<span style="margin-left:16px" class="label">展示：</span>
-    <button id="btn-table" class="active" onclick="switchViewMode('table')">📋 表格</button>
-    <button id="btn-grid" onclick="switchViewMode('grid')">🎨 网格</button>`;
+    <button id="btn-table" class="${currentViewMode === "table" ? "active" : ""}" onclick="switchViewMode('table')">📋 表格</button>
+    <button id="btn-grid" class="${currentViewMode === "grid" ? "active" : ""}" onclick="switchViewMode('grid')">🎨 网格</button>`;
 
   html += `<input type="text" class="search-box" placeholder="🔍 搜索英雄..." oninput="doSearch(this.value)" style="margin-left:16px">`;
   controls.innerHTML = html;
@@ -1022,14 +1054,19 @@ async function switchGame(gameId) {
   }
 
   // Reset state
-  currentMethod = gameConfig.algorithm.type === "weighted" ? "weighted" : "zscore";
+  // 算法不再可切换：LOLM 固定 Z-score 加权，曙光英雄固定加权和
+  currentMethod = gameConfig.hasLanes ? "zscore" : "weighted";
   currentView = "lane";
   currentLane = gameConfig.hasLanes ? gameConfig.lanes[0].name : null;
   currentDate = null;
   if (gameConfig.hasDates) {
+    if (!gameConfig.dates || gameConfig.dates.length === 0) {
+      throw new Error("未发现日期数据：请用 bun server.js 启动后访问（日期文件由服务器自动扫描）");
+    }
     currentDate = gameConfig.defaultDate || gameConfig.dates[0].date;
   }
   heroTimelineLoaded = false; heroTimeline = null; heroTimelineDates = [];
+  heroIntroLoaded = false; heroIntroMap = null; currentGridLane = null;
   // Clear search box
   const searchBox = document.querySelector(".search-box");
   if (searchBox) searchBox.value = "";
@@ -1046,6 +1083,13 @@ async function switchGame(gameId) {
   updateHeader();
   renderAll();
   updateFooter();
+
+  // 预热英雄介绍数据（网格分路按钮依赖它）；加载完若在网格视图则重绘一次
+  if (gameConfig.introFile) {
+    loadHeroIntro().then(() => {
+      if (currentViewMode === "grid") renderAll();
+    });
+  }
 }
 
 function updateHeader() {
@@ -1084,7 +1128,7 @@ let heroTimelineLoaded = false;
 
 async function loadHeroTimeline() {
   if (heroTimelineLoaded) return;
-  if (!gameConfig || !gameConfig.hasDates) return;
+  if (!gameConfig || !gameConfig.hasDates || !gameConfig.dates || gameConfig.dates.length === 0) return;
 
   heroTimelineDates = gameConfig.dates.map(d => d.date).sort();
   heroTimeline = {};
@@ -1100,12 +1144,82 @@ async function loadHeroTimeline() {
       const result = computeSG(raw);
       const map = {};
       result.heroes.forEach(h => {
-        map[h.name] = { score: h.score, winRate: h.winRate, combatPower: h.combatPower, rank: h.rank, tier: h.tier, appearanceRank: h.appearanceRank };
+        map[h.name] = { score: h.score, winRate: h.winRate, combatPower: h.combatSignal, rank: h.rank, tier: h.tier, appearanceRank: h.appearanceRank };
       });
       heroTimeline[dateStr] = map;
-    } catch (e) {}
+    } catch (e) { }
   }
   heroTimelineLoaded = true;
+}
+
+// ============================================================
+// HeroIntro — 英雄介绍数据（introFile，可选；无则详情只显示数据）
+// ============================================================
+let heroIntroMap = null;      // name -> {name, bannerUrl, 常用分路[], 擅长选手[]}
+let heroIntroLoaded = false;
+
+async function loadHeroIntro() {
+  if (heroIntroLoaded) return;
+  heroIntroLoaded = true;
+  heroIntroMap = {};
+  if (!gameConfig || !gameConfig.introFile) return;
+  const base = gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+  try {
+    const resp = await fetch(base + "/" + gameConfig.introFile);
+    if (!resp.ok) return;
+    const list = await resp.json();
+    // 本地横幅图：banner/<英雄名>.<扩展名>，文件名清单由服务器 /api/{dir}/banners 提供
+    let bannerByName = null;
+    try {
+      const br = await fetch("/api/" + encodeURIComponent(base) + "/banners");
+      if (br.ok) {
+        const bd = await br.json();
+        if (Array.isArray(bd.files)) {
+          const bdir = bd.bannerDir || "banner";
+          bannerByName = new Map(bd.files.map(f => [f.replace(/\.(png|jpe?g|webp|gif)$/i, ""), base + "/" + bdir + "/" + f]));
+        }
+      }
+    } catch (e) { /* banners 接口不可用 → 无横幅图 */ }
+    (Array.isArray(list) ? list : []).forEach(h => {
+      if (!h || !h.name) return;
+      const banner = bannerByName ? (bannerByName.get(h.name) || null) : null;
+      heroIntroMap[h.name] = { name: h.name, 常用分路: h["常用分路"], 擅长选手: h["擅长选手"], banner };
+    });
+  } catch (e) { /* 静默失败：无介绍数据时详情只显示数据部分 */ }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+// 详情页上部"英雄介绍"卡：样式参考 曙光英雄/英雄介绍详情.html
+// h.banner = 本地横幅图相对路径（如 曙光英雄/banner/鲁智深.jpg）；无图则纯暗底卡片
+function buildHeroIntroHtml(h) {
+  const name = escHtml(h.name);
+  const bg = h.banner ? escHtml(h.banner) : "";
+  const lanes = (Array.isArray(h["常用分路"]) ? h["常用分路"] : []).filter(Boolean);
+  const players = (Array.isArray(h["擅长选手"]) ? h["擅长选手"] : []).filter(Boolean);
+  const laneVal = lanes.length ? escHtml(lanes.join(" / ")) : '<span class="hd-intro-empty">待补充</span>';
+  const playersChips = players.length
+    ? players.map(p => `<span class="hd-intro-player">${escHtml(p)}</span>`).join("")
+    : '<span class="hd-intro-empty">待补充</span>';
+  const bgDiv = bg
+    ? `<div class="hd-intro-bg" style="background-image:url('${bg}')"></div><div class="hd-intro-mask"></div>`
+    : `<div class="hd-intro-mask hd-intro-mask-none"></div>`;
+  return `<div class="hd-intro">
+      ${bgDiv}
+      <div class="hd-intro-content">
+        <h2 class="hd-intro-name">${name}</h2>
+        <div class="hd-intro-lane">
+          <span class="hd-intro-label">常用分路</span>
+          <span class="hd-intro-value">${laneVal}</span>
+        </div>
+        <div class="hd-intro-players">
+          <span class="hd-intro-label">擅长选手</span>
+          <span class="hd-intro-chips">${playersChips}</span>
+        </div>
+      </div>
+    </div>`;
 }
 
 function showHeroDetail(name) {
@@ -1127,9 +1241,9 @@ function showHeroDetail(name) {
     document.body.appendChild(overlay);
   }
   overlay.style.display = 'flex';
-  document.getElementById('hdTitle').textContent = '📈 ' + name;
+  document.getElementById('hdTitle').textContent = name + ' 英雄详情';
   document.getElementById('hdBody').innerHTML = '<p style="text-align:center;padding:40px;color:#8b949e">⏳ 加载趋势数据...</p>';
-  loadHeroTimeline().then(() => renderHeroDetail(name));
+  Promise.all([loadHeroTimeline(), loadHeroIntro()]).then(() => renderHeroDetail(name));
 }
 
 function closeHeroDetail() {
@@ -1144,12 +1258,16 @@ function renderHeroDetail(name) {
     const h = heroTimeline[d] ? heroTimeline[d][name] : null;
     return h ? { date: d, ...h } : null;
   }).filter(Boolean);
+  // 上部：英雄介绍卡（英雄介绍.json 里有该英雄才显示）
+  const intro = (heroIntroMap && heroIntroMap[name]) || null;
+  const introHtml = intro ? buildHeroIntroHtml(intro) : "";
   if (points.length === 0) {
-    document.getElementById('hdBody').innerHTML = '<p style="text-align:center;padding:40px;color:#8b949e">暂无历史数据</p>';
+    document.getElementById('hdBody').innerHTML = introHtml + '<p style="text-align:center;padding:40px;color:#8b949e">暂无历史数据</p>';
     return;
   }
 
   const heroCount = Math.max(...heroTimelineDates.map(d => heroTimeline[d] ? Object.keys(heroTimeline[d]).length : 0), 0);
+  const combatLabel = (gameConfig.algorithm && gameConfig.algorithm.combatField) || "战力";
 
   let gMin = { score: Infinity, winRate: Infinity, combatPower: Infinity, rank: Infinity, appearanceRank: Infinity };
   let gMax = { score: -Infinity, winRate: -Infinity, combatPower: -Infinity, rank: -Infinity, appearanceRank: -Infinity };
@@ -1173,10 +1291,11 @@ function renderHeroDetail(name) {
 
   function norm(val, min, max) { return ((val - min) / (max - min || 1)) * 100; }
 
-  let html = '<div class="chart-box"><canvas id="chartHeroTimeline" style="height:360px"></canvas></div>';
-  html += `<table class="mini-table"><thead><tr><th>日期</th><th>梯度</th><th>排名</th><th>评分</th><th>胜率</th><th>战力</th><th>出场排名</th></tr></thead><tbody>`;
+  let html = introHtml;
+  html += '<div class="chart-box"><canvas id="chartHeroTimeline" style="height:360px"></canvas></div>';
+  html += `<table class="mini-table"><thead><tr><th>日期</th><th>梯度</th><th>排名</th><th>评分</th><th>胜率</th><th>${combatLabel}</th><th>出场排名</th></tr></thead><tbody>`;
   points.forEach(p => {
-    html += `<tr><td>${p.date}</td><td>${getTierBadge(p.tier)}</td><td>#${p.rank}</td><td>${p.score.toFixed(1)}</td><td>${(p.winRate*100).toFixed(2)}%</td><td>${p.combatPower}</td><td>#${p.appearanceRank}</td></tr>`;
+    html += `<tr><td>${p.date}</td><td>${getTierBadge(p.tier)}</td><td>#${p.rank}</td><td>${p.score.toFixed(1)}</td><td>${(p.winRate * 100).toFixed(2)}%</td><td>${p.combatPower}</td><td>#${p.appearanceRank}</td></tr>`;
   });
   html += '</tbody></table>';
   document.getElementById('hdBody').innerHTML = html;
@@ -1188,7 +1307,7 @@ function renderHeroDetail(name) {
       datasets: [
         { label: '评分', data: points.map(p => norm(p.score, gMin.score, gMax.score)), borderColor: '#58a6ff', backgroundColor: '#58a6ff', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
         { label: '胜率', data: points.map(p => norm(p.winRate, gMin.winRate, gMax.winRate)), borderColor: '#3fb950', backgroundColor: '#3fb950', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
-        { label: '战力', data: points.map(p => norm(p.combatPower, gMin.combatPower, gMax.combatPower)), borderColor: '#d2991d', backgroundColor: '#d2991d', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
+        { label: combatLabel, data: points.map(p => norm(p.combatPower, gMin.combatPower, gMax.combatPower)), borderColor: '#d2991d', backgroundColor: '#d2991d', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
         { label: '排名', data: points.map(p => norm(heroCount - p.rank + 1, gMin.rank, gMax.rank)), borderColor: '#ff7a45', backgroundColor: '#ff7a45', tension: 0.2, borderWidth: 2.5, pointRadius: 5, borderDash: [6, 3] },
         { label: '出场排名', data: points.map(p => norm(heroCount - p.appearanceRank + 1, gMin.appearanceRank, gMax.appearanceRank)), borderColor: '#bc8cff', backgroundColor: '#bc8cff', tension: 0.2, borderWidth: 2.5, pointRadius: 5, borderDash: [3, 3] },
       ]

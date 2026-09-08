@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英雄介绍</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            font-family:
+                "Microsoft YaHei",
+                "PingFang SC",
+                system-ui,
+                sans-serif;
+            background: #080b10;
+            color: #fff;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        /* =========================
+           英雄卡片
+        ========================= */
+
+        .hero-card {
+            position: relative;
+            width: min(1200px, 100%);
+            min-height: 620px;
+
+            overflow: hidden;
+
+            background: #0d1118;
+            border-radius: 18px;
+
+            isolation: isolate;
+        }
+
+        /* =========================
+           背景图片
+        ========================= */
+
+        .hero-image {
+            position: absolute;
+            inset: 0;
+
+            background-image: url("https://webcloudplt.oss.jjbisai.com/fw/2000/63e35a443c9f3fc2_841820_4444x2000.jpg");
+
+            background-size: cover;
+            background-position: center;
+
+            transition: transform 0.8s ease;
+        }
+
+        .hero-card:hover .hero-image {
+            transform: scale(1.025);
+        }
+
+        /* =========================
+           图片蒙版
+        ========================= */
+
+        .hero-mask {
+            position: absolute;
+            inset: 0;
+
+            background:
+                linear-gradient(90deg,
+                    rgba(5, 8, 13, 0.96) 0%,
+                    rgba(5, 8, 13, 0.86) 30%,
+                    rgba(5, 8, 13, 0.48) 58%,
+                    rgba(5, 8, 13, 0.12) 100%);
+
+            z-index: 1;
+        }
+
+        /* =========================
+           内容
+        ========================= */
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+
+            min-height: 620px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+
+            padding: 70px 80px;
+        }
+
+        /* =========================
+           英雄名称
+        ========================= */
+
+        .hero-name {
+            font-size: clamp(64px, 8vw, 104px);
+            line-height: 1;
+
+            font-weight: 900;
+            letter-spacing: -4px;
+
+            text-shadow:
+                0 6px 24px rgba(0, 0, 0, 0.65);
+
+            margin-bottom: 26px;
+        }
+
+        /* =========================
+           基础信息
+        ========================= */
+
+        .hero-info {
+            display: flex;
+            gap: 12px;
+
+            margin-bottom: 22px;
+        }
+
+        .info-item {
+            min-width: 145px;
+
+            padding: 13px 18px;
+
+            border-radius: 8px;
+
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .info-label {
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 11px;
+            line-height: 1.2;
+
+            color: rgba(255, 255, 255, 0.42);
+
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            line-height: 1.3;
+
+            font-weight: 700;
+
+            color: #fff;
+        }
+
+        /* =========================
+           擅长选手
+        ========================= */
+
+        .players {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            flex-wrap: wrap;
+        }
+
+        .player-label {
+            margin-right: 4px;
+
+            font-size: 12px;
+
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .player {
+            padding: 6px 11px;
+
+            border-radius: 5px;
+
+            font-size: 12px;
+
+            color: rgba(255, 255, 255, 0.78);
+
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* =========================
+           响应式
+        ========================= */
+
+        @media (max-width: 800px) {
+
+            body {
+                padding: 18px;
+            }
+
+            .hero-card {
+                min-height: 650px;
+            }
+
+            .hero-content {
+                min-height: 650px;
+                padding: 50px 35px;
+            }
+
+            .hero-mask {
+                background:
+                    linear-gradient(180deg,
+                        rgba(5, 8, 13, 0.35),
+                        rgba(5, 8, 13, 0.82) 65%,
+                        rgba(5, 8, 13, 0.97));
+            }
+
+            .hero-name {
+                font-size: 68px;
+                margin-bottom: 22px;
+            }
+
+            .hero-info {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .info-item {
+                min-width: 190px;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            .hero-card {
+                border-radius: 12px;
+            }
+
+            .hero-content {
+                padding: 40px 25px;
+            }
+
+            .hero-name {
+                font-size: 56px;
+                letter-spacing: -3px;
+                margin-bottom: 20px;
+            }
+
+            .info-item {
+                min-width: 170px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero-card">
+
+        <!-- 英雄图片 -->
+        <div class="hero-image"></div>
+
+        <!-- 图片蒙版 -->
+        <div class="hero-mask"></div>
+
+        <!-- 英雄信息 -->
+        <div class="hero-content">
+
+            <!-- 英雄名 -->
+            <h1 class="hero-name">
+                鲁智深
+            </h1>
+
+            <!-- 基础信息 -->
+            <div class="hero-info">
+
+                <div class="info-item">
+                    <span class="info-label">
+                        常用分路
+                    </span>
+
+                    <span class="info-value">
+                        打野/上单
+                    </span>
+                </div>
+
+
+            </div>
+
+            <!-- 擅长选手 -->
+            <div class="players">
+
+                <span class="player-label">
+                    擅长选手
+                </span>
+
+                <span class="player">
+                    Faker
+                </span>
+
+                <span class="player">
+                    Knight
+                </span>
+
+                <span class="player">
+                    Chovy
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
