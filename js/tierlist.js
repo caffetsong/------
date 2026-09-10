@@ -69,7 +69,7 @@ function computeSG(rawData) {
     const rawCombat = h[combatField];
     return {
       name: h.heroName,
-      headIcon: gameConfig.headIconPath ? ("曙光英雄/" + gameConfig.headIconPath.replace("{name}", h.heroName)) : null,
+      headIcon: gameConfig.headIconPath ? gameConfig.headIconPath.replace("{name}", h.heroName) : null,
       appearanceRank: parseInt(h.appearanceRank),
       combatPower: parseFloat(h.combatPower),
       combatSignal: parseFloat(rawCombat != null && rawCombat !== "" ? rawCombat : h.combatPower),
@@ -131,25 +131,21 @@ function computeSG(rawData) {
 // 数据加载 + 计算调度
 // ============================================================
 async function loadGameData() {
-  const base = "曙光英雄";
-
+  
   // 多期日期数据：当前日期 + 上一期（用于梯度/名次变化对比）
   let dataFile;
   if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length > 0) {
     const dateEntry = gameConfig.dates.find(d => d.date === currentDate) || gameConfig.dates[0];
     dataFile = dateEntry.file;
     if (!currentDate) currentDate = dateEntry.date;
-  } else if (gameConfig.hasDates) {
-    throw new Error("未发现日期数据：请用 bun server.js 启动后访问（日期文件由服务器自动扫描）");
   } else {
-    dataFile = gameConfig.dataFile;
+    throw new Error("未发现日期数据：请用 bun server.js 启动（需 曙光英雄_YYYY-MM-DD.json）");
   }
-  const resp = await fetch(base + "/" + dataFile);
+  const resp = await fetch(dataFile);
   if (!resp.ok) throw new Error(`加载数据失败: ${resp.status}`);
   const rawData = await resp.json();
   const data = computeSG(rawData);
   gameData = {
-    hasLanes: false,
     heroes: data.heroes,
     sorted: data.sorted
   };
@@ -163,7 +159,7 @@ async function loadGameData() {
       const prevEntry = gameConfig.dates.find(d => d.date === prevDate);
       if (prevEntry) {
         try {
-          const prevResp = await fetch(base + "/" + prevEntry.file);
+          const prevResp = await fetch(prevEntry.file);
           if (prevResp.ok) {
             const prevRaw = await prevResp.json();
             const prevResult = computeSG(prevRaw);
@@ -701,9 +697,8 @@ function buildControls() {
 // 加载曙光英雄（单一游戏）
 // ============================================================
 async function switchGame() {
-  const base = "曙光英雄";
-  try {
-    gameConfig = await DataSource.loadConfig(base);
+    try {
+    gameConfig = await DataSource.loadConfig();
   } catch (e) {
     throw new Error(`加载曙光英雄配置失败: ${e.message}`);
   }
@@ -778,13 +773,12 @@ async function loadHeroTimeline() {
 
   heroTimelineDates = gameConfig.dates.map(d => d.date).sort();
   heroTimeline = {};
-  const base = "曙光英雄";
-
+  
   for (const dateStr of heroTimelineDates) {
     const entry = gameConfig.dates.find(e => e.date === dateStr);
     if (!entry) continue;
     try {
-      const resp = await fetch(base + "/" + entry.file);
+      const resp = await fetch(entry.file);
       if (!resp.ok) continue;
       const raw = await resp.json();
       const result = computeSG(raw);
@@ -809,20 +803,19 @@ async function loadHeroIntro() {
   heroIntroLoaded = true;
   heroIntroMap = {};
   if (!gameConfig || !gameConfig.introFile) return;
-  const base = "曙光英雄";
-  try {
-    const resp = await fetch(base + "/" + gameConfig.introFile);
+    try {
+    const resp = await fetch(gameConfig.introFile);
     if (!resp.ok) return;
     const list = await resp.json();
     // 本地横幅图：banner/<英雄名>.<扩展名>，文件名清单由服务器 /api/{dir}/banners 提供
     let bannerByName = null;
     try {
-      const br = await fetch("/api/" + encodeURIComponent(base) + "/banners");
+      const br = await fetch("/api/banners");
       if (br.ok) {
         const bd = await br.json();
         if (Array.isArray(bd.files)) {
           const bdir = bd.bannerDir || "banner";
-          bannerByName = new Map(bd.files.map(f => [f.replace(/\.(png|jpe?g|webp|gif)$/i, ""), base + "/" + bdir + "/" + f]));
+          bannerByName = new Map(bd.files.map(f => [f.replace(/\.(png|jpe?g|webp|gif)$/i, ""), bdir + "/" + f]));
         }
       }
     } catch (e) { /* banners 接口不可用 → 无横幅图 */ }
@@ -838,8 +831,8 @@ function escHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// 详情页上部"英雄介绍"卡：样式参考 曙光英雄/英雄介绍详情.html
-// h.banner = 本地横幅图相对路径（如 曙光英雄/banner/鲁智深.jpg）；无图则纯暗底卡片
+// 详情页上部"英雄介绍"卡：样式参考 英雄介绍详情.html
+// h.banner = 本地横幅图相对路径（如 banner/鲁智深.jpg）；无图则纯暗底卡片
 function buildHeroIntroHtml(h) {
   const name = escHtml(h.name);
   const bg = h.banner ? escHtml(h.banner) : "";
@@ -992,8 +985,7 @@ async function setupWatch() {
   es.onmessage = ev => {
     let msg;
     try { msg = JSON.parse(ev.data); } catch { return; }
-    const base = gameConfig ? "曙光英雄" : "曙光英雄";
-    if (msg.dir !== base) return; // 只关心当前游戏
+    // 单游戏：所有数据变化都与本页相关
     clearTimeout(timer);
     timer = setTimeout(reloadFromDisk, 400);
   };
@@ -1004,9 +996,8 @@ let watchReloading = false;
 async function reloadFromDisk() {
   if (!gameConfig || watchReloading) return;
   watchReloading = true;
-  const base = "曙光英雄";
-  try {
-    const cfg = await DataSource.loadConfig(base);
+    try {
+    const cfg = await DataSource.loadConfig();
     // 保存当前搜索词（buildControls 会重建搜索框）
     const searchBox = document.querySelector(".search-box");
     const searchVal = searchBox ? searchBox.value : "";

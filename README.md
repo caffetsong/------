@@ -25,28 +25,29 @@ bun server.js                        # 默认端口 3001
 
 ## 项目结构
 
+单游戏（曙光英雄）· 数据全部在项目根目录，无嵌套子目录。
+
 ```
 曙光英雄梯度/
-├── server.js              # bun 服务器（静态托管 + API + 日期扫描 + SSE 热刷新）
-├── index.html             # 梯度排行主页
-├── 备战.html / 备战.js      # 备战管理器（符文 + 出装方案）
-├── equip.json             # 装备目录（定位 → tier → 装备名）
-├── data.json              # 备战方案数据（双端自动读写，勿手改）
-├── equipicon/             # 装备图标（PNG，按装备名命名，102 个）
-├── 装备数据说明.md          # 装备/方案数据格式说明
-├── css/tier-list.css      # 公共样式（GitHub dark 主题）
-├── js/tierlist.js         # 梯度排行核心引擎（算法 + 渲染 + 搜索 + 排序）
-├── js/dataSource.js       # 数据访问层（探测服务器，回退静态直读）
-├── js/chart.min.js        # Chart.js（英雄详情趋势图）
-├── editor.html            # JSON 数据编辑器
-└── 曙光英雄/
-    ├── config.json        # 配置（dates 由服务器自动扫描，无需手写）
-    ├── 曙光英雄_YYYY-MM-DD.json  # 多期数据，按起始日期命名（8-17~8-23 → 2026-08-17）
-    ├── 英雄介绍.json        # 英雄介绍：name / 常用分路 / 擅长选手
-    ├── HeadIcon/          # 英雄头像（PNG，按英雄名命名）
-    ├── banner/            # 英雄详情横幅图（PNG/JPG，按英雄名命名）
-    ├── analyze.js         # 离线分析脚本（相关性/敏感性验证，可选）
-    └── 英雄介绍详情.html    # 介绍卡视觉模板（参考）
+├── server.js                    # bun 服务器（静态托管 + API + 日期扫描 + SSE 热刷新）
+├── index.html                   # 梯度排行主页
+├── 备战.html / 备战.js            # 备战管理器（符文 + 出装方案）
+├── editor.html                  # JSON 数据编辑器
+├── css/tier-list.css            # 公共样式（GitHub dark 主题）
+├── js/tierlist.js               # 梯度排行核心引擎（算法 + 渲染 + 搜索 + 排序）
+├── js/dataSource.js             # 数据访问层（探测服务器，回退静态直读）
+├── js/chart.min.js              # Chart.js（英雄详情趋势图）
+├── config.json                  # 配置（dates 由服务器自动扫描，无需手写）
+├── 曙光英雄_YYYY-MM-DD.json       # 多期数据，按起始日期命名（8-17~8-23 → 2026-08-17）
+├── 英雄介绍.json                  # 英雄介绍：name / 常用分路 / 擅长选手
+├── HeadIcon/                    # 英雄头像（PNG，按英雄名命名）
+├── banner/                      # 英雄详情横幅图（PNG/JPG，按英雄名命名）
+├── equip.json                   # 装备目录（定位 → tier → 装备名）
+├── data.json                    # 备战方案数据（页面自动读写，勿手改）
+├── equipicon/                   # 装备图标（PNG，按装备名命名）
+├── 装备数据说明.md                # 装备/方案数据格式说明
+├── analyze.js                   # 离线分析脚本（相关性/敏感性验证，可选）
+└── 英雄介绍详情.html              # 介绍卡视觉模板（参考）
 ```
 
 ---
@@ -97,18 +98,19 @@ rawPower = 0.15 × 出场分 + 0.70 × 战力分 + 0.15 × 胜率分
 
 ## 服务器接口
 
+单游戏架构：数据都在根目录，接口不再带 `{dir}` 路径段。
+
 | 接口 | 说明 |
 |------|------|
-| `GET /api/games` | 自动发现含 config.json 的游戏目录 |
-| `GET /api/{dir}/config` | 返回配置；**日期类自动扫描目录内 `游戏名_YYYY-MM-DD.json`**，`defaultDate` 指向最新 |
-| `GET /api/{dir}/list` | 列出目录下 JSON 文件 |
-| `GET /api/{dir}/banners` | 列出横幅图目录（bannerDir）文件 |
-| `POST /api/{dir}/save` | 编辑器写回数据（原子替换） |
-| `GET /api/watch` | SSE 文件监听，数据变化前端自动刷新 |
-| `GET /api/heroes` | 英雄列表（扫 `曙光英雄/HeadIcon`） |
+| `GET /api/games` | 单游戏信息（也用于前端探测服务器是否可用） |
+| `GET /api/config` | 返回 config.json；**自动扫描根目录 `曙光英雄_YYYY-MM-DD.json`**，`dates` / `defaultDate` 由扫描结果生成 |
+| `GET /api/list` | 列出根目录 JSON 数据文件 |
+| `GET /api/banners` | 列出横幅图目录（`config.bannerDir`，缺省 `banner`）文件 |
+| `POST /api/save` | 编辑器写回数据（临时文件 + rename 原子替换） |
+| `GET /api/watch` | SSE 文件监听，数据变化前端自动刷新（只推送日期数据/config/英雄介绍） |
+| `GET /api/heroes` | 英雄列表（扫 `HeadIcon/`） |
 | `GET /api/lanes` / `GET /api/players` | 读 `英雄介绍.json` 的 常用分路 / 擅长选手 |
 | `GET/POST /api/data` | 读取 / 保存备战方案（`data.json`） |
-| `GET /HeadIcon/*` | 映射到 `曙光英雄/HeadIcon`（备战页头像复用，不重复存一份） |
 
 ---
 
@@ -144,5 +146,5 @@ rawPower = 0.15 × 出场分 + 0.70 × 战力分 + 0.15 × 胜率分
 ## 备注
 
 - 数据文件命名按**起始日期**：例如 8-17 到 8-23 的数据命名为 `曙光英雄_2026-08-17.json`
-- 新增数据：把文件丢进 `曙光英雄/` 即可，服务器自动扫描、自动设为最新，无需改 config
+- 新增数据：把 `曙光英雄_YYYY-MM-DD.json` 丢进项目根目录即可，服务器自动扫描、自动设为最新，无需改 config
 - 横幅图/头像缺失时页面自动降级显示（不破图）

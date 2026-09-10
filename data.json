@@ -1268,5 +1268,50 @@
         null
       ]
     }
+  ],
+  "帕提多": [
+    {
+      "name": "新方案",
+      "lane": "赏金",
+      "player": "57天下无双25805529205",
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "刀锋之翼",
+        "牛魔的咆哮",
+        "夺魂之镰",
+        "穿心",
+        "狂放之击",
+        "平衡支配者"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        "神圣救赎"
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
   ]
 }

@@ -405,7 +405,7 @@
     let sortKey = null;
     let sortDir = 1;
     let currentFile = '';
-    let currentBase = '';        // 数据所属游戏目录（曙光英雄），服务器保存用
+    let currentBase = '';        // 非空表示数据来自项目根目录（可写回服务器）
     let currentFileHandle = null; // FileSystemFileHandle for direct write-back
     let computedFields = {};   // { fieldName: { dependsOn: [], compute: fn } }
 
@@ -806,9 +806,9 @@
       fetch(path)
         .then(r => { if (!r.ok) throw new Error(r.status + ' ' + r.statusText); return r.json(); })
         .then(json => {
-          const parts = path.split('/');
-          currentBase = parts.length > 1 ? parts[0] : '';
-          currentFile = parts.length > 1 ? parts.slice(1).join('/') : path;
+          // 单游戏：预设都是项目根目录下的文件，标记为可写回服务器
+          currentBase = 'root';
+          currentFile = path;
           setData(json, currentFile);
         })
         .catch(err => alert('加载失败: ' + err.message));
@@ -823,11 +823,11 @@
 
       const json = JSON.stringify(data, null, 2);
 
-      // 服务器模式：直接写回项目文件（最优先，前提是从预设加载、知道归属目录）
+      // 服务器模式：直接写回项目文件（从预设加载的数据可写回根目录）
       if (currentBase) {
-        const saved = await DataSource.saveToDisk(currentBase, currentFile, data);
+        const saved = await DataSource.saveToDisk(currentFile, data);
         if (saved && saved.ok) {
-          toast(`✅ 已保存到 ${currentBase}/${currentFile}（${saved.rows} 行）`);
+          toast(`✅ 已保存到 ${currentFile}（${saved.rows} 行）`);
           return;
         }
         if (saved && !saved.ok) {
@@ -920,9 +920,9 @@
       }
 
       try {
-        // 1. Pick the game data directory (e.g. 曙光英雄). Browser remembers via id.
+        // 1. 选择项目根目录（数据文件都放在项目根目录）
         const dirHandle = await window.showDirectoryPicker({
-          id: 'sg-template-dir',
+          id: 'project-root-dir',
           mode: 'readwrite'
         });
 
@@ -952,33 +952,10 @@
         await writable.write(json);
         await writable.close();
 
-        // 4. Register the new file in config.json so the preset dropdown shows it
-        const registered = await registerTemplateInConfig(dirHandle, fileName, dateStr);
-        toast(registered
-          ? `模板已创建并登记到预设: ${fileName}`
-          : `模板已创建: ${fileName}（未找到 config.json，预设未登记）`);
+        // 4. 完成（服务器会自动扫描 曙光英雄_YYYY-MM-DD.json，无需登记 config）
+        toast(`模板已创建: ${fileName}（服务器会自动扫描为最新一期）`);
       } catch (e) {
         if (e.name !== 'AbortError') alert('创建模板失败: ' + e.message);
-      }
-    }
-
-    // Add { date, file } to config.json dates array, preserving existing entries
-    async function registerTemplateInConfig(dirHandle, fileName, dateStr) {
-      try {
-        const configHandle = await dirHandle.getFileHandle('config.json');
-        const file = await configHandle.getFile();
-        const config = JSON.parse(await file.text());
-        if (!Array.isArray(config.dates)) config.dates = [];
-        if (!config.dates.some(d => d.file === fileName)) {
-          config.dates.push({ date: dateStr, file: fileName });
-          const writable = await configHandle.createWritable();
-          await writable.write(JSON.stringify(config, null, 2));
-          await writable.close();
-        }
-        return true;
-      } catch (e) {
-        console.warn('registerTemplateInConfig failed:', e);
-        return false;
       }
     }
 
@@ -1135,14 +1112,14 @@
       if (!optgroup) return;
       try {
         // 走数据层：服务器可用时自动扫出目录里最新日期文件，无需手改 config.json
-        const config = await DataSource.loadConfig('曙光英雄');
+        const config = await DataSource.loadConfig();
         optgroup.innerHTML = '';
         const gameName = config.gameName || '曙光英雄';
         if (config.hasDates && config.dates && config.dates.length > 0) {
           const sorted = [...config.dates].sort((a, b) => b.date.localeCompare(a.date));
           sorted.forEach(d => {
             const opt = document.createElement('option');
-            opt.value = '曙光英雄/' + d.file;
+            opt.value = d.file;
             opt.textContent = gameName + ' ' + d.date;
             optgroup.appendChild(opt);
           });
@@ -1154,7 +1131,7 @@
           optgroup.appendChild(opt);
         } else if (config.dataFile) {
           const opt = document.createElement('option');
-          opt.value = '曙光英雄/' + config.dataFile;
+          opt.value = config.dataFile;
           opt.textContent = gameName;
           optgroup.appendChild(opt);
         }

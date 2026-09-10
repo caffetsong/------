@@ -2,9 +2,7 @@
   "gameId": "sg",
   "gameName": "曙光英雄",
   "gameIcon": "☀️",
-  "hasLanes": false,
   "hasDates": true,
-  "dataFile": "曙光英雄.json",
   "headIconPath": "HeadIcon/{name}.png",
   "introFile": "英雄介绍.json",
   "bannerDir": "banner",
@@ -104,15 +102,5 @@
       "format": "int"
     }
   ],
-  "footer": "曙光英雄 Hero Tier List · 基于出场排名/战力/胜率加权算法 · 仅供参考",
-  "dates": [
-    {
-      "date": "2026-09-04",
-      "file": "曙光英雄_2026-09-04.json"
-    },
-    {
-      "date": "2026-09-10",
-      "file": "曙光英雄_2026-09-10.json"
-    }
-  ]
+  "footer": "曙光英雄 Hero Tier List · 基于出场排名/战力/胜率加权算法 · 仅供参考"
 }
