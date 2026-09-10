@@ -317,6 +317,7 @@ function selectHero(hero) {
 
     renderSchemes();
     updateUniversalButton();
+    updateUniversalEquipButton();
 }
 
 
@@ -331,18 +332,26 @@ function getSchemes() {
 
 
 /* =========================================================
-   通用符文(英雄级共享符文配置)
-   开启后顶部显示一份共享符文, 方案卡隐藏各自符文区(数据保留);
-   关闭后方案恢复显示自己的符文配置。存于 data.__universal[hero]。
+   通用符文 / 通用装备(英雄级共享配置)
+   开启后顶部显示一份共享面板, 方案卡隐藏各自对应区域(数据保留);
+   关闭后方案恢复显示自己的配置。存于 data.__universal[hero]。
 ========================================================= */
 
 function getUniversalEntry(hero) {
     const store = data.__universal;
     const entry = store && typeof store === "object" && !Array.isArray(store) ? store[hero] : null;
     if (!entry || typeof entry !== "object") {
-        return { enabled: false, runes: { colorful: [], attack: [], defense: [], general: [] } };
+        return {
+            enabled: false,
+            runes: { colorful: [], attack: [], defense: [], general: [] },
+            equipEnabled: false,
+            equips: normalizeEquips(),
+            equipsBackup: normalizeEquipsBackup(null, EQUIP_SLOT_COUNT),
+            equipsBackup2: normalizeEquipsBackup(null, EQUIP_SLOT_COUNT)
+        };
     }
     const runes = entry.runes && typeof entry.runes === "object" ? entry.runes : {};
+    const equips = normalizeEquips(entry.equips);
     return {
         enabled: !!entry.enabled,
         runes: {
@@ -350,7 +359,11 @@ function getUniversalEntry(hero) {
             attack: Array.isArray(runes.attack) ? runes.attack : [],
             defense: Array.isArray(runes.defense) ? runes.defense : [],
             general: Array.isArray(runes.general) ? runes.general : []
-        }
+        },
+        equipEnabled: !!entry.equipEnabled,
+        equips,
+        equipsBackup: normalizeEquipsBackup(entry.equipsBackup, equips.length),
+        equipsBackup2: normalizeEquipsBackup(entry.equipsBackup2, equips.length)
     };
 }
 
@@ -364,6 +377,17 @@ function setUniversalEntry(hero, entry) {
 /* 通用符文的“虚拟方案”对象, 供符文槽/选择器复用 */
 function getUniversalBuild() {
     return { runes: getUniversalEntry(currentHero).runes };
+}
+
+/* 通用装备的“虚拟方案”对象, 供出装摘要/编辑弹窗复用 */
+function getUniversalEquipBuild() {
+    const entry = getUniversalEntry(currentHero);
+    const equips = normalizeEquips(entry.equips);
+    return {
+        equips,
+        equipsBackup: normalizeEquipsBackup(entry.equipsBackup, equips.length),
+        equipsBackup2: normalizeEquipsBackup(entry.equipsBackup2, equips.length)
+    };
 }
 
 /* 渲染全部方案卡片到 #buildsArea */
@@ -386,13 +410,16 @@ function renderSchemes() {
 
     const universal = getUniversalEntry(currentHero);
 
-    /* 启用通用符文: 方案列表顶部显示共享符文面板 */
+    /* 启用通用符文/通用装备: 方案列表顶部显示对应共享面板 */
     if (universal.enabled) {
         area.appendChild(renderUniversalRunePanel(universal));
     }
+    if (universal.equipEnabled) {
+        area.appendChild(renderUniversalEquipPanel(universal));
+    }
 
     builds.forEach((build, index) => {
-        area.appendChild(renderSchemeCard(build, index, universal.enabled));
+        area.appendChild(renderSchemeCard(build, index, universal));
     });
 
     hideRuneInfo();
@@ -426,8 +453,48 @@ function renderUniversalRunePanel(entry) {
     return panel;
 }
 
-/* 单套方案卡片(universalEnabled: 通用符文开启时隐藏本方案符文区, 数据保留) */
-function renderSchemeCard(build, index, universalEnabled) {
+/* 通用装备面板(启用时显示在通用符文面板之下) */
+function renderUniversalEquipPanel(entry) {
+    const panel = document.createElement("section");
+    panel.className = "panel build-card universal-rune-panel";
+
+    const head = document.createElement("div");
+    head.className = "build-card-head";
+    const title = document.createElement("div");
+    title.className = "build-card-title";
+    const num = document.createElement("span");
+    num.className = "build-card-index";
+    num.textContent = "通用装备";
+    const desc = document.createElement("span");
+    desc.className = "universal-desc";
+    desc.textContent = "对该英雄所有方案生效; 关闭后各方案恢复显示自己的出装配置";
+    title.appendChild(num);
+    title.appendChild(desc);
+    head.appendChild(title);
+
+    const actions = document.createElement("div");
+    actions.className = "build-card-actions";
+    const btnEdit = document.createElement("button");
+    btnEdit.type = "button";
+    btnEdit.className = "btn";
+    btnEdit.textContent = "✎ 修改出装";
+    btnEdit.onclick = () => openEquipEditor("universal");
+    actions.appendChild(btnEdit);
+    head.appendChild(actions);
+    panel.appendChild(head);
+
+    const summary = document.createElement("div");
+    summary.className = "equip-summary";
+    renderEquipSummary(getUniversalEquipBuild(), summary, "universal");
+    panel.appendChild(summary);
+
+    return panel;
+}
+
+/* 单套方案卡片(universal: 通用符文开启时隐藏本方案符文区, 通用装备开启时隐藏本方案出装区, 数据保留) */
+function renderSchemeCard(build, index, universal) {
+    const universalRuneOn = !!(universal && universal.enabled);
+    const universalEquipOn = !!(universal && universal.equipEnabled);
     const card = document.createElement("section");
     card.className = "panel build-card";
     card.dataset.index = index;
@@ -530,7 +597,7 @@ function renderSchemeCard(build, index, universalEnabled) {
     card.appendChild(head);
 
     /* ---- 符文区(通用符文开启时不渲染, 方案数据保留不动) ---- */
-    if (!universalEnabled) {
+    if (!universalRuneOn) {
         const runeTitle = document.createElement("div");
         runeTitle.className = "build-section-label";
         runeTitle.textContent = "符文配置";
@@ -542,24 +609,26 @@ function renderSchemeCard(build, index, universalEnabled) {
         card.appendChild(runesWrap);
     }
 
-    /* ---- 出装区 ---- */
-    const equipTitleRow = document.createElement("div");
-    equipTitleRow.className = "build-section-label equip-label-row";
-    const equipTitle = document.createElement("span");
-    equipTitle.textContent = "出装配置";
-    const btnEditEquip = document.createElement("button");
-    btnEditEquip.type = "button";
-    btnEditEquip.className = "btn";
-    btnEditEquip.textContent = "✎ 修改出装";
-    btnEditEquip.onclick = () => openEquipEditor(index);
-    equipTitleRow.appendChild(equipTitle);
-    equipTitleRow.appendChild(btnEditEquip);
-    card.appendChild(equipTitleRow);
+    /* ---- 出装区(通用装备开启时不渲染, 方案数据保留不动) ---- */
+    if (!universalEquipOn) {
+        const equipTitleRow = document.createElement("div");
+        equipTitleRow.className = "build-section-label equip-label-row";
+        const equipTitle = document.createElement("span");
+        equipTitle.textContent = "出装配置";
+        const btnEditEquip = document.createElement("button");
+        btnEditEquip.type = "button";
+        btnEditEquip.className = "btn";
+        btnEditEquip.textContent = "✎ 修改出装";
+        btnEditEquip.onclick = () => openEquipEditor(index);
+        equipTitleRow.appendChild(equipTitle);
+        equipTitleRow.appendChild(btnEditEquip);
+        card.appendChild(equipTitleRow);
 
-    const equipSummary = document.createElement("div");
-    equipSummary.className = "equip-summary";
-    renderEquipSummary(build, equipSummary, index);
-    card.appendChild(equipSummary);
+        const equipSummary = document.createElement("div");
+        equipSummary.className = "equip-summary";
+        renderEquipSummary(build, equipSummary, index);
+        card.appendChild(equipSummary);
+    }
 
     return card;
 }
@@ -942,8 +1011,10 @@ function renderEquipSummary(build, container, buildIndex) {
         const cell = document.createElement("div");
         cell.className = "equip-slot equip-summary-cell";
 
-        /* 点击任意格进入编辑弹窗 */
-        if (typeof buildIndex === "number") cell.onclick = () => openEquipEditor(buildIndex);
+        /* 点击任意格进入编辑弹窗(通用装备面板的 buildIndex 为 "universal") */
+        if (typeof buildIndex === "number" || buildIndex === "universal") {
+            cell.onclick = () => openEquipEditor(buildIndex);
+        }
 
         const info = getEquipInfo(name);
         if (!info) {
@@ -1331,21 +1402,24 @@ function renderEquipEditor() {
     });
 }
 
-/* 当前弹窗编辑的方案索引 */
+/* 当前弹窗编辑的方案索引; "universal" 表示正在编辑通用装备 */
 let equipEditBuildIndex = -1;
 
 function getEditBuild() {
-    if (!currentHero || equipEditBuildIndex < 0) return null;
+    if (!currentHero || equipEditBuildIndex === -1) return null;
+    if (equipEditBuildIndex === "universal") return getUniversalEquipBuild();
     const builds = getSchemes();
     return builds[equipEditBuildIndex] || null;
 }
 
 function openEquipEditor(buildIndex) {
-    const build = getSchemes()[buildIndex];
+    const build = buildIndex === "universal" ? getUniversalEquipBuild() : getSchemes()[buildIndex];
     if (!build) return;
     equipEditorOpen = true;
     equipEditBuildIndex = buildIndex;
     equipPickPos = getEquipPositions()[0] || null;
+    const titleEl = document.getElementById("equipModalTitle");
+    if (titleEl) titleEl.textContent = buildIndex === "universal" ? "修改通用装备" : "修改出装";
     document.getElementById("equipModal").hidden = false;
     renderEquipBar(build);
     renderEquipEditor();
@@ -1365,8 +1439,22 @@ function closeEquipEditor() {
     renderSchemes();
 }
 
-/* 写回弹窗编辑中的方案并刷新弹窗与页面 */
+/* 写回弹窗编辑中的方案(或通用装备)并刷新弹窗与页面 */
 async function saveBuildEdit(build) {
+    if (equipEditBuildIndex === "universal") {
+        const entry = getUniversalEntry(currentHero);
+        entry.equips = build.equips;
+        entry.equipsBackup = build.equipsBackup;
+        entry.equipsBackup2 = build.equipsBackup2;
+        setUniversalEntry(currentHero, entry);
+
+        await saveData();
+        renderEquipBar(build);
+        renderEquipEditor();
+        renderSchemes();
+        return;
+    }
+
     const builds = getSchemes();
     builds[equipEditBuildIndex] = build;
     writeBack(currentHero, builds);
@@ -1472,7 +1560,7 @@ async function removeEquipSlot(index) {
 
 
 /* =========================================================
-   通用符文开关(顶部按钮)
+   通用符文 / 通用装备开关(顶部按钮)
 ========================================================= */
 
 async function toggleUniversalRune() {
@@ -1495,6 +1583,28 @@ function updateUniversalButton() {
     const on = !!currentHero && getUniversalEntry(currentHero).enabled;
     btn.classList.toggle("primary", on);
     btn.textContent = on ? "通用符文: 开" : "通用符文: 关";
+    btn.disabled = !currentHero;
+}
+
+async function toggleUniversalEquip() {
+    if (!currentHero) return;
+
+    /* 装备内容默认为空(6 个空格), 开启后在面板中自行编辑 */
+    const entry = getUniversalEntry(currentHero);
+    entry.equipEnabled = !entry.equipEnabled;
+    setUniversalEntry(currentHero, entry);
+
+    await saveData();
+    renderSchemes();
+    updateUniversalEquipButton();
+}
+
+function updateUniversalEquipButton() {
+    const btn = document.getElementById("btnUniversalEquip");
+    if (!btn) return;
+    const on = !!currentHero && getUniversalEntry(currentHero).equipEnabled;
+    btn.classList.toggle("primary", on);
+    btn.textContent = on ? "通用装备: 开" : "通用装备: 关";
     btn.disabled = !currentHero;
 }
 
@@ -1590,6 +1700,8 @@ async function deleteBuild(buildIndex) {
 document.getElementById("btnCreateBuild").addEventListener("click", createBuild);
 
 document.getElementById("btnUniversalRune").addEventListener("click", toggleUniversalRune);
+
+document.getElementById("btnUniversalEquip").addEventListener("click", toggleUniversalEquip);
 
 document.getElementById("btnDoneEquip").addEventListener("click", closeEquipEditor);
 
