@@ -7,7 +7,7 @@
 // 用法：
 //   const cfg  = await DataSource.loadConfig('曙光英雄');   // 自动含最新日期
 //   const res  = await DataSource.saveToDisk('曙光英雄', 'xxx.json', data);
-//   const list = await DataSource.listFiles('lolm');        // 无服务器时返回 null
+//   const list = await DataSource.listFiles('曙光英雄');      // 无服务器时返回 null
 // ============================================================
 "use strict";
 

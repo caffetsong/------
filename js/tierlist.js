@@ -1,44 +1,22 @@
 /* ============================================================
-   tierlist.js — 英雄梯度排行榜核心引擎
-   支持 LOLM（分路/Z-score） 和 曙光英雄（无分路/加权和）
+   tierlist.js — 曙光英雄梯度排行榜核心引擎
+   （LoLM 已解耦：算法/分路/全局排名相关代码不在本项目中）
    ============================================================ */
 
 "use strict";
 
 // ---- 全局状态 ----
-let gameConfig = null;      // 当前游戏的 config.json
+let gameConfig = null;      // 曙光英雄 config.json
 let gameData = null;        // 计算后的结构化数据
-let currentMethod = "zscore"; // LOLM: "zscore"|"simple", SG: "weighted"
-let currentView = "lane";   // "lane"|"global"
-let currentLane = null;     // 当前分路名（仅 hasLanes）
+const currentMethod = "weighted"; // 固定为加权和
 let currentViewMode = "table"; // "table"|"grid" — 展示模式
-let currentDate = null;      // 当前选中的日期 (YYYY-MM-DD)，仅 hasDates 游戏
-let currentGridLane = null;  // 曙光网格视图：常用分路过滤（null=全部），取自 英雄介绍.json
+let currentDate = null;      // 当前选中的日期 (YYYY-MM-DD)
+let currentGridLane = null;  // 网格视图：常用分路过滤（null=全部），取自 英雄介绍.json
 
 // ---- 工具函数 ----
-function parsePct(s) {
-  if (typeof s === "number") return s / 100;
-  return parseFloat(String(s).replace("%", "")) / 100;
-}
-
 function mean(arr) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
-
-function stdDev(arr) {
-  const m = mean(arr);
-  const v = arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length;
-  return Math.sqrt(v) || 1;
-}
-
-function zScores(arr) {
-  const m = mean(arr);
-  const s = stdDev(arr);
-  if (s === 0) return arr.map(() => 0);
-  return arr.map(v => (v - m) / s);
-}
-
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 function getRankClass(rank) {
   if (rank === 1) return "rank-1";
@@ -81,114 +59,6 @@ function getScoreBar(score, tier) {
     <span class="score-value">${score.toFixed(1)}</span></div>`;
 }
 
-function assignTiers(heroes, scoreKey) {
-  const sorted = [...heroes].sort((a, b) => b[scoreKey] - a[scoreKey]);
-  const n = sorted.length;
-  const thresholds = getTierThresholds();
-  sorted.forEach((h, rank) => {
-    const pct = 1 - rank / n;
-    let tier = "T4";
-    for (const t of thresholds) {
-      if (pct >= t.pct) { tier = t.tier; break; }
-    }
-    h.tier = tier;
-    h.rank = rank + 1;
-  });
-}
-
-// ============================================================
-// LOLM 算法
-// ============================================================
-function computeLOLM(rawData) {
-  const hasLanes = gameConfig.hasLanes;
-  const lanes = {};
-  const allHeroes = [];
-
-  for (const laneCfg of gameConfig.lanes) {
-    const raw = rawData[laneCfg.name];
-    if (!raw) continue;
-    const heroes = raw.map(h => ({
-      name: h.heroName,
-      lane: laneCfg.name,
-      headIcon: gameConfig.headIconPath ? (gameConfig.gameId + "/" + gameConfig.headIconPath.replace("{name}", h.heroName)) : null,
-      wr: parsePct(h.winRate),
-      pr: parsePct(h.pickRate),
-      br: parsePct(h.banRate),
-      bp: parsePct(h.pickRate) + parsePct(h.banRate)
-    }));
-    lanes[laneCfg.name] = heroes;
-    allHeroes.push(...heroes);
-  }
-
-  // Z-score 加权（分路内计算 Z-score）
-  for (const [laneName, heroes] of Object.entries(lanes)) {
-    const zWr = zScores(heroes.map(h => h.wr));
-    const zPr = zScores(heroes.map(h => h.pr));
-    const zBr = zScores(heroes.map(h => h.br));
-    heroes.forEach((h, i) => {
-      h.z_wr = zWr[i]; h.z_pr = zPr[i]; h.z_br = zBr[i];
-      h.raw_zscore = 0.5 * zWr[i] + 1.0 * zPr[i] + 3.0 * zBr[i];
-    });
-  }
-
-  // 简易公式
-  for (const [laneName, heroes] of Object.entries(lanes)) {
-    heroes.forEach(h => {
-      h.raw_simple = Math.pow(h.wr, 0.3) * (h.pr + 2.5 * h.br) * 100;
-    });
-  }
-
-  // 分路内 min-max 归一化
-  function normalize(heroes, rawKey, normKey) {
-    const vals = heroes.map(h => h[rawKey]);
-    const lo = Math.min(...vals), hi = Math.max(...vals);
-    const rng = hi - lo || 1;
-    heroes.forEach(h => { h[normKey] = ((h[rawKey] - lo) / rng) * 100; });
-  }
-
-  for (const [, heroes] of Object.entries(lanes)) {
-    normalize(heroes, "raw_zscore", "score_zscore");
-    normalize(heroes, "raw_simple", "score_simple");
-  }
-
-  // 全局归一化
-  normalize(allHeroes, "raw_zscore", "score_zscore_global");
-  normalize(allHeroes, "raw_simple", "score_simple_global");
-
-  // 分配梯度
-  for (const [, heroes] of Object.entries(lanes)) {
-    assignTiersWithKey(heroes, "score_zscore", "tier_zscore");
-    assignTiersWithKey(heroes, "score_simple", "tier_simple");
-    assignTiersWithKey(heroes, "score_zscore_global", "tier_global");
-  }
-
-  function assignTiersWithKey(heroes, scoreKey, tierKey) {
-    const sorted = [...heroes].sort((a, b) => b[scoreKey] - a[scoreKey]);
-    const n = sorted.length;
-    const thresholds = getTierThresholds();
-    sorted.forEach((h, i) => {
-      const pct = 1 - i / n;
-      let tier = "T4";
-      for (const t of thresholds) {
-        if (pct >= t.pct) { tier = t.tier; break; }
-      }
-      h[tierKey] = tier;
-      // Store lane rank under a consistent key: _rank_zscore / _rank_simple
-      if (tierKey === "tier_zscore") h._rank_zscore = i + 1;
-      if (tierKey === "tier_simple") h._rank_simple = i + 1;
-    });
-  }
-
-  // 全局排名
-  const globalZ = [...allHeroes].sort((a, b) => b.score_zscore_global - a.score_zscore_global);
-  globalZ.forEach((h, i) => { h.global_rank_zscore = i + 1; });
-  const globalSimple = [...allHeroes].sort((a, b) => b.score_simple_global - a.score_simple_global);
-  globalSimple.forEach((h, i) => { h.global_rank_simple = i + 1; });
-
-  return { lanes, allHeroes, globalZ, globalSimple };
-}
-
-// ============================================================
 // 曙光英雄算法（从 Python validate_pure.py 移植）
 // ============================================================
 function computeSG(rawData) {
@@ -261,78 +131,53 @@ function computeSG(rawData) {
 // 数据加载 + 计算调度
 // ============================================================
 async function loadGameData() {
-  const base = gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+  const base = "曙光英雄";
 
-  if (gameConfig.hasLanes) {
-    // LOLM: 加载所有分路 JSON
-    const results = await Promise.all(
-      gameConfig.lanes.map(async lane => {
-        const resp = await fetch(base + "/" + lane.dataFile);
-        if (!resp.ok) throw new Error(`加载 ${lane.dataFile} 失败: ${resp.status}`);
-        return [lane.name, await resp.json()];
-      })
-    );
-    const rawData = Object.fromEntries(results);
-    const data = computeLOLM(rawData);
-
-    // 转换为标准格式
-    gameData = {
-      hasLanes: true,
-      lanes: {},
-      allHeroes: data.allHeroes,
-      globalZ: data.globalZ,
-      globalSimple: data.globalSimple
-    };
-    for (const [name, heroes] of Object.entries(data.lanes)) {
-      gameData.lanes[name] = heroes;
-    }
+  // 多期日期数据：当前日期 + 上一期（用于梯度/名次变化对比）
+  let dataFile;
+  if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length > 0) {
+    const dateEntry = gameConfig.dates.find(d => d.date === currentDate) || gameConfig.dates[0];
+    dataFile = dateEntry.file;
+    if (!currentDate) currentDate = dateEntry.date;
+  } else if (gameConfig.hasDates) {
+    throw new Error("未发现日期数据：请用 bun server.js 启动后访问（日期文件由服务器自动扫描）");
   } else {
-    // 无分路模式：支持多日期或单文件
-    let dataFile;
-    if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length > 0) {
-      const dateEntry = gameConfig.dates.find(d => d.date === currentDate) || gameConfig.dates[0];
-      dataFile = dateEntry.file;
-      if (!currentDate) currentDate = dateEntry.date;
-    } else if (gameConfig.hasDates) {
-      throw new Error("未发现日期数据：请用 bun server.js 启动后访问（日期文件由服务器自动扫描）");
-    } else {
-      dataFile = gameConfig.dataFile;
-    }
-    const resp = await fetch(base + "/" + dataFile);
-    if (!resp.ok) throw new Error(`加载数据失败: ${resp.status}`);
-    const rawData = await resp.json();
-    const data = computeSG(rawData);
-    gameData = {
-      hasLanes: false,
-      heroes: data.heroes,
-      sorted: data.sorted
-    };
+    dataFile = gameConfig.dataFile;
+  }
+  const resp = await fetch(base + "/" + dataFile);
+  if (!resp.ok) throw new Error(`加载数据失败: ${resp.status}`);
+  const rawData = await resp.json();
+  const data = computeSG(rawData);
+  gameData = {
+    hasLanes: false,
+    heroes: data.heroes,
+    sorted: data.sorted
+  };
 
-    // 如果有历史数据，加载上一期数据用于梯度变化对比
-    if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length >= 2) {
-      const sortedDates = gameConfig.dates.map(d => d.date).sort();
-      const curIdx = sortedDates.indexOf(currentDate);
-      if (curIdx > 0) {
-        const prevDate = sortedDates[curIdx - 1];
-        const prevEntry = gameConfig.dates.find(d => d.date === prevDate);
-        if (prevEntry) {
-          try {
-            const prevResp = await fetch(base + "/" + prevEntry.file);
-            if (prevResp.ok) {
-              const prevRaw = await prevResp.json();
-              const prevResult = computeSG(prevRaw);
-              const prevMap = new Map(prevResult.heroes.map(h => [h.name, h]));
-              data.heroes.forEach(h => {
-                const prev = prevMap.get(h.name);
-                if (prev) {
-                  h.prevTier = prev.tier;
-                  h.prevScore = prev.score;
-                  h.prevRank = prev.rank;
-                }
-              });
-            }
-          } catch (e) { /* 静默失败，不影响当前数据展示 */ }
-        }
+  // 如果有历史数据，加载上一期数据用于梯度变化对比
+  if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length >= 2) {
+    const sortedDates = gameConfig.dates.map(d => d.date).sort();
+    const curIdx = sortedDates.indexOf(currentDate);
+    if (curIdx > 0) {
+      const prevDate = sortedDates[curIdx - 1];
+      const prevEntry = gameConfig.dates.find(d => d.date === prevDate);
+      if (prevEntry) {
+        try {
+          const prevResp = await fetch(base + "/" + prevEntry.file);
+          if (prevResp.ok) {
+            const prevRaw = await prevResp.json();
+            const prevResult = computeSG(prevRaw);
+            const prevMap = new Map(prevResult.heroes.map(h => [h.name, h]));
+            data.heroes.forEach(h => {
+              const prev = prevMap.get(h.name);
+              if (prev) {
+                h.prevTier = prev.tier;
+                h.prevScore = prev.score;
+                h.prevRank = prev.rank;
+              }
+            });
+          }
+        } catch (e) { /* 静默失败，不影响当前数据展示 */ }
       }
     }
   }
@@ -342,23 +187,14 @@ async function loadGameData() {
 // 获取当前有效的字段
 // ============================================================
 function getScoreField(hero) {
-  if (gameConfig.hasLanes) {
-    return currentMethod === "zscore" ? "score_zscore" : "score_simple";
-  }
   return "score";
 }
 
 function getTierField(hero) {
-  if (gameConfig.hasLanes) {
-    return currentMethod === "zscore" ? "tier_zscore" : "tier_simple";
-  }
   return "tier";
 }
 
 function getGlobalRank(hero) {
-  if (gameConfig.hasLanes) {
-    return hero[currentMethod === "zscore" ? "global_rank_zscore" : "global_rank_simple"];
-  }
   return hero.rank;
 }
 
@@ -419,10 +255,8 @@ function renderTable(heroes, columns, highlightLane) {
       let displayVal;
       if (col.field === "score") {
         displayVal = h[getScoreField(h)];
-      } else if (col.field === "scoreGlobal") {
-        displayVal = h[gameConfig.hasLanes ? (currentMethod === "zscore" ? "score_zscore_global" : "score_simple_global") : "score"];
       } else if (col.field === "tier") {
-        displayVal = gameConfig.hasLanes ? h[getTierField(h)] : h.tier;
+        displayVal = h.tier;
       } else if (col.field === "globalRank") {
         displayVal = getGlobalRank(h);
       } else {
@@ -434,8 +268,8 @@ function renderTable(heroes, columns, highlightLane) {
         html += `<td class="rank-num ${getRankClass(displayVal)}">${displayVal}</td>`;
       } else if (col.type === "tier") {
         let badge = getTierBadge(displayVal);
-        // 显示与上一期的梯度变化箭头（仅无分路游戏 + 有 prevTier 数据）
-        if (!gameConfig.hasLanes && h.prevTier && h.prevTier !== displayVal) {
+        // 显示与上一期的梯度变化箭头（有 prevTier 数据时）
+        if (h.prevTier && h.prevTier !== displayVal) {
           const tierOrder = ["T4", "T3", "T2", "T1", "T0.5", "T0"];
           const arrow = tierOrder.indexOf(displayVal) > tierOrder.indexOf(h.prevTier)
             ? ' <span style="color:#3fb950;font-size:0.7rem">▲</span>'
@@ -459,10 +293,10 @@ function renderTable(heroes, columns, highlightLane) {
         let txt = displayVal != null ? displayVal : "-";
         // Render head icon + name for text columns when hero has an icon
         if (col.type === "text" && col.field === "name" && h.headIcon) {
-          const clickable = !gameConfig.hasLanes && gameConfig.hasDates ? ` style="cursor:pointer" onclick="showHeroDetail('${h.name.replace(/'/g, "\\'")}')"` : '';
+          const clickable = gameConfig.hasDates ? ` style="cursor:pointer" onclick="showHeroDetail('${h.name.replace(/'/g, "\\'")}')"` : '';
           txt = `<div class="hero-cell"${clickable}><img class="hero-icon" src="${h.headIcon}" alt="${h.name}" onerror="this.style.display='none'"> <span class="hero-name">${txt}</span></div>`;
         } else if (col.type === "text" && col.field === "name") {
-          const clickable = !gameConfig.hasLanes && gameConfig.hasDates ? ` style="cursor:pointer" onclick="showHeroDetail('${h.name.replace(/'/g, "\\'")}')"` : '';
+          const clickable = gameConfig.hasDates ? ` style="cursor:pointer" onclick="showHeroDetail('${h.name.replace(/'/g, "\\'")}')"` : '';
           txt = `<span class="hero-name"${clickable}>${txt}</span>`;
         }
         html += `<td>${txt}</td>`;
@@ -487,21 +321,11 @@ function renderGridView(heroes, highlightLane) {
   const unknownGroup = [];
 
   heroes.forEach(h => {
-    const tierField = gameConfig.hasLanes ? getTierField(h) : "tier";
-    const tier = h[tierField];
+    const tier = h.tier;
     if (tier && validTiers.has(tier)) {
       groups[tier].push(h);
     } else {
-      // 诊断：捕获异常梯度值
-      console.warn("[梯度异常] 英雄:", h.name,
-        "| 分路:", h.lane || "-",
-        "| 梯度字段:", tierField,
-        "| 梯度值:", tier,
-        "| 有效字段存在:", {
-        tier_zscore: "tier_zscore" in h ? h.tier_zscore : "缺失",
-        tier_simple: "tier_simple" in h ? h.tier_simple : "缺失",
-        tier: "tier" in h ? h.tier : "缺失"
-      });
+      console.warn("[梯度异常] 英雄:", h.name, "| 梯度值:", tier);
       unknownGroup.push(h);
     }
   });
@@ -604,7 +428,7 @@ const VOLATILITY_METRIC = 'rank';   // 'rank' | 'score'
 const VOLATILITY_THRESHOLD = 10;    // 波动 ≥ 该值才进横幅
 
 function renderVolatilityBanner(heroes) {
-  if (!gameConfig || gameConfig.hasLanes) return "";   // 仅无分路游戏
+  if (!gameConfig) return "";
   if (!heroes || !heroes.length) return "";
   if (!gameConfig.hasDates) return "";                 // 需有日期对比（上一期数据）
 
@@ -669,62 +493,18 @@ function renderVolatilityBanner(heroes) {
   return html;
 }
 
-function renderLaneView(laneName) {
-  if (!gameData.hasLanes) {
-    // 曙光：无分路，直接全量渲染
-    const heroes = gameData.heroes;
-    const sorted = [...heroes].sort((a, b) => a.rank - b.rank);
-    const dateBadge = currentDate ? `<span class="count-badge" style="background:#238636">📅 ${currentDate}</span>` : '';
-    let html = `<div class="section-header">
-      <h2>${gameConfig.gameIcon} ${gameConfig.gameName} 梯度排行</h2>
-      <span class="count-badge">${heroes.length} 个英雄</span>${dateBadge}</div>`;
-    html += renderVolatilityBanner(heroes);   // 大幅波动横幅（无则空串）
-    html += renderTable(sorted, gameConfig.columns, null);
-    return html;
-  }
-
-  // LOLM：分路渲染
-  const heroes = gameData.lanes[laneName];
-  if (!heroes) return "<p>无数据</p>";
-
-  const scoreKey = getScoreField();
-  const tierKey = getTierField();
-  const rankKey = currentMethod === "zscore" ? "_rank_zscore" : "_rank_simple";
-  const sorted = [...heroes].sort((a, b) => b[scoreKey] - a[scoreKey]);
-  // Set display rank from precomputed lane rank
-  sorted.forEach((h) => { h.laneRank = h[rankKey]; });
-
-  // Build lane-specific columns (with global rank column appended)
-  const laneCols = gameConfig.columns.map(col => {
-    if (col.field === "rank") return { ...col, field: "laneRank" };
-    return col;
-  });
-  // Append global rank column
-  laneCols.push({ label: "全局排名", field: "globalRank", type: "rank" });
-
+// ============================================================
+// 表格视图：梯度排行（全量，含波动横幅）
+// ============================================================
+function renderLaneView() {
+  const heroes = gameData.heroes;
+  const sorted = [...heroes].sort((a, b) => a.rank - b.rank);
+  const dateBadge = currentDate ? `<span class="count-badge" style="background:#238636">📅 ${currentDate}</span>` : '';
   let html = `<div class="section-header">
-    <h2>${laneName}</h2>
-    <span class="count-badge">${heroes.length} 个英雄</span></div>`;
-  html += renderStatCards(heroes);
-  html += renderTable(sorted, laneCols, null);
-  return html;
-}
-
-function renderGlobalView() {
-  if (!gameData.hasLanes) {
-    // 曙光无分路模式没有"全局"视图，显示一个汇总
-    return renderLaneView();
-  }
-
-  const all = currentMethod === "zscore" ? gameData.globalZ : gameData.globalSimple;
-  // Re-rank
-  all.forEach((h, i) => { h.globalRank = i + 1; });
-
-  let html = `<div class="section-header">
-    <h2>🌍 全局排名（跨分路对比）</h2>
-    <span class="count-badge">${all.length} 个英雄</span>
-    <span class="hint">⚠️ 不同分路英雄职责不同，建议以分路内排名为主</span></div>`;
-  html += renderTable(all, gameConfig.globalColumns, null);
+    <h2>${gameConfig.gameIcon} ${gameConfig.gameName} 梯度排行</h2>
+    <span class="count-badge">${heroes.length} 个英雄</span>${dateBadge}</div>`;
+  html += renderVolatilityBanner(heroes);   // 大幅波动横幅（无则空串）
+  html += renderTable(sorted, gameConfig.columns, null);
   return html;
 }
 
@@ -775,47 +555,18 @@ function renderAll() {
 
   // 网格视图 — 单独处理
   if (currentViewMode === "grid") {
-    let heroes;
-    if (!gameData.hasLanes) {
-      heroes = filterByGridLane(gameData.heroes);
-    } else if (currentView === "global") {
-      heroes = currentMethod === "zscore" ? gameData.globalZ : gameData.globalSimple;
-    } else {
-      heroes = gameData.lanes[currentLane] || [];
-    }
-
-    let titleHtml;
-    if (!gameData.hasLanes) {
-      const dateBadge = currentDate ? `<span class="count-badge" style="background:#238636">📅 ${currentDate}</span>` : '';
-      const laneBadge = currentGridLane ? `<span class="count-badge" style="background:#8957e5">${currentGridLane}</span>` : '';
-      titleHtml = `<div class="section-header">
+    const heroes = filterByGridLane(gameData.heroes);
+    const dateBadge = currentDate ? `<span class="count-badge" style="background:#238636">📅 ${currentDate}</span>` : '';
+    const laneBadge = currentGridLane ? `<span class="count-badge" style="background:#8957e5">${currentGridLane}</span>` : '';
+    const titleHtml = `<div class="section-header">
         <h2>${gameConfig.gameIcon} ${gameConfig.gameName} 梯度排行</h2>
         <span class="count-badge">${heroes.length} 个英雄</span>${laneBadge}${dateBadge}</div>`;
-    } else if (currentView === "global") {
-      titleHtml = `<div class="section-header">
-        <h2>🌍 全局排名（跨分路对比）</h2>
-        <span class="count-badge">${heroes.length} 个英雄</span>
-        <span class="hint">⚠️ 不同分路英雄职责不同，建议以分路内排名为主</span></div>`;
-    } else {
-      titleHtml = `<div class="section-header">
-        <h2>${currentLane}</h2>
-        <span class="count-badge">${heroes.length} 个英雄</span></div>`;
-    }
     content.innerHTML = titleHtml + gridLaneTabsHtml() + renderGridView(heroes, null);
     return;
   }
 
   // 表格视图
-  if (!gameData.hasLanes) {
-    content.innerHTML = renderLaneView();
-    return;
-  }
-
-  if (currentView === "global") {
-    content.innerHTML = renderGlobalView();
-  } else {
-    content.innerHTML = renderLaneView(currentLane);
-  }
+  content.innerHTML = renderLaneView();
 }
 
 // ============================================================
@@ -827,17 +578,7 @@ function doSearch(query) {
     return;
   }
   const q = query.trim().toLowerCase();
-  let results = [];
-
-  if (gameData.hasLanes) {
-    for (const heroes of Object.values(gameData.lanes)) {
-      for (const h of heroes) {
-        if (h.name.toLowerCase().includes(q)) results.push(h);
-      }
-    }
-  } else {
-    results = gameData.heroes.filter(h => h.name.toLowerCase().includes(q));
-  }
+  const results = gameData.heroes.filter(h => h.name.toLowerCase().includes(q));
 
   if (results.length === 0) {
     document.getElementById("content").innerHTML =
@@ -847,29 +588,10 @@ function doSearch(query) {
 
   // Sort by score descending
   const scoreKey = getScoreField();
-  const rankKey = gameData.hasLanes ? (currentMethod === "zscore" ? "_rank_zscore" : "_rank_simple") : "rank";
   results.sort((a, b) => b[scoreKey] - a[scoreKey]);
-  // Set laneRank for display
-  results.forEach(h => { h.laneRank = h[rankKey] || 0; });
 
   // Search result columns
-  let searchCols;
-  if (gameData.hasLanes) {
-    searchCols = [
-      { label: "分路排名", field: "laneRank", type: "rank" },
-      { label: "英雄", field: "name", type: "text" },
-      { label: "分路", field: "lane", type: "text" },
-      { label: "梯度", field: "tier", type: "tier" },
-      { label: "评分", field: "score", type: "score" },
-      { label: "胜率", field: "wr", type: "pct", colorClass: "wr" },
-      { label: "出场率", field: "pr", type: "pct" },
-      { label: "Ban率", field: "br", type: "pct" },
-      { label: "BP率", field: "bp", type: "pct" },
-      { label: "全局排名", field: "globalRank", type: "rank" }
-    ];
-  } else {
-    searchCols = gameConfig.columns;
-  }
+  const searchCols = gameConfig.columns;
 
   let html = `<div class="section-header">
     <h2>🔍 搜索结果："${query}"</h2>
@@ -892,35 +614,21 @@ function sortTable(th, colIdx) {
   if (isDesc) th.classList.add("desc");
 
   // Determine which heroes list is active
-  let heroes;
-  if (gameData.hasLanes) {
-    if (currentView === "global") {
-      heroes = currentMethod === "zscore" ? gameData.globalZ : gameData.globalSimple;
-    } else {
-      heroes = gameData.lanes[currentLane] || [];
-    }
-  } else {
-    heroes = gameData.heroes;
-  }
+  const heroes = gameData.heroes;
 
   // Build column definitions
-  let cols;
-  if (gameData.hasLanes && currentView === "global") {
-    cols = gameConfig.globalColumns;
-  } else {
-    cols = gameConfig.columns;
-  }
+  const cols = gameConfig.columns;
 
   // Handle lane-specific rank column
-  const col = (colIdx < cols.length) ? cols[colIdx] : { field: "globalRank", type: "rank" };
+  const col = (colIdx < cols.length) ? cols[colIdx] : { field: "rank", type: "rank" };
 
   // 动态找到英雄名列的索引（而非硬编码 cells[1]）
   const nameColIdx = cols.findIndex(c => c.field === "name");
   rows.sort((a, b) => {
     const heroA = heroes.find(h => h.name === a.cells[nameColIdx]?.textContent?.trim());
     const heroB = heroes.find(h => h.name === b.cells[nameColIdx]?.textContent?.trim());
-    const va = heroA ? (col.field === "laneRank" ? heroA.laneRank : heroA[col.field]) : 0;
-    const vb = heroB ? (col.field === "laneRank" ? heroB.laneRank : heroB[col.field]) : 0;
+    const va = heroA ? heroA[col.field] : 0;
+    const vb = heroB ? heroB[col.field] : 0;
 
     if (col.type === "tier") {
       const order = ["T0", "T0.5", "T1", "T2", "T3", "T4"];
@@ -939,25 +647,8 @@ function sortTable(th, colIdx) {
 }
 
 // ============================================================
-// 导航与控制
+// 控制栏 / 展示模式
 // ============================================================
-function switchView(view) {
-  currentView = view;
-  document.getElementById("btn-lane").className = view === "lane" ? "active" : "";
-  const btnGlobal = document.getElementById("btn-global");
-  if (btnGlobal) btnGlobal.className = view === "global" ? "active" : "";
-
-  if (view === "lane" && gameData.hasLanes) {
-    currentLane = currentLane || Object.keys(gameData.lanes)[0];
-    document.querySelectorAll("#nav button").forEach(b => {
-      b.className = b.textContent === currentLane ? "active" : "";
-    });
-  } else if (gameData.hasLanes) {
-    document.querySelectorAll("#nav button").forEach(b => b.className = "");
-  }
-  renderAll();
-}
-
 function switchViewMode(mode) {
   currentViewMode = mode;
   document.getElementById("btn-table").className = mode === "table" ? "active" : "";
@@ -985,13 +676,7 @@ function buildControls() {
 
   let html = "";
 
-  if (gameConfig.hasLanes) {
-    html += `<span style="margin-left:16px" class="label">视图：</span>
-      <button id="btn-lane" class="${currentView === "lane" ? "active" : ""}" onclick="switchView('lane')">📋 分路排名</button>
-      <button id="btn-global" class="${currentView === "global" ? "active" : ""}" onclick="switchView('global')">🌍 全局排名</button>`;
-  }
-
-  // 日期切换 (hasDates 游戏) — 下拉列表
+  // 日期切换 — 下拉列表
   if (gameConfig.hasDates && gameConfig.dates && gameConfig.dates.length > 1) {
     const sortedDates = [...gameConfig.dates].sort((a, b) => b.date.localeCompare(a.date));
     html += `<span style="margin-left:16px" class="label">日期：</span>
@@ -1012,52 +697,18 @@ function buildControls() {
   controls.innerHTML = html;
 }
 
-function buildNav() {
-  const nav = document.getElementById("nav");
-  if (!nav) return;
-
-  if (!gameData.hasLanes) {
-    nav.style.display = "none";
-    return;
-  }
-
-  nav.style.display = "flex";
-  nav.innerHTML = "";
-  if (!gameData.lanes) return;
-  Object.keys(gameData.lanes).forEach(lane => {
-    const btn = document.createElement("button");
-    btn.textContent = lane;
-    btn.className = lane === currentLane ? "active" : "";
-    btn.onclick = () => {
-      currentLane = lane;
-      switchView("lane");
-    };
-    nav.appendChild(btn);
-  });
-}
-
 // ============================================================
-// 游戏切换
+// 加载曙光英雄（单一游戏）
 // ============================================================
-async function switchGame(gameId) {
-  // Update game selector buttons
-  document.querySelectorAll(".game-selector button").forEach(b => {
-    b.className = b.dataset.game === gameId ? "active" : "";
-  });
-
-  // Load config (via data source layer — 服务器可用时自动扫最新日期)
-  const base = gameId === "lolm" ? "lolm" : "曙光英雄";
+async function switchGame() {
+  const base = "曙光英雄";
   try {
     gameConfig = await DataSource.loadConfig(base);
   } catch (e) {
-    throw new Error(`加载 ${gameId} 配置失败: ${e.message}`);
+    throw new Error(`加载曙光英雄配置失败: ${e.message}`);
   }
 
   // Reset state
-  // 算法不再可切换：LOLM 固定 Z-score 加权，曙光英雄固定加权和
-  currentMethod = gameConfig.hasLanes ? "zscore" : "weighted";
-  currentView = "lane";
-  currentLane = gameConfig.hasLanes ? gameConfig.lanes[0].name : null;
   currentDate = null;
   if (gameConfig.hasDates) {
     if (!gameConfig.dates || gameConfig.dates.length === 0) {
@@ -1079,7 +730,6 @@ async function switchGame(gameId) {
 
   // Rebuild UI
   buildControls();
-  buildNav();
   updateHeader();
   renderAll();
   updateFooter();
@@ -1107,14 +757,10 @@ function updateFooter() {
 // ============================================================
 function syncURL() {
   const params = new URLSearchParams();
-  if (gameConfig) params.set("game", gameConfig.gameId);
-  if (currentMethod) params.set("method", currentMethod);
-  if (currentView) params.set("view", currentView);
-  if (currentLane) params.set("lane", currentLane);
   if (currentViewMode !== "table") params.set("viewmode", currentViewMode);
   if (gameConfig && gameConfig.hasDates && currentDate) params.set("date", currentDate);
-  const newUrl = window.location.pathname + "?" + params.toString();
-  if (window.location.search !== "?" + params.toString()) {
+  const newUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
+  if (window.location.pathname + window.location.search !== newUrl) {
     window.history.replaceState(null, "", newUrl);
   }
 }
@@ -1132,7 +778,7 @@ async function loadHeroTimeline() {
 
   heroTimelineDates = gameConfig.dates.map(d => d.date).sort();
   heroTimeline = {};
-  const base = gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+  const base = "曙光英雄";
 
   for (const dateStr of heroTimelineDates) {
     const entry = gameConfig.dates.find(e => e.date === dateStr);
@@ -1163,7 +809,7 @@ async function loadHeroIntro() {
   heroIntroLoaded = true;
   heroIntroMap = {};
   if (!gameConfig || !gameConfig.introFile) return;
-  const base = gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+  const base = "曙光英雄";
   try {
     const resp = await fetch(base + "/" + gameConfig.introFile);
     if (!resp.ok) return;
@@ -1233,6 +879,7 @@ function showHeroDetail(name) {
     overlay.innerHTML = `<div class="hero-detail-panel">
       <div class="hero-detail-header">
         <span class="hero-detail-title" id="hdTitle"></span>
+        <a class="hd-prep-link" id="hdPrepLink" href="#" target="_blank" rel="noopener" title="在新标签页打开该英雄的备战方案（符文 + 出装）">🧩 备战方案</a>
         <button class="hero-detail-close" onclick="closeHeroDetail()">✕</button>
       </div>
       <div class="hero-detail-body" id="hdBody"></div>
@@ -1242,6 +889,9 @@ function showHeroDetail(name) {
   }
   overlay.style.display = 'flex';
   document.getElementById('hdTitle').textContent = name + ' 英雄详情';
+  // 入口：跳到备战管理器页面，并预选该英雄
+  const prepLink = document.getElementById('hdPrepLink');
+  if (prepLink) prepLink.href = "/备战.html?hero=" + encodeURIComponent(name);
   document.getElementById('hdBody').innerHTML = '<p style="text-align:center;padding:40px;color:#8b949e">⏳ 加载趋势数据...</p>';
   Promise.all([loadHeroTimeline(), loadHeroIntro()]).then(() => renderHeroDetail(name));
 }
@@ -1342,7 +992,7 @@ async function setupWatch() {
   es.onmessage = ev => {
     let msg;
     try { msg = JSON.parse(ev.data); } catch { return; }
-    const base = gameConfig && gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+    const base = gameConfig ? "曙光英雄" : "曙光英雄";
     if (msg.dir !== base) return; // 只关心当前游戏
     clearTimeout(timer);
     timer = setTimeout(reloadFromDisk, 400);
@@ -1354,7 +1004,7 @@ let watchReloading = false;
 async function reloadFromDisk() {
   if (!gameConfig || watchReloading) return;
   watchReloading = true;
-  const base = gameConfig.gameId === "lolm" ? "lolm" : "曙光英雄";
+  const base = "曙光英雄";
   try {
     const cfg = await DataSource.loadConfig(base);
     // 保存当前搜索词（buildControls 会重建搜索框）
@@ -1393,13 +1043,12 @@ async function reloadFromDisk() {
 async function init() {
   // Parse URL params
   const params = new URLSearchParams(window.location.search);
-  const gameId = params.get("game") || "lolm";
   if (params.get("viewmode") === "grid") currentViewMode = "grid";
   const urlDate = params.get("date");
 
-  await switchGame(gameId);
+  await switchGame();
 
-  // URL 里指定了日期且属于该游戏的日期列表 → 切换到它
+  // URL 里指定了日期且属于日期列表 → 切换到它
   if (urlDate && gameConfig && gameConfig.hasDates) {
     const validDates = (gameConfig.dates || []).map(d => d.date);
     if (validDates.includes(urlDate) && urlDate !== currentDate) {

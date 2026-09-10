@@ -1,0 +1,1272 @@
+{
+  "洛克": [
+    {
+      "name": "空白/桎梏鸟",
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "风驰"
+        ]
+      },
+      "equips": [
+        "风暴之翼",
+        "镜光法典",
+        "芭蕉扇",
+        "碧蓝怒火",
+        "降魔宝珠",
+        "大地之缚"
+      ]
+    },
+    {
+      "name": "抖音简爱/争锋",
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "风暴之翼",
+        "阴影权杖",
+        "镜光法典",
+        "大地之缚",
+        "憎恨碎片",
+        "恶念"
+      ]
+    }
+  ],
+  "白泽": [
+    {
+      "name": "5580860205仔",
+      "runes": {
+        "colorful": [
+          "觉醒·疾咒"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "掘金"
+        ]
+      },
+      "equips": [
+        "风暴之翼",
+        "镜光法典",
+        "龙胆三击",
+        "芭蕉扇",
+        "降魔宝珠",
+        "碧蓝怒火"
+      ]
+    }
+  ],
+  "关羽": [
+    {
+      "name": "14129516205抖音简爱/17",
+      "lane": "争锋",
+      "player": "14129516205抖音简爱",
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "守护之翼",
+        "伤痕使者",
+        "霜燃",
+        "无畏肩甲",
+        "自然守护",
+        "正义壁垒"
+      ],
+      "equipsBackup": [
+        "钢铁之翼",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "备用",
+      "lane": null,
+      "player": null,
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "风驰"
+        ]
+      },
+      "equips": [
+        null,
+        null,
+        null,
+        "黑羽",
+        "崇高信念",
+        "荆棘刺盾"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "赵云": [
+    {
+      "name": "23706136205别伤欣/中单",
+      "lane": "中单",
+      "player": "77别伤欣23706136205",
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "天使之翼",
+        "牛魔的咆哮",
+        "夺魂之镰",
+        "伤痕使者",
+        "平衡支配者",
+        null
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "攻速暴击",
+      "lane": null,
+      "player": null,
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "刀锋之翼",
+        "狂放之击",
+        "绯红之刺",
+        "破天",
+        "至高信仰",
+        "平衡支配者"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "79547435205简长生/打野",
+      "lane": "打野",
+      "player": "78简长生79547435205",
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "裂甲利斧",
+        "刀锋之翼",
+        "夺魂之镰",
+        "牛魔的咆哮",
+        "破天",
+        "不朽之王"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "刘备": [
+    {
+      "name": "72从后退出江湖105422319205",
+      "lane": "争锋",
+      "player": "72从后退出江湖105422319205",
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "灾祸",
+        "狂风之翼",
+        "夺魂之镰",
+        "破天",
+        "平衡支配者",
+        null
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "90992890205地中海也是海",
+      "lane": "争锋",
+      "player": "71地中海也是海90992890205",
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "夺魂之镰",
+        "狂风之翼",
+        "掠影迅刃",
+        "破天",
+        "牛魔的咆哮",
+        "不朽之王"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "15657238205爱涵呆呆罪",
+      "lane": "争锋",
+      "player": "69爱涵呆呆罪15657238205",
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "夺魂之镰",
+        "狂风之翼",
+        "破天",
+        "平衡支配者",
+        null,
+        null
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "77唯一的主叫佳25091673205",
+      "lane": "争锋",
+      "player": "77唯一的主叫佳25091673205",
+      "runes": {
+        "colorful": [
+          "觉醒·磐固"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "简易手弩",
+        "刀锋之翼",
+        "弧光之戒",
+        "夺魂之镰",
+        "灾祸",
+        "掠影迅刃",
+        "破天",
+        "平衡支配者",
+        "牛魔的咆哮"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "白浩": [
+    {
+      "name": "2966502203THe梦/争锋",
+      "lane": "争锋",
+      "player": "81梦2966502203",
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "群岩"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "守护之翼",
+        "霜燃",
+        "无畏肩甲",
+        "黑羽",
+        "不屈意志",
+        "伤痕使者"
+      ],
+      "equipsBackup": [
+        "钢铁之翼",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "后三顺序可变",
+      "lane": "打野",
+      "player": "76此放弃陌涵31924871205",
+      "runes": {
+        "colorful": [
+          "觉醒·磐固"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "守护之翼",
+        "霜燃",
+        "无畏肩甲",
+        "黑羽",
+        "不屈意志",
+        "冰凰羽衣"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        "伤痕使者"
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "杨玉环": [
+    {
+      "name": "103269800205琼霄高叁暂退/打野",
+      "lane": "打野",
+      "player": "103269800205琼霄高叁暂退",
+      "runes": {
+        "colorful": [
+          "觉醒·强袭"
+        ],
+        "attack": [
+          "霹雳"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "风驰"
+        ]
+      },
+      "equips": [
+        "刀锋之翼",
+        "霜燃",
+        "风暴射手",
+        "正义壁垒",
+        "自然守护",
+        "不屈意志"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "52739559205淼淼控/争锋",
+      "lane": "争锋",
+      "player": "52739559205淼淼控",
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "霹雳"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "掘金"
+        ]
+      },
+      "equips": [
+        "刀锋之翼",
+        "伤痕使者",
+        "霜燃",
+        "风暴射手",
+        "自然守护",
+        "无畏肩甲"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "蔡文姬": [
+    {
+      "name": "39841678205小公主漓漓宝",
+      "runes": {
+        "colorful": [
+          "冰灵·霜冻"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "狂风之翼",
+        "镜光法典",
+        "阴影权杖",
+        "碧蓝怒火",
+        "憎恨碎片",
+        "恶念"
+      ]
+    }
+  ],
+  "牛魔王": [
+    {
+      "name": "自研",
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "荆棘"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "钢铁之翼",
+        "荆棘刺盾",
+        "自然守护",
+        "霜燃",
+        "冰凰羽衣",
+        "黑羽"
+      ]
+    }
+  ],
+  "鲁智深": [],
+  "岚": [
+    {
+      "name": "赏金",
+      "runes": {
+        "colorful": [
+          "灵狐·召唤"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "狂风之翼",
+        "镜光法典",
+        "芭蕉扇",
+        "降魔宝珠",
+        "碧蓝怒火",
+        "迷雾铃"
+      ]
+    }
+  ],
+  "西施": [
+    {
+      "name": "58078572205小芯芙",
+      "lane": "中单",
+      "player": "82小芯芙58078572205",
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "瞬雷"
+        ]
+      },
+      "equips": [
+        "专注之翼",
+        "牛魔的咆哮",
+        "夺魂之镰",
+        "平衡支配者",
+        "破天",
+        "掠影迅刃"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "阿尔弗雷德": [
+    {
+      "name": "就一套通用的",
+      "lane": "争锋",
+      "player": null,
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "壁垒"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "霜燃",
+        "专注之翼",
+        "自然守护",
+        "无畏肩甲",
+        "正义壁垒",
+        "不屈意志"
+      ],
+      "equipsBackup": [
+        null,
+        "守护之翼",
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        "钢铁之翼",
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "布斯": [
+    {
+      "name": "通用的",
+      "lane": "赏金",
+      "player": "79闫羽118129956205",
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "掘金"
+        ]
+      },
+      "equips": [
+        "刀锋之翼",
+        "夺魂之镰",
+        "破天",
+        "平衡支配者",
+        "牛魔的咆哮",
+        "掠影迅刃"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "孙悟空": [
+    {
+      "name": "争锋/后三顺序随便",
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "狂风之翼",
+        "无畏肩甲",
+        "霜燃",
+        "荆棘刺盾",
+        "不屈意志",
+        "黑羽"
+      ]
+    }
+  ],
+  "__universal": {
+    "刘备": {
+      "enabled": true,
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "疾行"
+        ]
+      }
+    },
+    "赵云": {
+      "enabled": true,
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "疾行"
+        ]
+      }
+    },
+    "白浩": {
+      "enabled": true,
+      "runes": {
+        "colorful": [
+          "地灵·回生"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "群岩"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      }
+    }
+  },
+  "黄泉": [
+    {
+      "name": "新符文方案",
+      "lane": "赏金",
+      "player": "78槐序81062071205",
+      "runes": {
+        "colorful": [
+          "灵狐·召唤"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "剑誓"
+        ]
+      },
+      "equips": [
+        "专注之翼",
+        "阴影权杖",
+        "镜光法典",
+        "迷雾铃",
+        "降魔宝珠",
+        "碧蓝怒火"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "黛西": [
+    {
+      "name": "两个派别,出芭蕉扇和不出芭蕉扇",
+      "lane": "赏金",
+      "player": "73小芯芙58078572205",
+      "runes": {
+        "colorful": [
+          "觉醒·疾咒"
+        ],
+        "attack": [
+          "狮狩"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "瞬雷"
+        ]
+      },
+      "equips": [
+        "风暴之翼",
+        "镜光法典",
+        "阴影权杖",
+        "碧蓝怒火",
+        "降魔宝珠",
+        "芭蕉扇"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        "憎恨碎片"
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "新符文方案",
+      "lane": "赏金",
+      "player": "71冷冷咧咧91442877205",
+      "runes": {
+        "colorful": [
+          "觉醒·磐固"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "镜光法典",
+        "风暴之翼",
+        "芭蕉扇",
+        "阴影权杖",
+        "碧蓝怒火",
+        "降魔宝珠"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        "迷雾铃"
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "女魃": [
+    {
+      "name": "后三顺序可换",
+      "lane": "中单",
+      "player": null,
+      "runes": {
+        "colorful": [
+          "灵狐·召唤"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "掘金"
+        ]
+      },
+      "equips": [
+        "风暴之翼",
+        "镜光法典",
+        "芭蕉扇",
+        "碧蓝怒火",
+        "迷雾铃",
+        "降魔宝珠"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "诸葛亮": [
+    {
+      "name": "后三可变",
+      "lane": "中单",
+      "player": null,
+      "runes": {
+        "colorful": [
+          "灵狐·召唤"
+        ],
+        "attack": [
+          "破魔"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "锋鸣"
+        ]
+      },
+      "equips": [
+        "风暴之翼",
+        "镜光法典",
+        "阴影权杖",
+        "碧蓝怒火",
+        "迷雾铃",
+        "降魔宝珠"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        "芭蕉扇",
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        "憎恨碎片",
+        null
+      ]
+    }
+  ],
+  "北斗": [
+    {
+      "name": "新方案",
+      "lane": "赏金",
+      "player": "67痕踪灭22493165205",
+      "runes": {
+        "colorful": [
+          "灵狐·召唤"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "守护之翼",
+        "灾祸",
+        "狂放之击",
+        "穿心",
+        "至高信仰",
+        "平衡支配者",
+        "绯红之刺"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "荆轲": [
+    {
+      "name": "新方案",
+      "lane": null,
+      "player": null,
+      "runes": {
+        "colorful": [
+          "觉醒·透甲"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "蝠拥"
+        ],
+        "general": [
+          "疾行"
+        ]
+      },
+      "equips": [
+        "狂风之翼",
+        "牛魔的咆哮",
+        "夺魂之镰",
+        "无畏肩甲",
+        "平衡支配者",
+        "破天"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        "至高信仰",
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ]
+}

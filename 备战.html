@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英雄备战管理器</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            overflow: hidden;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+
+        .logo {
+            font-size: 17px;
+            font-weight: 700;
+            color: #c9d1d9;
+        }
+
+        .logo span {
+            color: #58a6ff;
+        }
+
+        /* =========================
+    主区域
+========================= */
+
+        .main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            height: 64px;
+            flex-shrink: 0;
+            padding: 0 24px;
+            border-bottom: 1px solid #30363d;
+            background: #161b22;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title h1 {
+            font-size: 19px;
+            color: #c9d1d9;
+        }
+
+        .build-select {
+            height: 32px;
+            min-width: 150px;
+            padding: 0 30px 0 10px;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            outline: none;
+            background: #161b22;
+            color: #c9d1d9;
+            cursor: pointer;
+        }
+
+        .build-select:hover,
+        .build-select:focus {
+            border-color: #58a6ff;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            height: 34px;
+            padding: 0 13px;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            background: #161b22;
+            color: #c9d1d9;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #21262d;
+        }
+
+        .btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            border-color: #1f6feb;
+            background: #1f6feb;
+            color: #ffffff;
+        }
+
+        .btn.primary:hover:not(:disabled) {
+            background: #388bfd;
+        }
+
+        .btn.danger {
+            border-color: #f85149;
+            background: rgba(248,81,73,.10);
+            color: #f85149;
+        }
+
+        .btn.danger:hover:not(:disabled) {
+            background: rgba(248,81,73,.18);
+        }
+
+        /* =========================
+    内容
+========================= */
+
+        .content {
+            flex: 1;
+            overflow: auto;
+            padding: 24px;
+        }
+
+        .layout {
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        /* =========================
+    英雄标题
+========================= */
+
+        .hero-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .hero-large-avatar {
+            width: 70px;
+            height: 70px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #21262d, #30363d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b949e;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .hero-large-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-info h2 {
+            margin-bottom: 6px;
+            font-size: 23px;
+            color: #c9d1d9;
+        }
+
+        .hero-info p {
+            color: #8b949e;
+            font-size: 13px;
+        }
+
+        /* =========================
+    方案 + 符文
+========================= */
+
+        .workspace {
+            display: block;
+        }
+
+        .panel {
+            overflow: hidden;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            background: #161b22;
+            box-shadow: 0 1px 2px rgba(1,4,9,.3);
+        }
+
+        .panel-header {
+            min-height: 50px;
+            padding: 0 16px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #c9d1d9;
+        }
+
+        .panel-count {
+            color: #8b949e;
+            font-size: 12px;
+        }
+
+        .panel-body {
+            padding: 14px;
+        }
+
+        /* =========================
+    符文区域
+========================= */
+
+        .rune-panel {
+            min-width: 0;
+        }
+
+        .rune-content {
+            padding: 18px;
+        }
+
+        /* =========================
+    一行符文槽位(每类一槽, 只显示已选)
+========================= */
+
+        .rune-slots {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 22px;
+            padding: 8px 0 6px;
+        }
+
+        .rune-slot {
+            width: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .rune-slot-title {
+            font-size: 11px;
+            color: #8b949e;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        /* 槽位卡片: 同类型共用一个背景图(RUNE_BG), 中央放图标 */
+        .rune-card {
+            position: relative;
+            width: 92px;
+            height: 92px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #161b22;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform .15s, border-color .15s, box-shadow .15s;
+        }
+
+        .rune-card:hover {
+            transform: scale(1.06);
+        }
+
+        .rune-card .rune-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+        }
+
+        .rune-slot-plus {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b949e;
+            font-size: 26px;
+            font-weight: 300;
+            pointer-events: none;
+        }
+
+        /* 卡片下方显示的符文名(无背景) */
+        .rune-card-name {
+            font-size: 12px;
+            color: #c9d1d9;
+            text-align: center;
+            line-height: 1.3;
+            min-height: 16px;
+        }
+
+        /* =========================
+    符文下拉选择浮层(横向卡片列表)
+========================= */
+
+        .rune-picker {
+            position: fixed;
+            z-index: 1000;
+            max-width: calc(100vw - 40px);
+            max-height: 340px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            box-shadow: 0 12px 32px rgba(1,4,9,.6);
+        }
+
+        .rune-picker-title {
+            padding: 0 4px 8px;
+            color: #8b949e;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* 横向排列的选项容器 */
+        .rune-option-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .rune-option {
+            width: 84px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #c9d1d9;
+            transition: background .15s;
+        }
+
+        .rune-option:hover {
+            background: rgba(88,166,255,.12);
+        }
+
+        /* 选项卡片: 同类型共用背景图 + 居中符文图标 */
+        .rune-option-card {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rune-option-card img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+        }
+
+        .rune-option-placeholder {
+            color: #484f58;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .rune-option-name {
+            font-size: 11px;
+            color: #c9d1d9;
+            text-align: center;
+            line-height: 1.2;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* =========================
+    符文信息浮层(rune-info tooltip)
+========================= */
+
+        .rune-info {
+            position: fixed;
+            z-index: 2000;
+            max-width: 320px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(1,4,9,.94);
+            color: #c9d1d9;
+            box-shadow: 0 6px 18px rgba(1,4,9,.45);
+            pointer-events: none;
+        }
+
+        .rune-info-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #d2991d;
+        }
+
+        .rune-info-desc {
+            font-size: 12px;
+            line-height: 1.6;
+            color: #c9d1d9;
+        }
+
+        /* 无方案时的占位提示 */
+        .rune-empty {
+            padding: 14px 0;
+            color: #8b949e;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* =========================
+    出装面板
+========================= */
+
+        .equip-panel {
+            margin-top: 20px;
+            min-width: 0;
+        }
+
+        .panel-header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .equip-content {
+            padding: 18px;
+        }
+
+        .equip-empty {
+            padding: 14px 0;
+            color: #8b949e;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* 出装槽行(编辑弹窗内格数不限, 自动换行) */
+        .equip-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .equip-slot {
+            position: relative;
+            width: 96px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .equip-slot-card {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px dashed #484f58;
+        
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform .15s, border-color .15s, box-shadow .15s;
+        }
+
+        .equip-slot-card.has-equip {
+            border-style: solid;
+            border-color: transparent;
+        }
+
+
+        /* 拖拽悬停槽位时的底色提示(不使用边框) */
+        .equip-slot-card.drag-over {
+            background: rgba(88,166,255,.18);
+        }
+
+        .equip-slot-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            padding: 8px;
+        }
+
+        .equip-slot-plus {
+            color: #484f58;
+            font-size: 30px;
+            font-weight: 300;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .equip-slot-name {
+            font-size: 12px;
+            color: #c9d1d9;
+            text-align: center;
+            line-height: 1.3;
+            min-height: 16px;
+            max-width: 96px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 弹窗内“增加一格”按钮 */
+        .equip-add-slot .equip-slot-card {
+            border-color: #484f58;
+        }
+
+        .equip-add-slot:hover .equip-slot-card {
+            border-color: #58a6ff;
+            background: rgba(88,166,255,.12);
+        }
+
+        .equip-add-slot .equip-slot-plus {
+            color: #8b949e;
+        }
+
+        .equip-add-slot .equip-slot-name {
+            color: #8b949e;
+        }
+
+        /* 主+备用装备拼接(两图均铺满整格后裁剪):
+           双装备用对角切割; 三装备用三等分数据(调试工具产出, 已去误差):
+           主装备=左侧三角, 备用1=中间竖带, 备用2=右侧三角 */
+        .equip-slot-card.dual,
+        .equip-slot-card.triple {
+            border-style: solid;
+            border-color: transparent;
+            background: transparent;
+        }
+
+        .equip-slot-card.dual img,
+        .equip-slot-card.triple img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            padding: 8px;
+        }
+
+        /* 双装备(主+备用1): 沿“右上-左下”对角线切割, 主图取左上半, 备图取右下半 */
+        .equip-slot-card.dual img:first-of-type {
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+        }
+
+        .equip-slot-card.dual img:last-of-type {
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        }
+
+        /* 三装备(主+备用1+备用2): 左三角 + 中带 + 右三角, 两条切线均为竖直线(x 恒定) */
+        .equip-slot-card.triple img:nth-of-type(1) {
+            clip-path: polygon(0% 45%, 36.5% 0%, 36.5% 100%);
+        }
+
+        .equip-slot-card.triple img:nth-of-type(2) {
+            clip-path: polygon(36.5% 0%, 63.2% 0%, 63.2% 100%, 36.5% 100%);
+        }
+
+        .equip-slot-card.triple img:nth-of-type(3) {
+            clip-path: polygon(63.2% 0%, 100% 50%, 63.2% 100%);
+        }
+
+        /* 等待拖入备用装备的槽位 */
+        .equip-slot.await-backup .equip-slot-card {
+            border: 2px dashed #58a6ff;
+            background: rgba(88,166,255,.12);
+        }
+
+        .equip-slot.await-backup .equip-slot-name {
+            color: #58a6ff;
+        }
+
+        /* 槽位右键菜单 */
+        .equip-context-menu {
+            position: fixed;
+            z-index: 1500;
+            min-width: 150px;
+            padding: 4px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(1,4,9,.55);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .equip-context-item {
+            border: 0;
+            background: transparent;
+            text-align: left;
+            padding: 7px 10px;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .equip-context-item:hover {
+            background: rgba(88,166,255,.12);
+            color: #58a6ff;
+        }
+
+        /* =========================
+    出装编辑弹窗(居中)
+========================= */
+
+        /* 无弹窗时的出装卡槽: 横向一排(与弹窗内槽位样式一致) */
+        .equip-summary {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: max-content;
+            justify-content: center;
+            gap: 12px;
+            padding: 4px 0;
+        }
+
+        .equip-summary .equip-slot-name {
+            max-width: 96px;
+        }
+
+        .equip-modal-mask {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: rgba(0,0,0,.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* hidden 属性优先级高于 display:flex */
+        .equip-modal-mask[hidden] {
+            display: none;
+        }
+
+        .equip-modal {
+            width: min(1000px, 100%);
+            max-height: calc(100vh - 60px);
+            display: flex;
+            flex-direction: column;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 14px;
+            box-shadow: 0 22px 60px rgba(1,4,9,.7);
+            overflow: hidden;
+        }
+
+        .equip-modal-head {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            border-bottom: 1px solid #30363d;
+            background: #161b22;
+        }
+
+        .equip-modal-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #c9d1d9;
+        }
+
+        .equip-modal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .equip-modal-body {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 16px 18px;
+        }
+
+
+        .equip-modal-body .equip-bar {
+            margin-bottom: 10px;
+        }
+
+        /* 弹窗内摘要展示规则提示 */
+        .equip-tip {
+            margin-bottom: 14px;
+            color: #8b949e;
+            font-size: 12px;
+        }
+
+        .equip-pos-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .equip-pos-tab {
+            padding: 5px 14px;
+            border: 1px solid #30363d;
+            border-radius: 999px;
+            background: #161b22;
+            color: #c9d1d9;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background .15s, color .15s, border-color .15s;
+        }
+
+        .equip-pos-tab:hover {
+            border-color: #58a6ff;
+        }
+
+        .equip-pos-tab.active {
+            background: rgba(31,111,235,.25);
+            border-color: #58a6ff;
+            color: #58a6ff;
+            font-weight: 600;
+        }
+
+        /* 三行视图: T1 / T2 / T3 各占一整行 */
+        .equip-tier-cols {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .equip-tier-col {
+            min-width: 0;
+        }
+
+        .equip-tier-col-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background: #21262d;
+            color: #8b949e;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .equip-tier-col-title .tier-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 18px;
+            border-radius: 4px;
+            background: rgba(31,111,235,.22);
+            color: #58a6ff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .equip-tier-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 2px;
+        }
+
+        /* 装备选项: 无边框/无 hover/无选中样式, 可拖拽/点击选入 */
+        .equip-option {
+            width: 66px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: grab;
+            transition: opacity .15s;
+        }
+
+        .equip-option.dragging {
+            opacity: .35;
+        }
+
+        .equip-option img {
+            width: 66px;
+            height: 66px;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+            -webkit-user-drag: none;
+        }
+
+        .equip-option-name {
+            font-size: 11px;
+            color: #c9d1d9;
+            text-align: center;
+            line-height: 1.2;
+            word-break: break-all;
+        }
+
+        /* =========================
+    多套方案卡片(单英雄同屏)
+========================= */
+
+        .schemes-empty {
+            padding: 60px 20px;
+            text-align: center;
+            color: #8b949e;
+            font-size: 14px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+        }
+
+        /* 通用符文面板 */
+        .universal-rune-panel {
+            margin-bottom: 22px;
+        }
+
+        .universal-rune-panel .universal-desc {
+            font-size: 12px;
+            font-weight: 400;
+            color: #8b949e;
+        }
+
+        .build-card {
+            margin-bottom: 22px;
+        }
+
+        .build-card-head {
+            min-height: 52px;
+            padding: 0 18px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .build-card-title {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .build-card-index {
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
+            background: #30363d;
+            border-radius: 4px;
+            padding: 2px 7px;
+            flex-shrink: 0;
+        }
+
+        .build-card-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #c9d1d9;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 未添加备注时的占位样式 */
+        .build-card-name.placeholder {
+            color: #484f58;
+            font-weight: 400;
+        }
+
+        /* 方案分路下拉标签 */
+        .lane-select {
+            height: 24px;
+            padding: 0 2px;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            background: #0d1117;
+            color: #8b949e;
+            font-size: 12px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .lane-select:hover,
+        .lane-select:focus {
+            border-color: #58a6ff;
+        }
+
+        .build-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .build-card .build-section-label {
+            padding: 12px 18px 0;
+            color: #8b949e;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .build-card .equip-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        /* 摘要无装备时的占位 */
+        .equip-summary-empty {
+            color: #8b949e;
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        .build-card .equip-summary {
+            padding: 6px 18px 18px;
+        }
+
+        .build-card .equip-slot {
+            cursor: pointer;
+        }
+
+        /* 拖拽中槽位外观 */
+        .equip-slot.dragging {
+            opacity: .4;
+        }
+
+        @media (max-width: 900px) {
+            .equip-tier-cols {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* =========================
+    滚动条
+========================= */
+
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            background: #21262d;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #30363d;
+        }
+
+        /* =========================
+    响应式
+========================= */
+
+        @media (max-width: 900px) {
+
+
+        }
+
+        @media (max-width: 650px) {
+
+            .content {
+                padding: 14px;
+            }
+
+            .top-actions .btn {
+                padding: 0 9px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- 左侧英雄 -->
+        <!-- 主区域（英雄列表已移除：入口统一走主站「英雄详情 → 🧩 备战方案」） -->
+        <main class="main">
+
+            <header class="topbar">
+
+                <div class="page-title">
+                    <div class="logo">
+                        英雄<span>备战</span>管理器
+                    </div>
+                    <h1>备战方案</h1>
+                </div>
+
+                <div class="top-actions">
+                    <button class="btn" id="btnUniversalRune">
+                        通用符文: 关
+                    </button>
+                    <button class="btn primary" id="btnCreateBuild">
+                        + 新建方案
+                    </button>
+                </div>
+
+            </header>
+
+
+            <div class="content">
+
+                <div class="layout">
+
+                    <div class="hero-header">
+
+                        <div class="hero-large-avatar" id="heroAvatar"></div>
+
+                        <div class="hero-info">
+
+                            <h2 id="heroName">
+                                请选择英雄
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 多套方案区, 由 JS 渲染 -->
+                    <div id="buildsArea"></div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- 出装编辑弹窗: 槽位 + 装备列表, 居中显示 -->
+    <div class="equip-modal-mask" id="equipModal" hidden>
+        <div class="equip-modal">
+            <div class="equip-modal-head">
+                <div class="equip-modal-title" id="equipModalTitle">修改出装</div>
+                <div class="equip-modal-actions">
+                    <button class="btn primary" id="btnDoneEquip">完成</button>
+                </div>
+            </div>
+            <div class="equip-modal-body">
+                <div class="equip-bar" id="equipBar"></div>
+                <div class="equip-tip">点击“增加一格”可追加格数; 右键装备可删除或添加备用装备(每格最多 2 个备用); 摘要按行展示全部装备: 三级装备在底行, 备用1与非三级装备向上堆叠, 备用2在底行下方。</div>
+                <div class="equip-pos-tabs" id="equipPosTabs"></div>
+                <div class="equip-tier-cols" id="equipTierCols"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="备战.js"></script>
+
+</body>
+
+</html>

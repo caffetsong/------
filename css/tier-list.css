@@ -1,6 +1,6 @@
 /* ============================================================
    英雄梯度排行榜 — 公共样式
-   适配 LOLM 和 曙光英雄，深色主题，响应式
+   曙光英雄梯度排行 + 备战管理器，深色主题，响应式
    ============================================================ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -339,6 +339,14 @@ tbody tr.current-highlight { background: rgba(31,111,235,0.08); }
     font-size: 14px; font-family: inherit;
 }
 .hero-detail-close:hover { background: rgba(248,81,73,0.15); }
+/* 英雄详情 → 备战方案 入口 */
+.hd-prep-link {
+    padding: 6px 14px; border: 1px solid #8957e5; border-radius: 6px;
+    background: rgba(137,87,229,0.12); color: #c9a9ff; cursor: pointer;
+    font-size: 13px; text-decoration: none; white-space: nowrap;
+    transition: background 0.2s;
+}
+.hd-prep-link:hover { background: rgba(137,87,229,0.28); color: #fff; }
 .hero-detail-body { padding: 20px; }
 .hero-detail-body .chart-box {
     background: #161b22; border: 1px solid #30363d;

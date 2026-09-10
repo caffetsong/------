@@ -130,6 +130,95 @@ function listBanners(dir) {
   return { dir, bannerDir: sub, files };
 }
 
+// ---------- 备战管理器（页面: /备战.html，文件均在本项目根目录） ----------
+// 页面/脚本/数据: 备战.html、备战.js、data.json、equip.json、equipicon/
+// 接口: /api/{heroes,lanes,players,data}
+// 头像: /HeadIcon/* → 映射到 曙光英雄/HeadIcon（不重复存一份）
+const BEI_DATA = resolve(ROOT, "data.json");
+const SG_HEADICON = resolve(ROOT, "曙光英雄", "HeadIcon");
+const SG_INTRO = resolve(ROOT, "曙光英雄", "英雄介绍.json");
+
+// 英雄列表：扫曙光英雄头像目录，文件名即英雄名
+function listHeroNames() {
+  try {
+    return readdirSync(SG_HEADICON, { withFileTypes: true })
+      .filter(f => f.isFile() && f.name.toLowerCase().endsWith(".png"))
+      .map(f => f.name.slice(0, -4))
+      .sort((a, b) => a.localeCompare(b, "zh-Hans-CN"));
+  } catch { return []; }
+}
+
+// 读取 英雄介绍.json 的某个数组字段 → { 英雄名: string[] }（实时读取，可被其他工具编辑）
+function readIntroField(field) {
+  try {
+    const arr = JSON.parse(readFileSync(SG_INTRO, "utf8"));
+    const map = {};
+    if (Array.isArray(arr)) {
+      for (const item of arr) {
+        if (item && typeof item === "object" && typeof item.name === "string") {
+          map[item.name] = Array.isArray(item[field]) ? item[field] : [];
+        }
+      }
+    }
+    return map;
+  } catch { return {}; }
+}
+
+function readBeiData() {
+  try {
+    const parsed = JSON.parse(readFileSync(BEI_DATA, "utf8"));
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch { return {}; }
+}
+
+async function writeBeiData(doc) {
+  const tmp = BEI_DATA + ".tmp";
+  await Bun.write(tmp, JSON.stringify(doc, null, 2));
+  renameSync(tmp, BEI_DATA); // 原子替换
+}
+
+// 从指定目录提供静态文件（支持目录 → index.html）
+async function serveFromDir(dirBase, rel) {
+  const clean = String(rel).replace(/\\/g, "/").replace(/^\/+/, "");
+  let target = resolve(dirBase, clean || "index.html");
+  if (target !== dirBase && !target.startsWith(dirBase + sep)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+  try {
+    if (statSync(target).isDirectory()) target = resolve(target, "index.html");
+  } catch {
+    return new Response("Not Found", { status: 404 });
+  }
+  const f = Bun.file(target);
+  if (!(await f.exists())) return new Response("Not Found", { status: 404 });
+  return new Response(f, {
+    headers: { "Content-Type": f.type || "application/octet-stream", "Cache-Control": "no-cache" }
+  });
+}
+
+// 备战管理器数据接口：/api/{heroes,lanes,players,data}
+async function handleBeiApi(req, action, method) {
+  if (action === "heroes" && method === "GET") return json({ heroes: listHeroNames() });
+  if (action === "lanes" && method === "GET") return json({ lanes: readIntroField("常用分路") });
+  if (action === "players" && method === "GET") return json({ players: readIntroField("擅长选手") });
+  if (action === "data") {
+    if (method === "GET") return json(readBeiData());
+    if (method === "POST" || method === "PUT") {
+      const text = await req.text();
+      if (text.length > MAX_BODY) return json({ error: "请求体过大" }, 400);
+      let doc;
+      try { doc = JSON.parse(text); } catch { return json({ error: "invalid json" }, 400); }
+      if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
+        return json({ error: "body must be an object" }, 400);
+      }
+      try { await writeBeiData(doc); } catch (e) { return json({ error: "写入失败: " + e.message }, 500); }
+      return json({ ok: true });
+    }
+    return json({ error: "method not allowed" }, 405);
+  }
+  return json({ error: "接口不存在: " + action }, 404);
+}
+
 // ---------- 保存 ----------
 async function handleSave(dir, body) {
   let payload;
@@ -229,6 +318,10 @@ async function handleApi(req, pathname, method) {
 
   if (segs.length === 2 && segs[1] === "games") return json({ games: discoverGames() });
   if (segs.length === 2 && segs[1] === "watch") return handleWatch();
+  // 备战管理器数据接口
+  if (segs.length === 2 && ["heroes", "lanes", "players", "data"].includes(segs[1])) {
+    return handleBeiApi(req, segs[1], method);
+  }
 
   if (segs.length === 3) {
     const dir = segs[1];
@@ -282,9 +375,27 @@ const server = Bun.serve({
     const method = req.method;
 
     if (pathname === "/api" || pathname === "/api/") {
-      return json({ endpoints: ["/api/games", "/api/{dir}/config", "/api/{dir}/list", "/api/{dir}/banners", "/api/{dir}/save", "/api/watch"] });
+      return json({ endpoints: ["/api/games", "/api/{dir}/config", "/api/{dir}/list", "/api/{dir}/banners", "/api/{dir}/save", "/api/watch", "/api/{heroes,lanes,players,data}"] });
     }
     if (pathname.startsWith("/api/")) return handleApi(req, pathname, method);
+
+    // 中文路径需先解码再匹配（url.pathname 是百分号编码的）
+    let decodedPath = pathname;
+    try { decodedPath = decodeURIComponent(pathname); } catch { /* 保留原值 */ }
+
+    // 旧地址兼容：/备战管理器[/] → /备战.html（保留 ?hero= 参数）
+    if (decodedPath === "/备战管理器" || decodedPath === "/备战管理器/") {
+      return new Response(null, {
+        status: 301,
+        headers: { Location: encodeURI("/备战.html") + (url.search || "") }
+      });
+    }
+
+    // 备战管理器头像：复用 曙光英雄/HeadIcon（不重复存一份）
+    if (decodedPath.startsWith("/HeadIcon/")) {
+      return serveFromDir(SG_HEADICON, decodedPath.slice("/HeadIcon/".length));
+    }
+
     if (method !== "GET") return new Response("Method Not Allowed", { status: 405 });
     return serveStatic(pathname);
   }
@@ -292,10 +403,11 @@ const server = Bun.serve({
 
 setupWatchers();
 
-console.log("\n  MOBA 梯度数据服务器已启动 (bun " + process.version + ")");
-console.log(`  → 站点:   http://${HOST}:${PORT}/`);
-console.log(`  → 编辑器: http://${HOST}:${PORT}/editor.html`);
-console.log(`  → API:    http://${HOST}:${PORT}/api/games`);
+console.log("\n  曙光英雄梯度服务器已启动 (bun " + process.version + ")");
+console.log(`  → 梯度排行: http://${HOST}:${PORT}/`);
+console.log(`  → 备战管理: http://${HOST}:${PORT}/备战.html`);
+console.log(`  → 数据编辑: http://${HOST}:${PORT}/editor.html`);
+console.log(`  → API:      http://${HOST}:${PORT}/api/games`);
 console.log("");
 const games = discoverGames();
 if (!games.length) console.log("  （未发现含 config.json 的游戏目录）");

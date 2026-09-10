@@ -363,13 +363,6 @@
       <input type="file" id="fileInput" accept=".json" onchange="loadFile(this)" style="display:none">
       <select id="presetSelect" onchange="loadPreset(this.value)">
         <option value="">— 快速加载项目数据 —</option>
-        <optgroup label="LoLM 分路数据">
-          <option value="lolm/上路.json">上路</option>
-          <option value="lolm/打野.json">打野</option>
-          <option value="lolm/中路.json">中路</option>
-          <option value="lolm/下路.json">下路</option>
-          <option value="lolm/辅助.json">辅助</option>
-        </optgroup>
         <optgroup label="曙光英雄" id="sgOptgroup">
           <option value="">加载中...</option>
         </optgroup>
@@ -412,7 +405,7 @@
     let sortKey = null;
     let sortDir = 1;
     let currentFile = '';
-    let currentBase = '';        // 数据所属游戏目录（如 lolm / 曙光英雄），服务器保存用
+    let currentBase = '';        // 数据所属游戏目录（曙光英雄），服务器保存用
     let currentFileHandle = null; // FileSystemFileHandle for direct write-back
     let computedFields = {};   // { fieldName: { dependsOn: [], compute: fn } }
 
