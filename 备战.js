@@ -56,64 +56,24 @@ const runeData = {
 
 
 /* =========================================================
-   符文卡片素材
-   - RUNE_BG    : 每种符文类型共用的外层背景图 (彩色 n1 / 攻击 n2 / 防御 n3 / 通用 n4)
-   - RUNE_ICONS : 每个符文居中图标 URL, 按符文名对应。当前留空,
-                  之后在此补充: RUNE_ICONS["猎隼·扑击"] = "https://....png"
-                  未填写的符文, 卡片中央会显示符文名文字兜底。
+   符文卡片素材（全部为本地资源，目录 runeicon/）
+   - RUNE_BG : 每种符文类型共用的外层背景图（彩色 n1 / 攻击 n2 / 防御 n3 / 通用 n4）
+   - 图标    : 按符文名取 runeicon/{符文名}.png（与装备图标同规则，无需登记）
+               缺失时自动回退为文字兜底（"?" / 符文名）
+   新增符文：把图标放进 runeicon/ 并以符文名命名即可
 ========================================================= */
 
 const RUNE_BG = {
-    colorful: "https://sgyx-plt-static-resources.cache.jj.cn/sgwebsite/imgs/vs/pc/xsbg/n1.png",
-    attack: "https://sgyx-plt-static-resources.cache.jj.cn/sgwebsite/imgs/vs/pc/xsbg/n2.png",
-    defense: "https://sgyx-plt-static-resources.cache.jj.cn/sgwebsite/imgs/vs/pc/xsbg/n3.png",
-    general: "https://sgyx-plt-static-resources.cache.jj.cn/sgwebsite/imgs/vs/pc/xsbg/n4.png"
+    colorful: "runeicon/n1.png",
+    attack: "runeicon/n2.png",
+    defense: "runeicon/n3.png",
+    general: "runeicon/n4.png"
 };
 
-const RUNE_ICONS = {
-
-    "猎隼·扑击": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/9947570bbc054eb5f66a684a543c4b5d.png",
-    "冰灵·霜冻": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/92b68b081ec0a199d57656c480d54e26.png",
-    "地灵·回生": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/d83d95d36aee32535a12f5337387bb71.png",
-    "觉醒·庇护": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/b935bfc1e51966018b0279e4754418bb.png",
-    "觉醒·法能": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/40a1c43a290370126f1ab0ae55a30b9c.png",
-    "觉醒·疾射": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/ae089246bb3e387e24fb242f67036a05.png",
-    "觉醒·疾咒": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/c5b6f78bf54e8c635f656f2763c78d9c.png",
-    "觉醒·磐固": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/f6b17659fd024227dcdb710a923547b7.png",
-    "觉醒·强袭": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/5b4f8084c4e9d38f62fc4fd5d9659c8c.png",
-    "觉醒·守卫": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/a19fc52278d6125d7054d7a27f322471.png",
-    "觉醒·透甲": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/a3f77f394e9d325a57a5379b2fd5d2d8.png",
-    "猎隼·扑击": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/9947570bbc054eb5f66a684a543c4b5d.png",
-    "凛霜·席卷": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/604bbb970533aa675c1ed2fb5111e116.png",
-    "灵狐·召唤": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/e15412bd94aaf8e39cf69648b2308554.png",
-    "神行·振奋": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/b8fc17785a2d18e4e0e40d71cc974bc5.png",
-    "奔涌": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/3ea965129857805a4cb311ba7baa5d3b.png",
-    "盾歌": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/4cba516012756516e94efa737e72efc7.png",
-    "荆棘": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/a7d156932e3c39ab8b68e8af517e0b6b.png",
-    "连弩": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/2ee2228f61dc9bd77bd121b8c669d604.png",
-    "蛮斗": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/7810e06b7aca95c1d8a46154160d2260.png",
-    "霹雳": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/8d5b0459070c193b14a24a2bba7abb61.png",
-    "破魔": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/9160bb2111372c0f24234ee5d5399984.png",
-    "狮狩": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/d8c46bfe3bb6f3aef0ac5dee3abe1894.png",
-    "同仇": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/12034822501b433219e177cb2e832eaa.png",
-    "鹰戮": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/27bbdaafc76aba34f141f72e5b566a64.png",
-    "壁垒": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/cd0066736ec7957e3a4a10c29f60a21c.png",
-    "调息": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/aa05dfa8ba3315b2e46fa2df538c4179.png",
-    "蝠拥": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/12c99f96195491f11e415c3fcec87cf0.png",
-    "回春": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/8e50f8d38ae5f57bd2d64cf2ebc36551.png",
-    "渴血": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/e9ef6548f54e599fcf640a2cb50dba79.png",
-    "群岩": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/893dfba42db665d1ff083c7841401d3d.png",
-    "摄魂": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/efb7a46ae9b1032b618a7e3f6c2e0b27.png",
-    "神佑": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/002049b6342647ef1c8c3df9db7ebb54.png",
-    "风驰": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/908518dc4778aeb6d9fdee5cf4e095db.png",
-    "锋鸣": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/cd1d48f234d81d51e956b64a8d8a3c43.png",
-    "疾行": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/24f6e97aa9108dc0ce2ae260117bbed3.png",
-    "剑誓": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/d3a413340087ff148d5d745eab082686.png",
-    "掘金": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/27c923b186e7b349c9ca16e15040885b.png",
-    "灵犀": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/54d4f148258df1346aaffec89768b8b1.png",
-    "瞬雷": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/e42cd4cae49b0f8fdbe6b40b7a8cc5bd.png",
-    "追猎": "https://sgyx-plt-static-resources.cache.jj.cn/space/common/d25dec687524206ad4f976a134882297.png",
-};
+/* 符文图标本地路径：runeicon/{符文名}.png */
+function runeIconUrl(name) {
+    return "runeicon/" + encodeURIComponent(name) + ".png";
+}
 
 /* 符文类型槽位(按行展示顺序) */
 const RUNE_TYPES = [
@@ -663,20 +623,19 @@ function renderRuneSlots(build, buildIndex, container) {
         card.style.backgroundImage = `url('${RUNE_BG[key]}')`;
 
         if (rune) {
-            const iconUrl = (RUNE_ICONS && RUNE_ICONS[rune.name]) || "";
-            if (iconUrl) {
-                const img = document.createElement("img");
-                img.className = "rune-icon";
-                img.src = iconUrl;
-                img.alt = rune.name;
-                img.draggable = false;
-                card.appendChild(img);
-            } else {
+            const img = document.createElement("img");
+            img.className = "rune-icon";
+            img.src = runeIconUrl(rune.name);
+            img.alt = rune.name;
+            img.draggable = false;
+            img.onerror = () => {          // 本地缺图 → 回退问号
+                img.remove();
                 const mark = document.createElement("span");
                 mark.className = "rune-slot-plus";
                 mark.textContent = "?";
                 card.appendChild(mark);
-            }
+            };
+            card.appendChild(img);
 
             /* 悬浮槽位卡片: 显示 info 气泡 */
             bindRuneInfo(card, rune);
@@ -762,20 +721,19 @@ function openRunePicker(buildIndex, type, anchorCard) {
         card.className = "rune-option-card";
         card.style.backgroundImage = `url('${bgUrl}')`;
 
-        const iconUrl = (RUNE_ICONS && RUNE_ICONS[rune.name]) || "";
-        if (iconUrl) {
-            const img = document.createElement("img");
-            img.src = iconUrl;
-            img.alt = rune.name;
-            img.draggable = false;
-            img.loading = "lazy";
-            card.appendChild(img);
-        } else {
+        const img = document.createElement("img");
+        img.src = runeIconUrl(rune.name);
+        img.alt = rune.name;
+        img.draggable = false;
+        img.loading = "lazy";
+        img.onerror = () => {              // 本地缺图 → 回退问号
+            img.remove();
             const mark = document.createElement("span");
             mark.className = "rune-option-placeholder";
             mark.textContent = "?";
             card.appendChild(mark);
-        }
+        };
+        card.appendChild(img);
         option.appendChild(card);
 
         /* 下方符文名 */
