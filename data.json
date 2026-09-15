@@ -951,6 +951,48 @@
           "锋鸣"
         ]
       }
+    },
+    "李靖": {
+      "enabled": true,
+      "runes": {
+        "colorful": [
+          "觉醒·强袭"
+        ],
+        "attack": [
+          "蛮斗"
+        ],
+        "defense": [
+          "群岩"
+        ],
+        "general": [
+          "风驰"
+        ]
+      },
+      "equipEnabled": false,
+      "equips": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
     }
   },
   "黄泉": [
@@ -1303,6 +1345,78 @@
         null,
         null,
         "神圣救赎"
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "李靖": [
+    {
+      "name": "新方案",
+      "lane": "打野",
+      "player": "67雪落于眉间45769720205",
+      "runes": {
+        "colorful": [],
+        "attack": [],
+        "defense": [],
+        "general": []
+      },
+      "equips": [
+        "守护之翼",
+        "风暴射手",
+        "霜燃",
+        "荆棘刺盾",
+        "正义壁垒",
+        "不屈意志"
+      ],
+      "equipsBackup": [
+        "钢铁之翼",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "新方案",
+      "lane": null,
+      "player": null,
+      "runes": {
+        "colorful": [],
+        "attack": [],
+        "defense": [],
+        "general": []
+      },
+      "equips": [
+        "守护之翼",
+        "风暴射手",
+        "霜燃",
+        "伤痕使者",
+        "黑羽",
+        "正义壁垒"
+      ],
+      "equipsBackup": [
+        "钢铁之翼",
+        null,
+        null,
+        null,
+        null,
+        null
       ],
       "equipsBackup2": [
         null,

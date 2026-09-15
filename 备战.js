@@ -1035,7 +1035,8 @@ function renderEquipSummary(build, container, buildIndex) {
 
         const nameEl = document.createElement("div");
         nameEl.className = "equip-slot-name";
-        nameEl.textContent = info.tier !== "3" ? `${info.name}·T${info.tier}` : info.name;
+        /* 只显示装备名, 不带 ·T1/·T2 层级后缀(桌面与移动端一致) */
+        nameEl.textContent = info.name;
         cell.appendChild(nameEl);
         return cell;
     };
