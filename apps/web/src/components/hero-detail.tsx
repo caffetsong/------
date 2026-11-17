@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ExternalLink, Pencil, Plus, Save, Swords, Trash2 } from "lucide-react";
@@ -10,7 +10,8 @@ import { HeroAvatar } from "./hero-avatar";
 import { TierBadge } from "./tier-badge";
 import { formatNumber, formatPercent } from "../lib/utils";
 import { api } from "../lib/api";
-import type { ComputedHero, HeroProfile } from "../lib/types";
+import { computeTierList } from "../lib/algorithm";
+import type { AppConfig, ComputedHero, HeroProfile, Period } from "../lib/types";
 
 const LANES = ["赏金", "中单", "争锋", "辅助", "打野"];
 const LEGACY_BASE = import.meta.env.VITE_LEGACY_BASE || "http://127.0.0.1:3001";
@@ -23,6 +24,93 @@ const statLabels: { key: keyof ComputedHero; label: string }[] = [
   { key: "rankCount", label: "榜长" },
   { key: "combatScore", label: "分布分" }
 ];
+
+type TrendPoint = {
+  date: string;
+  score: number;
+  winRate: number | null;
+  headMean: number;
+  rank: number;
+  appearanceRank: number | null;
+  normScore: number;
+  normWinRate: number | null;
+  normHeadMean: number;
+  normRank: number;
+  normAppearanceRank: number | null;
+};
+
+// 原版逻辑：所有期数、所有英雄的全局 min/max 归一化到 0–100；
+// 排名类指标反向，保证“越高越好”。
+function buildTrend(periods: Period[] | undefined, config: AppConfig | undefined, name: string): TrendPoint[] {
+  if (!periods?.length || !config || !name) return [];
+  const datasets = periods.map((period) => ({
+    date: period.date,
+    heroes: computeTierList(period.heroes, config)
+  }));
+
+  const values = {
+    score: [] as number[],
+    winRate: [] as number[],
+    headMean: [] as number[],
+    rank: [] as number[],
+    appearanceRank: [] as number[]
+  };
+  for (const dataset of datasets) {
+    const count = dataset.heroes.length;
+    for (const hero of dataset.heroes) {
+      values.score.push(hero.score);
+      if (typeof hero.winRate === "number" && Number.isFinite(hero.winRate)) {
+        values.winRate.push(hero.winRate);
+      }
+      values.headMean.push(hero.headMean);
+      values.rank.push(count - hero.rank + 1);
+      if (typeof hero.appearanceRank === "number" && Number.isFinite(hero.appearanceRank)) {
+        values.appearanceRank.push(count - hero.appearanceRank + 1);
+      }
+    }
+  }
+
+  const range = (items: number[]) => {
+    if (!items.length) return { min: 0, max: 0 };
+    return { min: Math.min(...items), max: Math.max(...items) };
+  };
+  const ranges = {
+    score: range(values.score),
+    winRate: range(values.winRate),
+    headMean: range(values.headMean),
+    rank: range(values.rank),
+    appearanceRank: range(values.appearanceRank)
+  };
+  const norm = (value: number, r: { min: number; max: number }) =>
+    r.max === r.min ? 50 : ((value - r.min) / (r.max - r.min)) * 100;
+
+  return datasets.flatMap((dataset) => {
+    const hero = dataset.heroes.find((item) => item.name === name);
+    if (!hero) return [];
+    const count = dataset.heroes.length;
+    const rankValue = count - hero.rank + 1;
+    const appearanceRank = typeof hero.appearanceRank === "number" && Number.isFinite(hero.appearanceRank)
+      ? hero.appearanceRank
+      : null;
+    const appearanceValue = appearanceRank === null ? null : count - appearanceRank + 1;
+    const winRate = typeof hero.winRate === "number" && Number.isFinite(hero.winRate)
+      ? hero.winRate
+      : null;
+    return [{
+      date: dataset.date,
+      score: hero.score,
+      winRate,
+      headMean: hero.headMean,
+      rank: hero.rank,
+      appearanceRank,
+      normScore: norm(hero.score, ranges.score),
+      normWinRate: winRate === null ? null : norm(winRate, ranges.winRate),
+      normHeadMean: norm(hero.headMean, ranges.headMean),
+      normRank: norm(rankValue, ranges.rank),
+      normAppearanceRank: appearanceValue === null ? null : norm(appearanceValue, ranges.appearanceRank)
+    }];
+  });
+}
 
 export function HeroDetail({
   hero,
@@ -42,16 +130,29 @@ export function HeroDetail({
   const [draftPlayers, setDraftPlayers] = useState<string[]>([]);
   const [chartMode, setChartMode] = useState<"distribution" | "history">("distribution");
 
-  const history = useQuery({
-    queryKey: ["hero-history", hero?.name],
-    queryFn: () => api.heroHistory(hero!.name),
-    enabled: open && Boolean(hero)
+  const configQuery = useQuery({ queryKey: ["config"], queryFn: api.config });
+  const periodsQuery = useQuery({ queryKey: ["periods"], queryFn: api.periods });
+  const periodDates = useMemo(
+    () => [...(periodsQuery.data?.periods ?? [])]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((period) => period.date),
+    [periodsQuery.data]
+  );
+  const fullPeriodsQuery = useQuery({
+    queryKey: ["periods-full", periodDates.join("|")],
+    queryFn: () => Promise.all(periodDates.map((date) => api.period(date))),
+    enabled: open && periodDates.length > 0
   });
 
+  const trend = useMemo(
+    () => buildTrend(fullPeriodsQuery.data, configQuery.data, hero?.name ?? ""),
+    [fullPeriodsQuery.data, configQuery.data, hero?.name]
+  );
+
   useEffect(() => {
-    if (!history.data) return;
-    setChartMode(history.data.periods.length > 1 ? "history" : "distribution");
-  }, [history.data]);
+    if (!trend.length) return;
+    setChartMode(trend.length > 1 ? "history" : "distribution");
+  }, [trend]);
 
   useEffect(() => {
     setLanes(profile?.lanes ?? []);
@@ -215,7 +316,7 @@ export function HeroDetail({
                 <span className="text-[10px] text-zinc-500">
                   {chartMode === "distribution"
                     ? `1–${hero.rankCount} 名`
-                    : `${history.data?.periods.length ?? 0} 期`}
+                    : `${trend.length} 期 · 全局归一化`}
                 </span>
               </div>
 
@@ -274,12 +375,12 @@ export function HeroDetail({
                     暂无战力分布数据
                   </div>
                 )
-              ) : history.isLoading ? (
+              ) : fullPeriodsQuery.isLoading || configQuery.isLoading ? (
                 <div className="flex h-40 items-center justify-center text-sm text-zinc-600">读取历史数据…</div>
-              ) : history.data && history.data.periods.length > 1 ? (
-                <div className="h-64 w-full">
+              ) : trend.length > 1 ? (
+                <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={history.data.periods} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                    <LineChart data={trend} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                       <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
                       <XAxis
                         dataKey="date"
@@ -289,12 +390,12 @@ export function HeroDetail({
                         axisLine={{ stroke: "#27272a" }}
                       />
                       <YAxis
-                        domain={["auto", "auto"]}
+                        domain={[0, 100]}
                         stroke="#52525b"
                         tick={{ fill: "#71717a", fontSize: 11 }}
                         tickLine={false}
                         axisLine={false}
-                        width={56}
+                        width={40}
                       />
                       <Tooltip
                         contentStyle={{
@@ -304,19 +405,33 @@ export function HeroDetail({
                           fontSize: 12,
                           color: "#e4e4e7"
                         }}
+                        formatter={(value, name, props) => {
+                          const point = props?.payload as TrendPoint | undefined;
+                          let raw = "";
+                          if (point) {
+                            if (name === "评分") raw = point.score.toFixed(1);
+                            else if (name === "胜率") raw = point.winRate == null ? "—" : `${(point.winRate * 100).toFixed(2)}%`;
+                            else if (name === "头部均值") raw = formatNumber(point.headMean);
+                            else if (name === "排名") raw = `#${point.rank}`;
+                            else if (name === "出场排名") raw = point.appearanceRank == null ? "—" : `#${point.appearanceRank}`;
+                          }
+                          return [`${Number(value).toFixed(0)}｜${raw}`, name];
+                        }}
                       />
                       <Legend wrapperStyle={{ fontSize: 11, color: "#a1a1aa" }} />
-                      <Line type="monotone" dataKey="powerTop1" name="榜首" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="powerTop9" name="国9" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="powerMedian" name="中位" stroke="#fbbf24" strokeWidth={2} strokeDasharray="5 3" dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="normScore" name="评分" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="normWinRate" name="胜率" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="normHeadMean" name="头部均值" stroke="#fbbf24" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="normRank" name="排名" stroke="#f472b6" strokeWidth={2} strokeDasharray="5 3" dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="normAppearanceRank" name="出场排名" stroke="#a78bfa" strokeWidth={2} strokeDasharray="5 3" dot={{ r: 3 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
                 <div className="flex h-40 flex-col items-center justify-center gap-1 text-sm text-zinc-600">
-                  <div>当前只有 {history.data?.periods.length ?? 0} 期数据，无法形成历史趋势</div>
-                  {history.data?.periods[0]?.date && (
-                    <div className="text-[11px] text-zinc-700">已有：{history.data.periods.map((p) => p.date).join("、")}</div>
+                  <div>当前只有 {trend.length} 期数据，无法形成历史趋势</div>
+                  {trend[0]?.date && (
+                    <div className="text-[11px] text-zinc-700">已有：{trend.map((p) => p.date).join("、")}</div>
                   )}
                 </div>
               )}
