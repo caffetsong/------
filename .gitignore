@@ -1,0 +1,21 @@
+# 运行时数据库（可由 data/snapshots 重建）
+data/tierlist.db
+data/tierlist.db-wal
+data/tierlist.db-shm
+data/tierlist.db-journal
+
+# 导入中间产物
+data/imports/
+
+# 临时文件
+*.tmp
+.tmp-*
+
+# 前端/Rust 构建产物
+apps/web/node_modules/
+apps/web/dist/
+server-rs/target/
+
+# Python 缓存
+tools/__pycache__/
+__pycache__/

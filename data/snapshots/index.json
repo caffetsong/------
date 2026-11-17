@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "generatedAt": "2026-11-17T12:36:28.307Z",
+  "periods": [
+    {
+      "date": "2026-10-19",
+      "capturedAt": "2026-10-25T11:49:00+08:00",
+      "heroCount": 103,
+      "rowCount": 9167,
+      "hasPower": true
+    },
+    {
+      "date": "2026-11-17",
+      "capturedAt": "2026-11-17T08:01:31.933Z",
+      "heroCount": 103,
+      "rowCount": 9896,
+      "hasPower": true
+    }
+  ]
+}

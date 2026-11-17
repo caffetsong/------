@@ -32,9 +32,9 @@ function getWrClass(val) {
 }
 
 function getCwClass(val) {
-  // 战力分：高(>140) 中(80-140) 低(<80)
-  if (val >= 140) return "cw-high";
-  if (val >= 80) return "cw-mid";
+  // 可选的 cw 颜色列（当前 config 未启用；阈值按旧国9标量保留）
+  if (val >= 70) return "cw-high";
+  if (val >= 60) return "cw-mid";
   return "cw-low";
 }
 
@@ -59,72 +59,30 @@ function getScoreBar(score, tier) {
     <span class="score-value">${score.toFixed(1)}</span></div>`;
 }
 
-// 曙光英雄算法（从 Python validate_pure.py 移植）
+// 曙光英雄算法 v3（大神榜 1–100 分布；核心实现见 js/algorithm.js）
 // ============================================================
 function computeSG(rawData) {
-  // 战力信号字段可配置：combatField 默认取展示用 combatPower（国9+50+100 求和）；
-  // 设为 "国9战力" 等原始字段时，算法用该字段打分（高端局信号），展示列仍用 combatPower。
-  const combatField = (gameConfig.algorithm && gameConfig.algorithm.combatField) || "combatPower";
-  const heroes = rawData.map(h => {
-    const rawCombat = h[combatField];
-    return {
-      name: h.heroName,
-      headIcon: gameConfig.headIconPath ? gameConfig.headIconPath.replace("{name}", h.heroName) : null,
-      appearanceRank: parseInt(h.appearanceRank),
-      combatPower: parseFloat(h.combatPower),
-      combatSignal: parseFloat(rawCombat != null && rawCombat !== "" ? rawCombat : h.combatPower),
-      // 暴露战力信号原始字段（如 国9战力），供 columns 配置引用展示/排序
-      [combatField]: parseFloat(rawCombat != null && rawCombat !== "" ? rawCombat : h.combatPower),
-      winRate: parseFloat(String(h.winRate).replace("%", "")) / 100,
-      lane: null
-    };
-  });
+  return SGAlgorithm.compute(rawData, gameConfig);
+}
 
-  const N = heroes.length;
-  const weights = gameConfig.algorithm.weights;
+// 服务器 API / 静态 JSON → 算法输入
+function periodToRaw(period) {
+  if (!period || !Array.isArray(period.heroes)) return null;
+  return period.heroes.map(h => ({
+    heroName: h.name,
+    "职业": h.profession,
+    appearanceRank: h.appearanceRank,
+    winRate: h.winRate,
+    power: Array.isArray(h.power) ? h.power : []
+  }));
+}
 
-  // 出场分：rank 越小越好，转换为 1 → 1.0, N → 0.0
-  const appearanceScores = heroes.map(h => 1 - (h.appearanceRank - 1) / (N - 1));
-
-  // 战力分 min-max 归一化
-  const combatVals = heroes.map(h => h.combatSignal);
-  const combatMin = Math.min(...combatVals), combatMax = Math.max(...combatVals);
-  const combatRange = combatMax - combatMin || 1;
-  const combatScores = combatVals.map(v => (v - combatMin) / combatRange);
-
-  // 胜率 min-max 归一化
-  const wrVals = heroes.map(h => h.winRate);
-  const wrMin = Math.min(...wrVals), wrMax = Math.max(...wrVals);
-  const wrRange = wrMax - wrMin || 1;
-  const wrScores = wrVals.map(v => (v - wrMin) / wrRange);
-
-  // 加权和
-  heroes.forEach((h, i) => {
-    h.raw_weighted = weights.appearance * appearanceScores[i]
-      + weights.combat * combatScores[i]
-      + weights.winrate * wrScores[i];
-  });
-
-  // 最终 min-max 归一化 → 0~100
-  const rawVals = heroes.map(h => h.raw_weighted);
-  const rawMin = Math.min(...rawVals), rawMax = Math.max(...rawVals);
-  const rawRange = rawMax - rawMin || 1;
-  heroes.forEach(h => { h.score = ((h.raw_weighted - rawMin) / rawRange) * 100; });
-
-  // 分配梯度
-  const sorted = [...heroes].sort((a, b) => b.score - a.score);
-  const thresholds = getTierThresholds();
-  sorted.forEach((h, i) => {
-    const pct = 1 - i / N;
-    let tier = "T4";
-    for (const t of thresholds) {
-      if (pct >= t.pct) { tier = t.tier; break; }
-    }
-    h.tier = tier;
-    h.rank = i + 1;
-  });
-
-  return { heroes, sorted };
+async function loadRawForDate(date, file) {
+  const period = await DataSource.loadPeriod(date);
+  if (period) return periodToRaw(period);
+  const resp = await fetch(file);
+  if (!resp.ok) throw new Error(`加载数据失败: ${resp.status}`);
+  return resp.json();
 }
 
 // ============================================================
@@ -141,13 +99,12 @@ async function loadGameData() {
   } else {
     throw new Error("未发现日期数据：请用 bun server.js 启动（需 曙光英雄_YYYY-MM-DD.json）");
   }
-  const resp = await fetch(dataFile);
-  if (!resp.ok) throw new Error(`加载数据失败: ${resp.status}`);
-  const rawData = await resp.json();
+  const rawData = await loadRawForDate(currentDate, dataFile);
   const data = computeSG(rawData);
   gameData = {
     heroes: data.heroes,
-    sorted: data.sorted
+    sorted: data.sorted,
+    meta: data.meta
   };
 
   // 如果有历史数据，加载上一期数据用于梯度变化对比
@@ -159,20 +116,17 @@ async function loadGameData() {
       const prevEntry = gameConfig.dates.find(d => d.date === prevDate);
       if (prevEntry) {
         try {
-          const prevResp = await fetch(prevEntry.file);
-          if (prevResp.ok) {
-            const prevRaw = await prevResp.json();
-            const prevResult = computeSG(prevRaw);
-            const prevMap = new Map(prevResult.heroes.map(h => [h.name, h]));
-            data.heroes.forEach(h => {
-              const prev = prevMap.get(h.name);
-              if (prev) {
-                h.prevTier = prev.tier;
-                h.prevScore = prev.score;
-                h.prevRank = prev.rank;
-              }
-            });
-          }
+          const prevRaw = await loadRawForDate(prevDate, prevEntry.file);
+          const prevResult = computeSG(prevRaw);
+          const prevMap = new Map(prevResult.heroes.map(h => [h.name, h]));
+          data.heroes.forEach(h => {
+            const prev = prevMap.get(h.name);
+            if (prev) {
+              h.prevTier = prev.tier;
+              h.prevScore = prev.score;
+              h.prevRank = prev.rank;
+            }
+          });
         } catch (e) { /* 静默失败，不影响当前数据展示 */ }
       }
     }
@@ -778,13 +732,27 @@ async function loadHeroTimeline() {
     const entry = gameConfig.dates.find(e => e.date === dateStr);
     if (!entry) continue;
     try {
-      const resp = await fetch(entry.file);
-      if (!resp.ok) continue;
-      const raw = await resp.json();
+      const raw = await loadRawForDate(dateStr, entry.file);
       const result = computeSG(raw);
       const map = {};
       result.heroes.forEach(h => {
-        map[h.name] = { score: h.score, winRate: h.winRate, combatPower: h.combatSignal, rank: h.rank, tier: h.tier, appearanceRank: h.appearanceRank };
+        map[h.name] = {
+          score: h.score,
+          winRate: h.winRate,
+          combatSignal: h.combatSignal,
+          rank: h.rank,
+          tier: h.tier,
+          appearanceRank: h.appearanceRank,
+          profession: h.profession,
+          power: h.power,
+          rankCount: h.rankCount,
+          headCount: h.headCount,
+          headMean: h.headMean,
+          fullMean: h.fullMean,
+          leaderPower: h.leaderPower,
+          lastPower: h.lastPower,
+          combatScore: h.combatScore
+        };
       });
       heroTimeline[dateStr] = map;
     } catch (e) { }
@@ -909,11 +877,17 @@ function renderHeroDetail(name) {
     return;
   }
 
-  const heroCount = Math.max(...heroTimelineDates.map(d => heroTimeline[d] ? Object.keys(heroTimeline[d]).length : 0), 0);
-  const combatLabel = (gameConfig.algorithm && gameConfig.algorithm.combatField) || "战力";
+  // 单期（当前实验期）：展示 1–N 战力分布
+  if (points.length === 1 && Array.isArray(points[0].power)) {
+    renderSinglePeriodDetail(name, points[0], introHtml);
+    return;
+  }
 
-  let gMin = { score: Infinity, winRate: Infinity, combatPower: Infinity, rank: Infinity, appearanceRank: Infinity };
-  let gMax = { score: -Infinity, winRate: -Infinity, combatPower: -Infinity, rank: -Infinity, appearanceRank: -Infinity };
+  const heroCount = Math.max(...heroTimelineDates.map(d => heroTimeline[d] ? Object.keys(heroTimeline[d]).length : 0), 0);
+  const combatLabel = "头部均值";
+
+  let gMin = { score: Infinity, winRate: Infinity, combatSignal: Infinity, rank: Infinity, appearanceRank: Infinity };
+  let gMax = { score: -Infinity, winRate: -Infinity, combatSignal: -Infinity, rank: -Infinity, appearanceRank: -Infinity };
   for (const d of heroTimelineDates) {
     if (!heroTimeline[d]) continue;
     for (const [, h] of Object.entries(heroTimeline[d])) {
@@ -921,8 +895,8 @@ function renderHeroDetail(name) {
       gMax.score = Math.max(gMax.score, h.score);
       gMin.winRate = Math.min(gMin.winRate, h.winRate);
       gMax.winRate = Math.max(gMax.winRate, h.winRate);
-      gMin.combatPower = Math.min(gMin.combatPower, h.combatPower);
-      gMax.combatPower = Math.max(gMax.combatPower, h.combatPower);
+      gMin.combatSignal = Math.min(gMin.combatSignal, h.combatSignal);
+      gMax.combatSignal = Math.max(gMax.combatSignal, h.combatSignal);
       const invRank = heroCount - h.rank + 1;
       gMin.rank = Math.min(gMin.rank, invRank);
       gMax.rank = Math.max(gMax.rank, invRank);
@@ -938,7 +912,7 @@ function renderHeroDetail(name) {
   html += '<div class="chart-box"><canvas id="chartHeroTimeline" style="height:360px"></canvas></div>';
   html += `<table class="mini-table"><thead><tr><th>日期</th><th>梯度</th><th>排名</th><th>评分</th><th>胜率</th><th>${combatLabel}</th><th>出场排名</th></tr></thead><tbody>`;
   points.forEach(p => {
-    html += `<tr><td>${p.date}</td><td>${getTierBadge(p.tier)}</td><td>#${p.rank}</td><td>${p.score.toFixed(1)}</td><td>${(p.winRate * 100).toFixed(2)}%</td><td>${p.combatPower}</td><td>#${p.appearanceRank}</td></tr>`;
+    html += `<tr><td>${p.date}</td><td>${getTierBadge(p.tier)}</td><td>#${p.rank}</td><td>${p.score.toFixed(1)}</td><td>${(p.winRate * 100).toFixed(2)}%</td><td>${p.combatSignal}</td><td>#${p.appearanceRank}</td></tr>`;
   });
   html += '</tbody></table>';
   document.getElementById('hdBody').innerHTML = html;
@@ -950,7 +924,7 @@ function renderHeroDetail(name) {
       datasets: [
         { label: '评分', data: points.map(p => norm(p.score, gMin.score, gMax.score)), borderColor: '#58a6ff', backgroundColor: '#58a6ff', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
         { label: '胜率', data: points.map(p => norm(p.winRate, gMin.winRate, gMax.winRate)), borderColor: '#3fb950', backgroundColor: '#3fb950', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
-        { label: combatLabel, data: points.map(p => norm(p.combatPower, gMin.combatPower, gMax.combatPower)), borderColor: '#d2991d', backgroundColor: '#d2991d', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
+        { label: combatLabel, data: points.map(p => norm(p.combatSignal, gMin.combatSignal, gMax.combatSignal)), borderColor: '#d2991d', backgroundColor: '#d2991d', tension: 0.2, borderWidth: 2.5, pointRadius: 5 },
         { label: '排名', data: points.map(p => norm(heroCount - p.rank + 1, gMin.rank, gMax.rank)), borderColor: '#ff7a45', backgroundColor: '#ff7a45', tension: 0.2, borderWidth: 2.5, pointRadius: 5, borderDash: [6, 3] },
         { label: '出场排名', data: points.map(p => norm(heroCount - p.appearanceRank + 1, gMin.appearanceRank, gMax.appearanceRank)), borderColor: '#bc8cff', backgroundColor: '#bc8cff', tension: 0.2, borderWidth: 2.5, pointRadius: 5, borderDash: [3, 3] },
       ]
@@ -965,6 +939,63 @@ function renderHeroDetail(name) {
       scales: {
         x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
         y: { min: 0, max: 100, ticks: { color: '#8b949e', callback: v => v.toFixed(0) }, grid: { color: '#21262d' }, title: { display: true, text: '归一化值 (0-100)', color: '#8b949e' } }
+      }
+    }
+  });
+}
+
+function renderSinglePeriodDetail(name, p, introHtml) {
+  const power = Array.isArray(p.power) ? p.power : [];
+  const items = [
+    ["榜首", p.leaderPower],
+    ["榜尾", p.lastPower],
+    ["头部均值", p.headMean],
+    ["全榜均值", p.fullMean],
+    ["榜长", p.rankCount],
+    ["分布分", p.combatScore]
+  ];
+  let html = introHtml;
+  html += '<div class="stats-row">' + items.map(([label, value]) =>
+    `<div class="stat-card"><div class="stat-value">${value == null ? "-" : value}</div><div class="stat-label">${label}</div></div>`
+  ).join("") + '</div>';
+  html += '<div class="chart-box"><canvas id="chartHeroTimeline" style="height:360px"></canvas></div>';
+  html += '<table class="mini-table"><thead><tr><th>日期</th><th>梯度</th><th>排名</th><th>评分</th><th>头部均值</th><th>全榜均值</th><th>榜长</th><th>胜率</th><th>出场排名</th></tr></thead><tbody>';
+  html += `<tr><td>${p.date}</td><td>${getTierBadge(p.tier)}</td><td>#${p.rank}</td><td>${p.score.toFixed(1)}</td><td>${p.headMean}</td><td>${p.fullMean}</td><td>${p.rankCount}</td><td>${(p.winRate * 100).toFixed(2)}%</td><td>#${p.appearanceRank}</td></tr>`;
+  html += '</tbody></table>';
+  document.getElementById('hdBody').innerHTML = html;
+
+  if (!power.length) return;
+  new Chart(document.getElementById('chartHeroTimeline'), {
+    type: 'line',
+    data: {
+      labels: power.map((_, i) => String(i + 1)),
+      datasets: [{
+        label: '曙光战力',
+        data: power,
+        borderColor: '#d2991d',
+        backgroundColor: 'rgba(210,153,29,.12)',
+        fill: true,
+        tension: 0,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        title: { display: true, text: `${name} — 大神榜战力分布（1–${power.length}）`, color: '#c9d1d9', font: { size: 14 } },
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => `第 ${items[0].label} 名`,
+            label: (item) => `战力 ${item.parsed.y}`
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: '名次', color: '#8b949e' }, ticks: { color: '#8b949e', maxTicksLimit: 12 }, grid: { color: '#21262d' } },
+        y: { title: { display: true, text: '曙光战力', color: '#8b949e' }, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
       }
     }
   });
@@ -1014,6 +1045,10 @@ async function reloadFromDisk() {
         currentDate = gameConfig.defaultDate;
       }
     }
+    DataSource.clearPeriodCache();
+    heroTimelineLoaded = false;
+    heroTimeline = null;
+    heroTimelineDates = [];
     await loadGameData();
     if (datesChanged) {
       buildControls();

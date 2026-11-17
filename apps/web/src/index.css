@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #09090b;
+  color: #f4f4f5;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-image:
+    radial-gradient(900px 500px at 10% -10%, rgba(56, 189, 248, 0.08), transparent 60%),
+    radial-gradient(800px 500px at 90% 0%, rgba(16, 185, 129, 0.06), transparent 60%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(56, 189, 248, 0.3);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 999px;
+  border: 2px solid #09090b;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-zinc-800/80 bg-zinc-900/60 shadow-panel backdrop-blur;
+  }
+  .subtle-grid {
+    background-image: linear-gradient(to right, rgba(39, 39, 42, 0.35) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(39, 39, 42, 0.35) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+}
+
+/* 原版梯度网格视图（照搬 css/tier-list.css） */
+.tier-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #000;
+  padding: 2px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #30363d;
+  min-width: 320px;
+}
+.tier-row {
+  display: flex;
+  flex-direction: row;
+  min-height: 80px;
+  background: #161b22;
+}
+.tier-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  min-width: 96px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+  user-select: none;
+}
+.tier-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 0;
+  align-items: center;
+  flex: 1;
+  background: #0d1117;
+}
+.tier-hero {
+  cursor: pointer;
+  transition: transform 0.15s, filter 0.15s;
+  width: 80px;
+  flex-shrink: 0;
+}
+.tier-hero:hover {
+  transform: scale(1.12);
+  filter: brightness(1.15);
+}
+.tier-hero-img-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 0;
+  background: #21262d;
+}
+.tier-hero img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+  background: #21262d;
+}
+.tier-hero .tier-hero-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #e6e6e6;
+  font-size: 10px;
+  text-align: center;
+  padding: 2px 4px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.tier-hero:hover .tier-hero-name {
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+}
+.tier-row-empty .tier-icons {
+  color: #484f58;
+  font-size: 0.8rem;
+  font-style: italic;
+  justify-content: flex-start;
+  padding-left: 16px;
+}
+@media (max-width: 768px) {
+  .tier-label {
+    width: 48px;
+    min-width: 48px;
+    font-size: 0.75rem;
+  }
+  .tier-icons {
+    gap: 2px;
+    padding: 0;
+  }
+  .tier-hero {
+    width: 48px;
+  }
+  .tier-hero-img-wrap {
+    width: 48px;
+    height: 48px;
+  }
+  .tier-hero img {
+    width: 48px;
+    height: 48px;
+  }
+  .tier-hero .tier-hero-name {
+    font-size: 7px;
+    padding: 1px 2px;
+  }
+  .tier-row {
+    min-height: 48px;
+  }
+}

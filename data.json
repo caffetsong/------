@@ -1427,5 +1427,50 @@
         null
       ]
     }
+  ],
+  "哪吒": [
+    {
+      "name": "新方案",
+      "lane": "中单",
+      "player": "21551093205",
+      "runes": {
+        "colorful": [
+          "凛霜·席卷"
+        ],
+        "attack": [
+          "连弩"
+        ],
+        "defense": [
+          "渴血"
+        ],
+        "general": [
+          "瞬雷"
+        ]
+      },
+      "equips": [
+        "狂风之翼",
+        "无畏肩甲",
+        "夺魂之镰",
+        "至高信仰",
+        "风暴射手",
+        "冰凰羽衣"
+      ],
+      "equipsBackup": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "equipsBackup2": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
   ]
 }

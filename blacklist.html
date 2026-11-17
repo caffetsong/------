@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>失信名单 · UID 黑名单</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+    --danger: #f85149; --success: #3fb950; --warning: #d2991d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 18px 28px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  }
+  .header h1 { margin: 0; font-size: 20px; }
+  .header p { margin: 0; color: var(--muted); font-size: 13px; }
+  .header a { margin-left: auto; color: var(--accent); text-decoration: none; font-size: 13px; }
+  .wrap { max-width: 1120px; margin: 28px auto; padding: 0 20px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+  }
+  .card-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .card-head label { font-weight: 600; font-size: 15px; }
+  #summary { color: var(--muted); font-size: 13px; }
+  .hint { color: var(--muted); font-size: 13px; margin: 8px 0 14px; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  button {
+    font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: #238636; border-color: #238636; color: #fff; }
+  button.primary:hover { background: #2ea043; }
+  button:disabled { opacity: .5; pointer-events: none; }
+  #status { color: var(--muted); font-size: 13px; }
+  #status.ok { color: var(--success); }
+  #status.warn { color: var(--warning); }
+  #status.error { color: var(--danger); }
+  .audit-head { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
+  .audit-head b { color: var(--text); }
+  .audit-warn {
+    color: var(--warning); background: #2a2110; border: 1px solid #57451a;
+    border-radius: 6px; padding: 8px 10px; font-size: 13px; margin-bottom: 12px;
+  }
+  .uid-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .uid-table th, .uid-table td {
+    padding: 8px 10px; border-bottom: 1px solid var(--border);
+    text-align: left; vertical-align: top;
+  }
+  .uid-table th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .uid-input {
+    width: 190px; padding: 6px 9px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px;
+    outline: none;
+  }
+  .uid-input:focus { border-color: var(--accent); }
+  .badge {
+    display: inline-block; padding: 1px 7px; border-radius: 999px;
+    font-size: 12px; white-space: nowrap;
+  }
+  .badge.ok { color: var(--success); background: #12261a; border: 1px solid #1f5131; }
+  .badge.warn { color: var(--warning); background: #2a2110; border: 1px solid #57451a; }
+  .badge.bad { color: var(--danger); background: #2a1214; border: 1px solid #5b2024; }
+  .badge.pending { color: var(--muted); background: #1c2129; border: 1px solid var(--border); }
+  .remove-btn {
+    padding: 3px 9px; color: var(--danger); border-color: #5b2024;
+    background: #2a1214; white-space: nowrap;
+  }
+  .remove-btn:hover { border-color: var(--danger); }
+  .empty-row td { color: var(--muted); text-align: center; padding: 22px 10px; }
+  .name-cell { color: var(--text); }
+  .detail-cell { color: var(--muted); font-size: 12px; line-height: 1.5; }
+  @media (max-width: 760px) {
+    .uid-table th:nth-child(4), .uid-table td:nth-child(4) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🚫 失信名单</h1>
+  <p>按 UID 剔除违规用户；榜单读取时动态过滤，原始数据不修改</p>
+  <a href="/">← 返回排行榜</a>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="card-head">
+      <label for="uidBody">UID 名单</label>
+      <span id="summary">当前 0 个 UID</span>
+    </div>
+    <p class="hint">
+      每行一个 UID；点「新增 UID」录入，保存后显示该 UID 在最新榜单的用户名。
+      所有期数都未出现的 UID 只提示，不阻止保存。数据文件：<code>data/blacklist.json</code>。
+    </p>
+
+    <div class="toolbar">
+      <button class="primary" id="addBtn">＋ 新增 UID</button>
+      <button id="saveBtn">💾 保存名单</button>
+      <button id="reloadBtn">🔄 重新读取</button>
+      <span id="status"></span>
+    </div>
+
+    <div class="audit-head">最新榜单：<b id="latestDate">—</b></div>
+    <div id="warning"></div>
+
+    <table class="uid-table">
+      <thead>
+        <tr>
+          <th>UID</th>
+          <th>状态</th>
+          <th>最新榜单用户名</th>
+          <th>最新榜单记录</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="uidBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let dirty = false;
+let latestAudit = null;
+
+function setStatus(text, cls = '') {
+  const el = $('status');
+  el.textContent = text;
+  el.className = cls;
+}
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function updateCount() {
+  const n = document.querySelectorAll('.uid-input').length;
+  $('summary').textContent = `当前 ${n} 个 UID` + (dirty ? '（有未保存修改）' : '');
+}
+
+function ensureEmptyRow() {
+  const tbody = $('uidBody');
+  if (tbody.querySelector('.uid-input')) return;
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="5">名单为空，点击「＋ 新增 UID」开始录入。</td></tr>';
+}
+
+function makeRow(uid, info, pending = false) {
+  const tr = document.createElement('tr');
+
+  const tdUid = document.createElement('td');
+  const input = document.createElement('input');
+  input.className = 'uid-input';
+  input.value = uid || '';
+  input.dataset.original = uid || '';
+  input.spellcheck = false;
+  input.placeholder = '输入 UID';
+  input.addEventListener('input', () => markDirty(input));
+  tdUid.appendChild(input);
+
+  const tdStatus = document.createElement('td');
+  tdStatus.className = 'status-cell';
+  const tdName = document.createElement('td');
+  tdName.className = 'name-cell';
+  const tdDetail = document.createElement('td');
+  tdDetail.className = 'detail-cell';
+  const tdAction = document.createElement('td');
+
+  if (pending) {
+    tdStatus.innerHTML = '<span class="badge pending">待保存</span>';
+    tdName.textContent = '—';
+    tdDetail.textContent = '保存后显示最新榜单';
+  } else {
+    const latestRows = Array.isArray(info?.latest) ? info.latest : [];
+    const names = (Array.isArray(info?.latestNames) && info.latestNames.length)
+      ? info.latestNames
+      : (Array.isArray(info?.names) ? info.names : []);
+    let status = '仅历史出现';
+    let cls = 'warn';
+    if (!info || !info.found) { status = '所有期都未找到'; cls = 'bad'; }
+    else if (latestRows.length) { status = '最新榜单已找到'; cls = 'ok'; }
+    tdStatus.innerHTML = `<span class="badge ${cls}">${status}</span>`;
+    tdName.textContent = names.length ? names.join('、') : '—';
+    if (latestRows.length) {
+      const parts = latestRows.slice(0, 4).map((r) =>
+        `${r.hero} #${r.rank}（${r.power}）`
+      );
+      tdDetail.innerHTML = parts.map(esc).join('<br>') +
+        (latestRows.length > 4 ? `<br>… 等 ${latestRows.length} 条` : '');
+    } else {
+      tdDetail.textContent = '—';
+    }
+  }
+
+  const btn = document.createElement('button');
+  btn.className = 'remove-btn';
+  btn.textContent = '移除';
+  btn.addEventListener('click', () => removeRow(btn));
+  tdAction.appendChild(btn);
+
+  tr.append(tdUid, tdStatus, tdName, tdDetail, tdAction);
+  return tr;
+}
+
+function renderTable(data) {
+  latestAudit = data;
+  $('latestDate').textContent = data.latestDate || '—';
+  const warning = $('warning');
+  const missing = Array.isArray(data.missingUids) ? data.missingUids : [];
+  const noLatest = Array.isArray(data.noLatestUids) ? data.noLatestUids : [];
+  if (missing.length) {
+    warning.innerHTML = `<div class="audit-warn">⚠️ 以下 UID 在所有期数中都未找到（已保存，仅提示）：${missing.map(esc).join('、')}</div>`;
+  } else if (noLatest.length) {
+    warning.innerHTML = `<div class="audit-warn">以下 UID 只在历史期出现，最新榜单没有记录：${noLatest.map(esc).join('、')}</div>`;
+  } else {
+    warning.innerHTML = '';
+  }
+
+  const tbody = $('uidBody');
+  tbody.innerHTML = '';
+  const uids = Array.isArray(data.uids) ? data.uids : [];
+  for (const uid of uids) {
+    const info = data.appearances ? data.appearances[uid] : null;
+    tbody.appendChild(makeRow(uid, info));
+  }
+  if (!uids.length) ensureEmptyRow();
+  updateCount();
+}
+
+function markDirty(input) {
+  dirty = true;
+  const tr = input.closest('tr');
+  const changed = input.value.trim() !== (input.dataset.original || '');
+  const status = tr.querySelector('.status-cell');
+  const name = tr.querySelector('.name-cell');
+  const detail = tr.querySelector('.detail-cell');
+  if (changed) {
+    status.innerHTML = '<span class="badge pending">待保存</span>';
+    name.textContent = '—';
+    detail.textContent = '保存后校验';
+  }
+  setStatus('有未保存修改', 'warn');
+  updateCount();
+}
+
+function addUidRow() {
+  const tbody = $('uidBody');
+  const empty = tbody.querySelector('.empty-row');
+  if (empty) empty.remove();
+  const tr = makeRow('', null, true);
+  tbody.appendChild(tr);
+  dirty = true;
+  updateCount();
+  tr.querySelector('.uid-input').focus();
+  setStatus('输入 UID 后点「保存名单」', 'warn');
+}
+
+function removeRow(btn) {
+  const tr = btn.closest('tr');
+  const input = tr.querySelector('.uid-input');
+  const uid = input ? input.value.trim() : '';
+  if (uid && !confirm(`确定从名单移除 UID ${uid}？`)) return;
+  tr.remove();
+  dirty = true;
+  ensureEmptyRow();
+  updateCount();
+  setStatus('有未保存修改', 'warn');
+}
+
+function readUids() {
+  const inputs = [...document.querySelectorAll('.uid-input')];
+  const values = inputs.map((i) => i.value.trim()).filter(Boolean);
+  const seen = new Set();
+  for (const uid of values) {
+    if (seen.has(uid)) {
+      alert(`UID 重复：${uid}`);
+      return null;
+    }
+    seen.add(uid);
+  }
+  if (!values.length && !confirm('名单为空，保存后会清空失信名单。继续？')) return null;
+  return values;
+}
+
+async function load() {
+  if (dirty && !confirm('有未保存修改，重新读取会丢失。继续？')) return;
+  setStatus('读取中…');
+  try {
+    const resp = await fetch('/api/blacklist', { cache: 'no-store' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    renderTable(data);
+    dirty = false;
+    updateCount();
+    setStatus('已读取', 'ok');
+  } catch (e) {
+    setStatus('读取失败：' + e.message, 'error');
+  }
+}
+
+async function save() {
+  const uids = readUids();
+  if (uids === null) return;
+  if (uids.length && !confirm(`保存后榜单会剔除 ${uids.length} 个 UID，继续？`)) return;
+  $('saveBtn').disabled = true;
+  setStatus('保存中…');
+  try {
+    const resp = await fetch('/api/blacklist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uids })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || ('HTTP ' + resp.status));
+    renderTable(data);
+    dirty = false;
+    updateCount();
+    const missing = Array.isArray(data.missingUids) ? data.missingUids.length : 0;
+    setStatus(missing
+      ? `已保存，刷新榜单生效；${missing} 个 UID 在所有期数中都未找到（仅提示）`
+      : '已保存，刷新榜单生效', missing ? 'warn' : 'ok');
+  } catch (e) {
+    setStatus('保存失败：' + e.message, 'error');
+  } finally {
+    $('saveBtn').disabled = false;
+  }
+}
+
+$('addBtn').addEventListener('click', addUidRow);
+$('saveBtn').addEventListener('click', save);
+$('reloadBtn').addEventListener('click', load);
+load();
+</script>
+</body>
+</html>

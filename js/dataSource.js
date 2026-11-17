@@ -13,6 +13,7 @@
 
 const DataSource = (() => {
   let serverReady = null; // true / false / null(未探测)
+  const periodCache = new Map();
 
   // 探测服务器是否可用（结果缓存，只探测一次）
   async function probe() {
@@ -67,6 +68,34 @@ const DataSource = (() => {
       } catch (e) {
         return { ok: false, error: e.message };
       }
+    },
+
+    // 从 SQLite 读取一整期（含每个英雄的 1–N 战力分布）。
+    // 服务器不可用 / 无此期 → null，调用方回退到静态 JSON。
+    async loadPeriod(date) {
+      if (!(await probe())) return null;
+      if (periodCache.has(date)) return periodCache.get(date);
+      try {
+        const period = await fetchJSON("/api/periods/" + encodeURIComponent(date));
+        periodCache.set(date, period);
+        return period;
+      } catch {
+        return null;
+      }
+    },
+
+    // 期数索引（SQLite）
+    async loadPeriods() {
+      if (!(await probe())) return null;
+      try {
+        return await fetchJSON("/api/periods");
+      } catch {
+        return null;
+      }
+    },
+
+    clearPeriodCache() {
+      periodCache.clear();
     },
 
     // 列出根目录下可用数据文件（编辑器预设用）。服务器不可用时返回 null。

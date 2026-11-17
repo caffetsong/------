@@ -305,6 +305,134 @@
       font-size: 14px;
     }
 
+    /* ── import modal ── */
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 60;
+    }
+
+    .modal-mask[hidden] {
+      display: none;
+    }
+
+    .modal {
+      width: min(760px, 100%);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, .55);
+      overflow: hidden;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-date {
+      font-family: inherit;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: text;
+      color-scheme: dark;
+    }
+
+    .modal-date:hover,
+    .modal-date:focus {
+      border-color: var(--border);
+      background: var(--bg);
+      outline: none;
+    }
+
+    .modal-caption {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .modal-close {
+      margin-left: auto;
+      padding: 4px 10px;
+      font-size: 14px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .modal-close:hover {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .modal-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: auto;
+    }
+
+    .modal-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .modal textarea {
+      width: 100%;
+      min-height: 320px;
+      resize: vertical;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      outline: none;
+    }
+
+    .modal textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .import-status {
+      min-height: 18px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .import-status.ok {
+      color: var(--success);
+    }
+
+    .import-status.error {
+      color: var(--danger);
+    }
+
+    .modal-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+    }
+
     /* ── toast ── */
     .toast {
       position: fixed;
@@ -361,19 +489,21 @@
         📂 打开 JSON
       </span>
       <input type="file" id="fileInput" accept=".json" onchange="loadFile(this)" style="display:none">
-      <select id="presetSelect" onchange="loadPreset(this.value)">
+      <select id="presetSelect" onchange="loadPreset(this.value)" onfocus="initSGPresets()">
         <option value="">— 快速加载项目数据 —</option>
         <optgroup label="曙光英雄" id="sgOptgroup">
           <option value="">加载中...</option>
         </optgroup>
       </select>
+      <button onclick="initSGPresets()" title="重新扫描根目录日期文件">🔄</button>
+      <button onclick="openImportModal()" id="importBtn" title="粘贴周数据文本并解析导入">📥 文本导入</button>
+      <a class="file-label" href="/blacklist.html" target="_blank" title="维护 UID 失信名单">🚫 失信名单</a>
       <button onclick="addRow()" disabled id="addBtn">＋ 添加行</button>
-      <button onclick="createTemplate()" disabled id="templateBtn" title="基于当前数据创建仅含英雄名和职业的模板文件（需含「职业」列）">🧩 创建模板</button>
       <button class="primary" onclick="applyChanges()" disabled id="applyBtn" style="opacity:0.4">✏️ 应用修改</button>
       <button onclick="undoAll()" disabled id="undoBtn" class="danger" style="display:none">↩ 撤销全部修改</button>
     </div>
     <div class="toolbar">
-      <button class="primary" onclick="saveJSON()" disabled id="saveBtn">💾 下载 JSON</button>
+      <button class="primary" onclick="saveJSON()" disabled id="saveBtn">💾 保存</button>
     </div>
   </div>
 
@@ -386,14 +516,36 @@
 
   <div class="table-wrap" id="tableWrap">
     <div class="empty" id="empty">
-      <div class="icon">📂</div>
-      <p>打开一个 JSON 文件开始编辑</p>
-      <p style="font-size:12px;margin-top:4px;">支持从上方菜单加载项目数据，或拖放 / 选择本地 .json 文件</p>
+      <div class="icon">📥</div>
+      <p>打开 JSON 或使用「文本导入」开始编辑</p>
+      <p style="font-size:12px;margin-top:4px;">可加载上方项目数据，或粘贴周数据文本（登场排名,英雄,胜率…）</p>
     </div>
     <table id="dataTable" style="display:none">
       <thead id="tableHead"></thead>
       <tbody id="tableBody"></tbody>
     </table>
+  </div>
+
+  <div class="modal-mask" id="importModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="文本导入">
+      <div class="modal-head">
+        <input type="date" id="importDate" class="modal-date" aria-label="数据日期" title="数据日期（可修改，保存为 曙光英雄_YYYY-MM-DD.json）" oninput="updateImportStatus()" onchange="updateImportStatus()">
+        <span class="modal-caption">数据日期</span>
+        <button class="modal-close" onclick="closeImportModal()" title="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-hint">
+          粘贴周数据文本（CSV，6 列）：登场排名,英雄,胜率,击杀/死亡比,辅助数,场均经济。<br>
+          当前表格已有数据时，按 <b>heroName</b> 匹配，只更新 <b>appearanceRank / winRate</b>，保留 power / players / 职业；没有数据时才新建表。
+        </div>
+        <textarea id="importText" spellcheck="false" aria-label="粘贴数据文本" placeholder="登场排名,英雄,胜率,击杀/死亡比,辅助数,场均经济&#10;1,艾璐妮,46.79%,0.73,15.02,12317&#10;2,貂蝉,51.87%,1.52,7.56,14027" oninput="updateImportStatus()"></textarea>
+        <div class="import-status" id="importStatus"></div>
+      </div>
+      <div class="modal-foot">
+        <button onclick="closeImportModal()">取消</button>
+        <button class="primary" onclick="confirmImport()">保存</button>
+      </div>
+    </div>
   </div>
 
   <script src="js/dataSource.js"></script>
@@ -408,17 +560,16 @@
     let currentBase = '';        // 非空表示数据来自项目根目录（可写回服务器）
     let currentFileHandle = null; // FileSystemFileHandle for direct write-back
     let computedFields = {};   // { fieldName: { dependsOn: [], compute: fn } }
+    let sgConfig = null;       // 缓存的 config.json（日期列表 / 文件名）
 
     // ── computed field definitions ──
     // Add more definitions here when needed. The editor auto-detects which ones
     // apply based on whether all dependsOn columns exist in the loaded data.
-    const COMPUTED_DEFS = {
-      combatPower: {
-        dependsOn: ['国9战力', '国50战力', '国100战力'],
-        compute: (row) => (Number(row['国9战力']) || 0) + (Number(row['国50战力']) || 0) + (Number(row['国100战力']) || 0),
-        hint: '= 国9 + 国50 + 国100'
-      }
-    };
+    // 战力统一使用「国9战力」，不再维护派生的 combatPower 计算列。
+    // 旧数据文件里的 combatPower / 国50战力 / 国100战力 保持原样（可查看、可手动编辑）。
+    const COMPUTED_DEFS = {};
+    // 编辑器不再展示旧「国9战力」列（数据仍保留在 JSON 中，保存时原样带回）
+    const HIDDEN_COLUMNS = new Set(['国9战力']);
 
     // ── helpers ──
     function $(id) { return document.getElementById(id); }
@@ -464,7 +615,6 @@
         $('stats').style.display = 'none';
         $('saveBtn').disabled = true;
         $('addBtn').disabled = true;
-        $('templateBtn').disabled = true;
         $('applyBtn').disabled = true;
         $('applyBtn').style.opacity = '0.4';
         return;
@@ -478,10 +628,7 @@
       $('applyBtn').style.opacity = '0.4';
       $('stats').style.display = 'flex';
 
-      columns = detectColumns(data);
-
-      // Template button: only enabled when data has a 职业 column (曙光英雄 style)
-      $('templateBtn').disabled = !columns.includes('职业');
+      columns = detectColumns(data).filter(col => !HIDDEN_COLUMNS.has(col));
 
       // sort
       let sorted = [...data];
@@ -539,7 +686,7 @@
       // stats
       $('statFile').textContent = '📄 ' + (currentFile || '未命名数据');
       $('statRows').textContent = `📋 ${data.length} 行 × ${columns.length} 列`;
-      $('statDirty').textContent = '💡 编辑后点击「✏️ 应用修改」保存到数据模型';
+      $('statDirty').textContent = '💡 编辑后点击「💾 保存」写回文件';
 
       // Undo button: show if original snapshot exists
       if (original) {
@@ -589,8 +736,9 @@
     }
 
     // Read all inputs from DOM, write to data, recalc, re-render
-    function applyChanges() {
-      if (!data) return;
+    // silent=true: 只把输入写回 data，不重绘/不提示（供保存前调用）
+    function applyChanges(silent = false) {
+      if (!data) return 0;
       const inputs = $('tableBody').querySelectorAll('input');
       let changed = 0;
 
@@ -624,11 +772,14 @@
 
       if (changed > 0) {
         recalcAll(); // ensure cross-row computed consistency
-        render();
-        toast(`已应用 ${changed} 个修改`);
-      } else {
+        if (!silent) {
+          render();
+          toast(`已应用 ${changed} 个修改`);
+        }
+      } else if (!silent) {
         toast('没有需要保存的修改');
       }
+      return changed;
     }
 
     // Recalculate all computed fields for a single row
@@ -731,7 +882,7 @@
     }
 
     // ── load JSON ──
-    function setData(arr, filename) {
+    function setData(arr, filename, opts = {}) {
       if (!Array.isArray(arr)) {
         const found = Object.values(arr).find(v => Array.isArray(v));
         if (found) arr = found;
@@ -755,7 +906,7 @@
       recalcAll();
 
       render();
-      toast(`已加载: ${filename || '数据'} (${data.length} 行)`);
+      if (!opts.silent) toast(`已加载: ${filename || '数据'} (${data.length} 行)`);
     }
 
     // ── Open local file with File System Access API (direct write-back) ──
@@ -815,156 +966,289 @@
     }
 
     // ── save ──
+    // 保存前先把表格里尚未「应用」的输入写回 data，避免填写国9战力后直接保存丢失。
     async function saveJSON() {
       if (!data) return;
 
-      // Final recalculation before saving to ensure all computed values are correct
+      applyChanges(true);
       recalcAll();
 
-      const json = JSON.stringify(data, null, 2);
-
-      // 服务器模式：直接写回项目文件（从预设加载的数据可写回根目录）
+      // 项目根目录数据：走 bun 服务器原子写回
       if (currentBase) {
         const saved = await DataSource.saveToDisk(currentFile, data);
         if (saved && saved.ok) {
           toast(`✅ 已保存到 ${currentFile}（${saved.rows} 行）`);
+          original = null;
+          render();
+          sgConfig = null;
+          initSGPresets();
           return;
         }
-        if (saved && !saved.ok) {
-          alert('写回项目文件失败: ' + (saved.error || '未知错误') + '\n将改用下载方式保存。');
-        }
-        // saved === null（服务器不可用）→ 继续走下方原有逻辑
+        alert(saved
+          ? '写回项目文件失败: ' + (saved.error || '未知错误')
+          : '服务器不可用，无法写回项目文件。请用 bun server.js 启动后访问本页。');
+        return;
       }
 
+      // 通过 File System Access 打开的本地文件：直接写回原文件
       if (currentFileHandle) {
-        // Direct write-back to the file that was opened (no download dialog)
         try {
+          const json = JSON.stringify(data, null, 2);
           const writable = await currentFileHandle.createWritable();
           await writable.write(json);
           await writable.close();
           toast(`已保存到 ${currentFile || '文件'}`);
+          original = null;
+          render();
         } catch (e) {
-          alert('直接保存失败: ' + e.message + '\n将使用下载方式保存。');
-          downloadJSON(json);
+          alert('直接保存失败: ' + e.message);
         }
-      } else if ('showSaveFilePicker' in window) {
-        // No handle yet → ask user to pick a save location once, then remember it
-        try {
-          currentFileHandle = await window.showSaveFilePicker({
-            suggestedName: currentFile || 'data.json',
-            types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }]
-          });
-          const writable = await currentFileHandle.createWritable();
-          await writable.write(json);
-          await writable.close();
-          toast(`已保存到 ${currentFile || '文件'}（后续 Ctrl+S 将直接写回此位置）`);
-        } catch (e) {
-          if (e.name === 'AbortError') {
-            downloadJSON(json);  // user cancelled — fall back to download
-          } else {
-            alert('保存失败: ' + e.message + '\n将使用下载方式保存。');
-            downloadJSON(json);
-          }
-        }
-      } else {
-        // File System Access API not available → download
-        downloadJSON(json);
-      }
-    }
-
-    function downloadJSON(json) {
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = Object.assign(document.createElement('a'), {
-        href: url,
-        download: currentFile || 'data.json'
-      });
-      a.click();
-      URL.revokeObjectURL(url);
-      toast('JSON 已下载（含自动计算值）');
-    }
-
-    // ── create template (heroName + 职业 only) ──
-    function createTemplate() {
-      if (!data || !data.length) return;
-      const cols = detectColumns(data);
-      if (!cols.includes('职业')) {
-        alert('当前数据没有「职业」列，仅支持曙光英雄类数据创建模板。');
         return;
       }
-      // Name column: keep the original key used in the data (heroName or name)
-      const nameCol = cols.find(c => c === 'heroName' || c.toLowerCase().includes('name')) || 'heroName';
-      const template = data.map(row => {
-        const obj = {};
-        // Keep all columns; only name + 职业 keep their values, everything else is empty
-        cols.forEach(col => {
-          obj[col] = (col === nameCol || col === '职业') ? (row[col] ?? '') : '';
+
+      alert('当前数据来自本地文件，浏览器无法直接写回。请通过「快速加载项目数据」或「文本导入」后保存。');
+    }
+
+    // ============================================================
+    // 文本导入：把周数据 CSV 粘贴文本解析为当前数据表
+    // 源格式：登场排名,英雄,胜率,击杀/死亡比,辅助数,场均经济
+    // 只取前三列；职业从上一期继承；国9战力留空待填。
+    // ============================================================
+    // 默认数据日期 = 本周周一（与现有数据文件的「起始日期」习惯一致）
+    function defaultImportDate() {
+      const d = new Date();
+      const offset = (d.getDay() + 6) % 7; // 周一=0
+      d.setDate(d.getDate() - offset);
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+
+    function importFileName(dateStr) {
+      return '曙光英雄_' + dateStr + '.json';
+    }
+
+    function openImportModal() {
+      const modal = $('importModal');
+      if (!modal) return;
+      if (!$('importDate').value) {
+        const m = String(currentFile || '').match(/(\d{4}-\d{2}-\d{2})/);
+        $('importDate').value = m ? m[1] : defaultImportDate();
+      }
+      modal.hidden = false;
+      updateImportStatus();
+      $('importText').focus();
+    }
+
+    function closeImportModal() {
+      const modal = $('importModal');
+      if (modal) modal.hidden = true;
+    }
+
+    // 解析粘贴文本 → { rows, errors }
+    function parseImportText(text) {
+      const rows = [];
+      const errors = [];
+      const lines = String(text || '')
+        .replace(/^\uFEFF/, '')
+        .replace(/\r\n?/g, '\n')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+
+      for (const line of lines) {
+        const cells = line.split(/[,\t，]/).map(s => s.trim().replace(/^"(.*)"$/, '$1').trim());
+        if (!/^\d+$/.test(cells[0] || '')) {
+          // 表头或无法解析的行（表头只出现在正式数据前）
+          if (rows.length === 0 && /登场排名|排名|英雄|胜率/.test(line)) continue;
+          errors.push(line);
+          continue;
+        }
+        const rank = parseInt(cells[0], 10);
+        const hero = cells[1] || '';
+        const wrRaw = String(cells[2] || '').replace('%', '').trim();
+        let wr = parseFloat(wrRaw);
+        if (!hero || !Number.isFinite(rank) || !Number.isFinite(wr)) {
+          errors.push(line);
+          continue;
+        }
+        // 兼容不带 % 的小数胜率（0.4679 → 46.79）
+        if (!String(cells[2]).includes('%') && wr > 0 && wr <= 1) wr *= 100;
+        rows.push({
+          heroName: hero,
+          职业: '',
+          appearanceRank: rank,
+          国9战力: '',
+          winRate: wr.toFixed(2) + '%'
         });
-        return obj;
-      });
-      const json = JSON.stringify(template, null, 2);
-      saveTemplateFile(json);
-    }
-
-    async function saveTemplateFile(json) {
-      // Fallback for browsers without File System Access API
-      if (!('showDirectoryPicker' in window)) {
-        const suggested = '曙光英雄_模板.json';
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = Object.assign(document.createElement('a'), { href: url, download: suggested });
-        a.click();
-        URL.revokeObjectURL(url);
-        toast('模板已下载');
-        return;
       }
 
+      rows.sort((a, b) => a.appearanceRank - b.appearanceRank);
+      return { rows, errors };
+    }
+
+    function updateImportStatus() {
+      const el = $('importStatus');
+      if (!el) return;
+      const text = $('importText').value;
+      const dateStr = $('importDate').value;
+      if (!text.trim()) {
+        el.textContent = dateStr ? `将写入 ${importFileName(dateStr)}` : '';
+        el.className = 'import-status';
+        return;
+      }
+      const { rows, errors } = parseImportText(text);
+      const parts = [`识别 ${rows.length} 行`];
+      if (errors.length) parts.push(`${errors.length} 行无法解析`);
+      if (Array.isArray(data) && data.length) parts.push('按 heroName 更新当前表');
+      else if (dateStr) parts.push(`将写入 ${importFileName(dateStr)}`);
+      el.textContent = parts.join(' · ');
+      el.className = 'import-status ' + (errors.length ? 'error' : (rows.length ? 'ok' : ''));
+    }
+
+    // 取「上一期」数据，返回 { map: 英雄→职业, prevDate }
+    async function loadProfessionsFor(dateStr, cfg) {
+      cfg = cfg || sgConfig || await DataSource.loadConfig();
+      const dates = (cfg && Array.isArray(cfg.dates)) ? cfg.dates.slice() : [];
+      const prev = dates.map(d => d.date).filter(d => d < dateStr).sort().pop();
+      if (!prev) return { map: {}, prevDate: null };
+      const entry = dates.find(d => d.date === prev);
+      if (!entry) return { map: {}, prevDate: null };
+      const resp = await fetch(entry.file);
+      if (!resp.ok) throw new Error(`${entry.file} 请求失败: ${resp.status}`);
+      const arr = await resp.json();
+      const map = {};
+      (Array.isArray(arr) ? arr : []).forEach(h => {
+        if (h && typeof h === 'object' && typeof h.heroName === 'string') {
+          map[h.heroName] = h['职业'] || '';
+        }
+      });
+      return { map, prevDate: prev };
+    }
+
+    // 文本导入 → 按 heroName 合并到当前表：只更新 appearanceRank / winRate，
+    // 保留 power / players / 职业 等分布字段。
+    function mergeImportRows(imported, professionMap = {}) {
+      const current = Array.isArray(data) ? data : [];
+      const merged = current.map(row => ({ ...row }));
+      const byName = new Map();
+      merged.forEach(row => {
+        const name = String(row.heroName ?? row.name ?? '').trim();
+        if (name) byName.set(name, row);
+      });
+
+      let updated = 0, added = 0;
+      const seen = new Set();
+      for (const src of imported) {
+        const name = String(src.heroName || '').trim();
+        if (!name) continue;
+        const target = byName.get(name);
+        if (target) {
+          target.appearanceRank = src.appearanceRank;
+          target.winRate = src.winRate;
+          if (!target['职业'] && professionMap[name]) target['职业'] = professionMap[name];
+          if (!seen.has(name)) { updated++; seen.add(name); }
+        } else {
+          const row = { ...src };
+          if (professionMap[name]) row['职业'] = professionMap[name];
+          merged.push(row);
+          byName.set(name, row);
+          added++;
+        }
+      }
+      return { merged, updated, added, untouched: current.length - seen.size };
+    }
+
+    async function confirmImport() {
+      const dateStr = $('importDate').value;
+      if (!dateStr) {
+        alert('请填写数据日期。');
+        return;
+      }
+      const { rows, errors } = parseImportText($('importText').value);
+      if (!rows.length) {
+        alert('未解析到有效数据。\n请按「登场排名,英雄,胜率,击杀/死亡比,辅助数,场均经济」格式粘贴。');
+        return;
+      }
+      if (errors.length && !confirm(`有 ${errors.length} 行无法解析，将忽略这些行。继续？`)) return;
+
+      const hasCurrent = Array.isArray(data) && data.length > 0;
+      const currentDate = (String(currentFile || '').match(/(\d{4}-\d{2}-\d{2})/) || [])[1] || null;
+      if (hasCurrent && currentDate && dateStr && currentDate !== dateStr) {
+        if (!confirm(`当前表格是 ${currentDate}，导入日期是 ${dateStr}。\n仍按英雄名更新当前表格（不切换文件）？`)) return;
+      }
+      if (hasCurrent && hasUnsavedChanges() && !confirm('当前表格有未保存修改，导入会覆盖 appearanceRank / winRate。继续？')) return;
+
+      let cfg = sgConfig;
+      if (!cfg) {
+        try { cfg = await DataSource.loadConfig(); sgConfig = cfg; } catch (e) { /* 无服务器时仍允许导入 */ }
+      }
+
+      let prof = { map: {}, prevDate: null };
       try {
-        // 1. 选择项目根目录（数据文件都放在项目根目录）
-        const dirHandle = await window.showDirectoryPicker({
-          id: 'project-root-dir',
-          mode: 'readwrite'
-        });
-
-        // 2. Build filename: 曙光英雄_YYYY-MM-DD.json, bump suffix if taken
-        const d = new Date();
-        const dateStr = d.getFullYear() + '-' +
-          String(d.getMonth() + 1).padStart(2, '0') + '-' +
-          String(d.getDate()).padStart(2, '0');
-        let fileName = `曙光英雄_${dateStr}.json`;
-        let counter = 1;
-        while (true) {
-          const testName = counter === 1
-            ? `曙光英雄_${dateStr}.json`
-            : `曙光英雄_${dateStr}_${counter}.json`;
-          try {
-            await dirHandle.getFileHandle(testName); // throws if not found
-            counter++;
-          } catch (e) {
-            fileName = testName;
-            break;
-          }
-        }
-
-        // 3. Write the template file
-        const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
-        const writable = await fileHandle.createWritable();
-        await writable.write(json);
-        await writable.close();
-
-        // 4. 完成（服务器会自动扫描 曙光英雄_YYYY-MM-DD.json，无需登记 config）
-        toast(`模板已创建: ${fileName}（服务器会自动扫描为最新一期）`);
+        prof = await loadProfessionsFor(dateStr, cfg);
       } catch (e) {
-        if (e.name !== 'AbortError') alert('创建模板失败: ' + e.message);
+        console.warn('[import] 读取上一期职业失败:', e);
       }
+      rows.forEach(r => {
+        const profession = prof.map[r.heroName];
+        if (profession) r['职业'] = profession;
+      });
+
+      // 已有表格：按英雄名合并统计列，保留分布
+      if (hasCurrent) {
+        const { merged, updated, added, untouched } = mergeImportRows(rows, prof.map);
+        if (!updated && !added) {
+          alert('文本中的英雄名和当前表格没有匹配项，未做修改。');
+          return;
+        }
+        setData(merged, currentFile || importFileName(dateStr), { silent: true });
+        closeImportModal();
+        $('importText').value = '';
+        updateImportStatus();
+        const msg = [
+          `已按英雄名更新 ${updated} 行`,
+          added ? `新增 ${added} 行` : '',
+          '保留 power / players / 职业',
+          untouched ? `${untouched} 行未在文本中，保持原值` : ''
+        ].filter(Boolean);
+        toast(msg.join('；'));
+        return;
+      }
+
+      // 空表格：创建新表
+      if (cfg && Array.isArray(cfg.dates) && cfg.dates.some(d => d.date === dateStr)) {
+        if (!confirm(`${dateStr} 已存在数据文件，导入后保存会覆盖原文件。继续？`)) return;
+      }
+      currentBase = 'root';
+      currentFile = importFileName(dateStr);
+      setData(rows, currentFile, { silent: true });
+      closeImportModal();
+      $('importText').value = '';
+      updateImportStatus();
+
+      let missing = 0;
+      rows.forEach(r => { if (!r['职业']) missing++; });
+      const parts = [`已导入 ${rows.length} 行到编辑器`];
+      if (prof.prevDate) parts.push(`职业取自 ${prof.prevDate}`);
+      if (missing) parts.push(`${missing} 位英雄未匹配到职业`);
+      parts.push('点击「💾 保存」写入文件');
+      toast(parts.join('；'));
     }
+
+    // ── import modal: Esc / 点击遮罩关闭 ──
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !$('importModal').hidden) closeImportModal();
+    });
+    $('importModal').addEventListener('click', e => {
+      if (e.target === $('importModal')) closeImportModal();
+    });
 
     // ── keyboard shortcuts ──
     document.addEventListener('keydown', e => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        applyChanges();  // first apply any pending edits
-        saveJSON();      // then download
+        saveJSON();      // 保存前会先应用表格输入
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
@@ -982,6 +1266,7 @@
       e.preventDefault();
       const file = e.dataTransfer.files[0];
       if (file && file.name.endsWith('.json')) {
+        currentBase = '';       // 拖入的本地文件不归属项目目录
         currentFile = file.name;
         const reader = new FileReader();
         reader.onload = () => {
@@ -1107,16 +1392,29 @@
     });
 
     // ── 动态加载曙光英雄日期预设 ──
+    // 排行页日期来自 SQLite；编辑器「快速加载」需要直接扫根目录日期文件，
+    // 否则新丢进来的 曙光英雄_YYYY-MM-DD.json 不会出现。
     async function initSGPresets() {
       const optgroup = document.getElementById('sgOptgroup');
       if (!optgroup) return;
       try {
-        // 走数据层：服务器可用时自动扫出目录里最新日期文件，无需手改 config.json
         const config = await DataSource.loadConfig();
+        const list = await DataSource.listFiles().catch(() => null);
+        const map = new Map();
+        (config.dates || []).forEach(d => {
+          if (d && d.date) map.set(d.date, { date: d.date, file: d.file });
+        });
+        ((list && list.files) || []).forEach(file => {
+          const m = /_(\d{4}-\d{2}-\d{2})\.json$/.exec(file);
+          if (m) map.set(m[1], { date: m[1], file });
+        });
+
         optgroup.innerHTML = '';
         const gameName = config.gameName || '曙光英雄';
-        if (config.hasDates && config.dates && config.dates.length > 0) {
-          const sorted = [...config.dates].sort((a, b) => b.date.localeCompare(a.date));
+        const sorted = [...map.values()].sort((a, b) => b.date.localeCompare(a.date));
+        config.dates = sorted;
+        sgConfig = config;
+        if (sorted.length) {
           sorted.forEach(d => {
             const opt = document.createElement('option');
             opt.value = d.file;

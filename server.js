@@ -23,11 +23,14 @@
 // ============================================================
 import { watch, readFileSync, readdirSync, existsSync, renameSync, unlinkSync, statSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
+import { bootstrap, getDates, listPeriods, getPeriodFull, getHistory, saveLegacyRows, importPeriod, findUidAppearances } from "./db.js";
+import { getBlacklist, setBlacklist } from "./blacklist.js";
 
 const ROOT = import.meta.dir; // bun: 当前文件所在目录
 const PORT = Number(process.env.PORT) || Number(process.argv[2]) || 3001;
 const HOST = "127.0.0.1";
 const MAX_BODY = 64 * 1024 * 1024; // 请求体上限 64MB
+const WEB_DIST = resolve(ROOT, "apps", "web", "dist");
 
 // 日期数据文件名：`游戏名_YYYY-MM-DD.json`（如 曙光英雄_2026-08-31.json）
 const DATE_RE = /^(.+?)_(\d{4}-\d{2}-\d{2})\.json$/;
@@ -79,12 +82,16 @@ function scanDates() {
   return dates;
 }
 
-// 配置 + 自动扫描出的日期列表（defaultDate 始终指向最新一期）
+// 配置 + 日期列表（defaultDate 始终指向最新一期）
+// 排行页的日期以 SQLite 为准；编辑器「快速加载」另行扫描根目录文件（见 editor.html）。
 function getConfig() {
   const cfg = readConfig();
   if (!cfg) return { error: "config.json 缺失或损坏" };
   if (cfg.hasDates) {
-    const dates = scanDates();
+    const dbDates = getDates();
+    const dates = dbDates.length
+      ? dbDates.map((date) => ({ date, file: `曙光英雄_${date}.json` }))
+      : scanDates();
     cfg.dates = dates;
     if (dates.length) cfg.defaultDate = dates[dates.length - 1].date;
   }
@@ -116,7 +123,7 @@ function listBanners() {
   return { bannerDir: sub, files };
 }
 
-// ---------- 保存（原子写回根目录 JSON） ----------
+// ---------- 保存（日期数据同步 SQLite + 原子写回根目录 JSON） ----------
 async function handleSave(body) {
   let payload;
   try { payload = JSON.parse(body); }
@@ -132,6 +139,35 @@ async function handleSave(body) {
   const filePath = safeResolve(file);
   if (!filePath) return json({ ok: false, error: "路径越界" }, 403);
 
+  // 日期文件：先同步数据库。带 power 的实验数据走完整导入（保留分布），
+  // 纯统计表（文本导入/旧格式）只更新统计，已有分布保持不变。
+  let dbResult = null;
+  const dateMatch = DATE_RE.exec(file);
+  if (dateMatch && Array.isArray(data)) {
+    try {
+      const hasPower = data.some((row) => Array.isArray(row.power) && row.power.length > 0);
+      if (hasPower) {
+        dbResult = importPeriod({
+          date: dateMatch[2],
+          source: { type: "editor", file },
+          heroes: data.map((row) => ({
+            name: row.heroName || row.name,
+            profession: row["职业"] || row.profession || "",
+            appearanceRank: row.appearanceRank,
+            winRate: row.winRate,
+            power: row.power,
+            players: row.players,
+            legacyGuo9: row["国9战力"] ?? null
+          }))
+        });
+      } else {
+        dbResult = saveLegacyRows(dateMatch[2], data);
+      }
+    } catch (e) {
+      return json({ ok: false, error: "数据库同步失败: " + e.message }, 500);
+    }
+  }
+
   const tmp = filePath + ".tmp";
   try {
     await Bun.write(tmp, JSON.stringify(data, null, 2));
@@ -141,12 +177,14 @@ async function handleSave(body) {
     return json({ ok: false, error: "写入失败: " + e.message }, 500);
   }
   const st = statSync(filePath);
+  if (dbResult) broadcastChange(file);
   return json({
     ok: true,
     file,
     size: st.size,
     rows: Array.isArray(data) ? data.length : Object.keys(data).length,
-    mtime: st.mtime.toISOString()
+    mtime: st.mtime.toISOString(),
+    db: dbResult
   });
 }
 
@@ -191,6 +229,19 @@ async function handleBeiApi(req, action, method) {
   if (action === "heroes" && method === "GET") return json({ heroes: listHeroNames() });
   if (action === "lanes" && method === "GET") return json({ lanes: readIntroField("常用分路") });
   if (action === "players" && method === "GET") return json({ players: readIntroField("擅长选手") });
+  if (action === "players" && method === "POST") {
+    const text = await req.text();
+    if (text.length > MAX_BODY) return json({ error: "请求体过大" }, 400);
+    let payload;
+    try { payload = JSON.parse(text); } catch { return json({ error: "invalid json" }, 400); }
+    const uids = [...new Set((payload?.uids || [])
+      .map((uid) => String(uid ?? "").trim())
+      .filter(Boolean))];
+    const audit = findUidAppearances(uids);
+    const missingUids = uids.filter((uid) => !audit.appearances[uid]?.found);
+    const noLatestUids = uids.filter((uid) => !(audit.appearances[uid]?.latest.length));
+    return json({ ...audit, missingUids, noLatestUids });
+  }
   if (action === "data") {
     if (method === "GET") return json(readBeiData());
     if (method === "POST" || method === "PUT") {
@@ -271,6 +322,54 @@ async function handleApi(req, pathname, method) {
   });
   const action = segs[1] || "";
 
+  // 失信名单：手动维护 UID；榜单读取时动态剔除
+  if (action === "blacklist") {
+    try {
+      if (method === "GET") {
+        const data = getBlacklist();
+        return json({ ...data, ...auditBlacklist(data.uids) });
+      }
+      if (method === "POST") {
+        const text = await req.text();
+        let payload = null;
+        try { payload = text ? JSON.parse(text) : null; } catch { return json({ error: "JSON 格式错误" }, 400); }
+        const uids = Array.isArray(payload) ? payload : payload?.uids;
+        if (!Array.isArray(uids)) return json({ error: "需要 uids 数组" }, 400);
+        const saved = setBlacklist(uids);
+        return json({ ok: true, ...saved, ...auditBlacklist(saved.uids) });
+      }
+      return json({ error: "只支持 GET / POST" }, 405);
+    } catch (e) {
+      return json({ error: "失信名单操作失败: " + e.message }, 500);
+    }
+  }
+
+  // SQLite 数据接口
+  if (action === "periods") {
+    try {
+      if (segs.length === 2) return json({ periods: listPeriods() });
+      if (segs.length === 3) {
+        const period = getPeriodFull(segs[2]);
+        return period ? json(period) : json({ error: "不存在该期: " + segs[2] }, 404);
+      }
+      return json({ error: "接口不存在" }, 404);
+    } catch (e) {
+      return json({ error: e.message }, 500);
+    }
+  }
+  if (action === "heroes" && segs.length === 4 && segs[3] === "history") {
+    try {
+      const history = getHistory(segs[2]);
+      return history ? json({ name: segs[2], periods: history }) : json({ error: "没有该英雄: " + segs[2] }, 404);
+    } catch (e) {
+      return json({ error: e.message }, 500);
+    }
+  }
+
+  if (action === "players" && segs.length === 3 && segs[2] === "lookup" && method === "POST") {
+    return handleBeiApi(req, action, method);
+  }
+
   if (segs.length === 2) {
     try {
       // 服务器可用性探测 + 单游戏信息
@@ -305,6 +404,31 @@ async function handleApi(req, pathname, method) {
   return json({ error: "接口不存在" }, 404);
 }
 
+// ---------- 新 React 前端（/app/） ----------
+async function serveWebApp(pathname) {
+  let rel;
+  try { rel = decodeURIComponent(pathname.replace(/^\/app\/?/, "")); } catch { return new Response("Bad Request", { status: 400 }); }
+  if (!rel || rel.endsWith("/")) rel += "index.html";
+
+  let filePath = resolve(WEB_DIST, rel);
+  if (filePath !== WEB_DIST && !filePath.startsWith(WEB_DIST + sep)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+  if (!existsSync(filePath) || !statSync(filePath).isFile()) {
+    filePath = resolve(WEB_DIST, "index.html");
+  }
+  if (!existsSync(filePath)) {
+    return new Response("新前端尚未构建：请在 apps/web 执行 pnpm build", { status: 503 });
+  }
+  const f = Bun.file(filePath);
+  return new Response(f, {
+    headers: {
+      "Content-Type": f.type || "application/octet-stream",
+      "Cache-Control": rel.startsWith("assets/") ? "public, max-age=31536000, immutable" : "no-cache"
+    }
+  });
+}
+
 // ---------- 静态服务 ----------
 async function serveStatic(pathname) {
   let rel;
@@ -326,7 +450,22 @@ async function serveStatic(pathname) {
   }
 }
 
+// 失信名单校验：只提示，不阻止保存。
+function auditBlacklist(uids) {
+  const audit = findUidAppearances(uids);
+  const missingUids = uids.filter((uid) => !audit.appearances[uid]?.found);
+  const noLatestUids = uids.filter((uid) => !(audit.appearances[uid]?.latest.length));
+  return { ...audit, missingUids, noLatestUids };
+}
+
 // ---------- 启动 ----------
+let bootInfo = null;
+try {
+  bootInfo = bootstrap();
+} catch (e) {
+  console.error("[db] 初始化失败:", e.message);
+}
+
 Bun.serve({
   hostname: HOST,
   port: PORT,
@@ -338,6 +477,7 @@ Bun.serve({
     if (pathname === "/api" || pathname === "/api/") {
       return json({
         endpoints: ["/api/config", "/api/list", "/api/banners", "/api/save", "/api/watch",
+                    "/api/blacklist", "/api/periods", "/api/periods/:date", "/api/heroes/:name/history",
                     "/api/heroes", "/api/lanes", "/api/players", "/api/data"]
       });
     }
@@ -356,6 +496,7 @@ Bun.serve({
     }
 
     if (method !== "GET") return new Response("Method Not Allowed", { status: 405 });
+    if (pathname === "/app" || pathname.startsWith("/app/")) return serveWebApp(pathname);
     return serveStatic(pathname);
   }
 });
@@ -363,16 +504,20 @@ Bun.serve({
 setupWatcher();
 
 const cfg = readConfig() || {};
-const dates = scanDates();
+const dates = getDates().map((date) => ({ date }));
 console.log("\n  曙光英雄梯度服务器已启动 (bun " + process.version + ")");
 console.log(`  → 梯度排行: http://${HOST}:${PORT}/`);
+console.log(`  → 新版前端: http://${HOST}:${PORT}/app/`);
 console.log(`  → 备战管理: http://${HOST}:${PORT}/备战.html`);
 console.log(`  → 数据编辑: http://${HOST}:${PORT}/editor.html`);
 console.log("");
 if (!existsSync(CONFIG_FILE)) {
   console.log("  ⚠️ config.json 缺失");
 } else {
-  console.log(`  📁 ${cfg.gameName || "曙光英雄"}  数据 ${dates.length} 期` +
+  console.log(`  📁 ${cfg.gameName || "曙光英雄"}  数据库 ${dates.length} 期` +
     (dates.length ? `（最新 ${dates[dates.length - 1].date}）` : ""));
+  if (bootInfo) {
+    console.log(`  🗄️ SQLite: ${bootInfo.periods} 期 · 快照导入 ${bootInfo.importedSnapshots} · 实验数据导入 ${bootInfo.importedExperimental}`);
+  }
 }
 console.log("");

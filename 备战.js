@@ -102,6 +102,7 @@ let currentHero = null;
 let currentBuildIndex = -1;  // 保留(索引型操作以入参为准)
 let heroLanes = {};          // 英雄 -> 常用分路[](来自 英雄介绍.json)
 let heroPlayers = {};        // 英雄 -> 擅长选手[](来自 英雄介绍.json)
+let playerUidNames = {};     // UID -> 最新榜单用户名（用于展示）
 
 
 /* =========================================================
@@ -520,7 +521,8 @@ function renderSchemeCard(build, index, universal) {
         players.forEach(p => {
             const opt = document.createElement("option");
             opt.value = p;
-            opt.textContent = p;
+            opt.textContent = playerDisplayName(p);
+            opt.title = p;
             if (build.player === p) opt.selected = true;
             playerSelect.appendChild(opt);
         });
@@ -528,7 +530,8 @@ function renderSchemeCard(build, index, universal) {
         if (build.player && !players.includes(build.player)) {
             const opt = document.createElement("option");
             opt.value = build.player;
-            opt.textContent = build.player;
+            opt.textContent = playerDisplayName(build.player);
+            opt.title = build.player;
             opt.selected = true;
             playerSelect.appendChild(opt);
         }
@@ -1702,6 +1705,36 @@ document.addEventListener("click", (e) => {
    启动: 加载英雄与本地数据, 不自动创建默认方案
 ========================================================= */
 
+function playerUid(raw) {
+    const matches = String(raw ?? "").match(/\d{9,15}/g);
+    if (!matches || !matches.length) return "";
+    return matches.sort((a, b) => b.length - a.length)[0];
+}
+
+function playerDisplayName(raw) {
+    const uid = playerUid(raw);
+    if (uid && playerUidNames[uid]) return playerUidNames[uid];
+    const stripped = String(raw ?? "").replace(/\d{9,15}/g, "").trim();
+    return stripped || uid || String(raw ?? "");
+}
+
+async function loadPlayerUidNames() {
+    const raws = Object.values(heroPlayers).flat();
+    const uids = [...new Set(raws.map(playerUid).filter(Boolean))];
+    if (!uids.length) return;
+    const resp = await fetch("/api/players/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uids })
+    });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+    for (const [uid, info] of Object.entries(data.appearances || {})) {
+        const name = Array.isArray(info.latestNames) ? info.latestNames[0] : "";
+        if (name) playerUidNames[uid] = name;
+    }
+}
+
 async function boot() {
     try {
         const heroRes = await loadRemote("api/heroes");
@@ -1724,6 +1757,13 @@ async function boot() {
     } catch (error) {
         console.error("读取选手数据失败:", error);
         heroPlayers = {};
+    }
+
+    try {
+        await loadPlayerUidNames();
+    } catch (error) {
+        console.error("读取选手最新用户名失败:", error);
+        playerUidNames = {};
     }
 
     const loaded = await Promise.all([loadData(), loadEquipData()]);
