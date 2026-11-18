@@ -682,6 +682,7 @@ let equipEditorOpen = false;
 let equipPickPos = null;      // 当前定位筛选
 let backupPickIndex = null;   // 待拖入备用装备的槽位下标
 let equipSelectedSlot = 0;   // 当前可点击填入的槽位
+let equipDragging = false;    // 拖拽期间避免 document click 取消备用等待
 let equipMenuEl = null;       // 槽位右键菜单元素
 
 function closeRunePicker() {
@@ -1088,10 +1089,12 @@ function renderEquipBar(build) {
                 slot.addEventListener("dragstart", (e) => {
                     e.dataTransfer.setData("text/x-slot-index", String(i));
                     e.dataTransfer.effectAllowed = "move";
+                    equipDragging = true;
                     slot.classList.add("dragging");
                 });
                 slot.addEventListener("dragend", () => {
                     slot.classList.remove("dragging");
+                    setTimeout(() => { equipDragging = false; }, 50);
                 });
             }
 
@@ -1353,15 +1356,21 @@ function renderEquipEditor() {
             opt.addEventListener("dragstart", (e) => {
                 e.dataTransfer.setData("text/plain", name);
                 e.dataTransfer.effectAllowed = "copy";
+                equipDragging = true;
                 opt.classList.add("dragging");
             });
             opt.addEventListener("dragend", () => {
                 opt.classList.remove("dragging");
+                setTimeout(() => { equipDragging = false; }, 50);
             });
 
-            /* 点击装备直接填入当前选中的槽位 */
+            /* 点击装备直接填入当前选中的槽位；备用等待中则填入备用位 */
             opt.addEventListener("click", () => {
-                fillEquipIntoSlot(equipSelectedSlot, name);
+                if (backupPickIndex !== null) {
+                    fillBackupIntoSlot(backupPickIndex, name);
+                } else {
+                    fillEquipIntoSlot(equipSelectedSlot, name);
+                }
             });
 
             listEl.appendChild(opt);
@@ -1702,6 +1711,7 @@ document.addEventListener("mousedown", (e) => {
    用 click 而非 mousedown: 原生拖拽以 mousedown 开始且结束后不触发 click,
    这样从装备列表起拖不会误取消等待状态 */
 document.addEventListener("click", (e) => {
+    if (equipDragging) return;
     if (backupPickIndex === null || !equipEditorOpen) return;
     /* 右键菜单内的点击(如“添加备用装备”本身)不算取消 */
     if (e.target.closest && e.target.closest(".equip-context-menu")) return;

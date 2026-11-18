@@ -6,7 +6,7 @@ import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import type { BlacklistEntry, BlacklistResponse, UidAppearance } from "../lib/types";
+import type { BlacklistEntry, BlacklistResponse } from "../lib/types";
 
 export function BlacklistPage() {
   const queryClient = useQueryClient();
@@ -101,10 +101,6 @@ export function BlacklistPage() {
           <Badge variant="outline">最新榜单 {latestDate}</Badge>
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-zinc-50">失信名单</h1>
-        <p className="mt-2 max-w-3xl text-sm text-zinc-500">
-          按 UID 剔除违规用户；读取榜单时动态过滤并重新连续编号，原始 SQLite / 快照不修改。
-          可为每个 UID 填写失信原因，新增/保存后显示该 UID 在最新榜单中的用户名。
-        </p>
       </section>
 
       {query.isLoading && (
@@ -137,39 +133,22 @@ export function BlacklistPage() {
             </div>
           </div>
 
-          {!dirty && (data?.missingUids?.length || data?.noLatestUids?.length) ? (
-            <div className="border-b border-amber-500/20 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-300">
-              {data?.missingUids?.length ? (
-                <div>⚠️ 所有期数都未找到：{data.missingUids.join("、")}（仅提示，已保存）</div>
-              ) : null}
-              {data?.noLatestUids?.length ? (
-                <div>仅历史出现、最新榜单没有记录：{data.noLatestUids.join("、")}</div>
-              ) : null}
-            </div>
-          ) : null}
-
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] border-collapse text-left">
+            <table className="w-full min-w-[720px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900/60 text-[10px] uppercase tracking-wider text-zinc-500">
                   <th className="px-4 py-3 font-semibold">UID</th>
-                  <th className="px-4 py-3 font-semibold">状态</th>
-                  <th className="px-4 py-3 font-semibold">最新榜单用户名</th>
-                  <th className="px-4 py-3 font-semibold">最新榜单记录</th>
                   <th className="px-4 py-3 font-semibold">失信原因</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
                 {list.map((row, index) => {
-                  const info: UidAppearance | undefined = data?.appearances?.[row.uid.trim()];
                   return (
                     <BlacklistRow
                       key={index}
                       uid={row.uid}
                       reason={row.reason}
-                      info={info}
-                      dirty={dirty}
                       missing={missing.has(row.uid.trim())}
                       onChange={(patch) => updateRow(index, patch)}
                       onRemove={() => removeRow(index)}
@@ -178,17 +157,13 @@ export function BlacklistPage() {
                 })}
                 {!list.length && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-16 text-center text-sm text-zinc-600">
-                      名单为空，点击「新增 UID」开始录入。
+                    <td colSpan={3} className="px-4 py-16 text-center text-sm text-zinc-600">
+                      名单为空
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
-          </div>
-
-          <div className="border-t border-zinc-800/80 px-4 py-3 text-[11px] text-zinc-600">
-            数据文件：data/blacklist.json · 保存后刷新排行榜生效
           </div>
         </div>
       )}
@@ -199,37 +174,16 @@ export function BlacklistPage() {
 function BlacklistRow({
   uid,
   reason,
-  info,
-  dirty,
   missing,
   onChange,
   onRemove
 }: {
   uid: string;
   reason: string;
-  info?: UidAppearance;
-  dirty: boolean;
   missing: boolean;
   onChange: (patch: Partial<BlacklistEntry>) => void;
   onRemove: () => void;
 }) {
-  const latest = info?.latest ?? [];
-  const names = (info?.latestNames?.length ? info.latestNames : info?.names) ?? [];
-  const pending = dirty || !uid.trim();
-
-  let status = "仅历史出现";
-  let variant: "success" | "warning" | "danger" | "muted" = "warning";
-  if (pending) {
-    status = uid.trim() ? "待保存" : "待录入";
-    variant = "muted";
-  } else if (missing || !info?.found) {
-    status = "所有期都未找到";
-    variant = "danger";
-  } else if (latest.length) {
-    status = "最新榜单已找到";
-    variant = "success";
-  }
-
   return (
     <tr className="border-b border-zinc-800/60 last:border-0">
       <td className="px-4 py-2.5">
@@ -238,26 +192,11 @@ function BlacklistRow({
           onChange={(event) => onChange({ uid: event.target.value })}
           placeholder="输入 UID"
           spellCheck={false}
-          className="w-44 font-mono text-xs"
+          aria-invalid={missing}
+          className={`w-44 font-mono text-xs ${
+            missing ? "border-rose-500/60 bg-rose-500/5 text-rose-200 focus:border-rose-400" : ""
+          }`}
         />
-      </td>
-      <td className="px-4 py-2.5">
-        <Badge variant={variant}>{status}</Badge>
-      </td>
-      <td className="px-4 py-2.5 text-xs text-zinc-300">
-        {pending ? "保存后显示" : (names.length ? names.join("、") : "—")}
-      </td>
-      <td className="px-4 py-2.5 text-[11px] leading-5 text-zinc-500">
-        {pending ? "—" : latest.length ? (
-          <div className="space-y-0.5">
-            {latest.slice(0, 4).map((item) => (
-              <div key={`${item.hero}-${item.rank}`}>
-                {item.hero} <span className="text-zinc-600">#{item.rank}</span>（{item.power.toLocaleString("zh-CN")}）
-              </div>
-            ))}
-            {latest.length > 4 && <div>… 等 {latest.length} 条</div>}
-          </div>
-        ) : "—"}
       </td>
       <td className="px-4 py-2.5">
         <Input
