@@ -10,6 +10,7 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { ComputedHero } from "../lib/types";
 import { formatNumber, formatPercent } from "../lib/utils";
+import { TIER_ORDER } from "../lib/algorithm";
 import { HeroAvatar } from "./hero-avatar";
 import { TierBadge } from "./tier-badge";
 
@@ -21,9 +22,11 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
 
 export function RankingTable({
   heroes,
+  previousTiers,
   onSelect
 }: {
   heroes: ComputedHero[];
+  previousTiers?: Map<string, string>;
   onSelect: (hero: ComputedHero) => void;
 }) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -53,8 +56,20 @@ export function RankingTable({
     {
       accessorKey: "tier",
       header: "梯度",
-      size: 80,
-      cell: ({ row }) => <TierBadge tier={row.original.tier} />
+      size: 96,
+      cell: ({ row }) => {
+        const from = previousTiers?.get(row.original.name);
+        const to = row.original.tier;
+        if (!from || from === to) return <TierBadge tier={to} />;
+        const fromIndex = TIER_ORDER.indexOf(from as (typeof TIER_ORDER)[number]);
+        const toIndex = TIER_ORDER.indexOf(to as (typeof TIER_ORDER)[number]);
+        return (
+          <TierBadge
+            tier={to}
+            change={{ from, to, up: toIndex < fromIndex }}
+          />
+        );
+      }
     },
     {
       accessorKey: "score",
@@ -114,7 +129,7 @@ export function RankingTable({
         <span className="font-mono text-xs text-zinc-400">{formatPercent(row.original.winRate)}</span>
       )
     }
-  ], []);
+  ], [previousTiers]);
 
   const table = useReactTable({
     data: heroes,

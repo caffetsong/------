@@ -508,7 +508,7 @@ function renderSchemeCard(build, index, universal) {
     }
 
     /* 人物标签: 下拉选项来自 英雄介绍.json 中该英雄的擅长选手 */
-    const players = heroPlayers[currentHero] || [];
+    const players = [...new Set(heroPlayers[currentHero] || [])];
     if (players.length) {
         const playerSelect = document.createElement("select");
         playerSelect.className = "lane-select player-select";
@@ -681,6 +681,7 @@ let runePicker = null;
 let equipEditorOpen = false;
 let equipPickPos = null;      // 当前定位筛选
 let backupPickIndex = null;   // 待拖入备用装备的槽位下标
+let equipSelectedSlot = 0;   // 当前可点击填入的槽位
 let equipMenuEl = null;       // 槽位右键菜单元素
 
 function closeRunePicker() {
@@ -1074,7 +1075,8 @@ function renderEquipBar(build) {
         const awaitingBackup = backupPickIndex === i;
 
         const slot = document.createElement("div");
-        slot.className = "equip-slot" + (awaitingBackup ? " await-backup" : "");
+        slot.className = "equip-slot" + (awaitingBackup ? " await-backup" : "")
+            + (equipEditorOpen && equipSelectedSlot === i ? " selected-slot" : "");
         slot.dataset.index = i;
 
         const card = buildEquipCard(mainInfo, backupInfo, backup2Info);
@@ -1121,12 +1123,13 @@ function renderEquipBar(build) {
                 }
             });
 
-            /* 点击待备用槽位: 取消等待拖入 */
+            /* 点击槽位: 选中该槽, 之后点击左侧装备可直接填入 */
             slot.addEventListener("click", () => {
                 if (backupPickIndex === i) {
                     backupPickIndex = null;
-                    renderEquipBar(build);
                 }
+                equipSelectedSlot = i;
+                renderEquipBar(build);
             });
 
             /* 右键: 有装备弹操作菜单; 空格且格数多于基础 6 格时直接删除此格 */
@@ -1356,6 +1359,11 @@ function renderEquipEditor() {
                 opt.classList.remove("dragging");
             });
 
+            /* 点击装备直接填入当前选中的槽位 */
+            opt.addEventListener("click", () => {
+                fillEquipIntoSlot(equipSelectedSlot, name);
+            });
+
             listEl.appendChild(opt);
         });
 
@@ -1380,6 +1388,8 @@ function openEquipEditor(buildIndex) {
     equipEditorOpen = true;
     equipEditBuildIndex = buildIndex;
     equipPickPos = getEquipPositions()[0] || null;
+    const firstEmpty = build.equips.findIndex((item) => !item);
+    equipSelectedSlot = firstEmpty >= 0 ? firstEmpty : 0;
     const titleEl = document.getElementById("equipModalTitle");
     if (titleEl) titleEl.textContent = buildIndex === "universal" ? "修改通用装备" : "修改出装";
     document.getElementById("equipModal").hidden = false;
@@ -1393,6 +1403,7 @@ function closeEquipModal() {
     equipEditorOpen = false;
     equipEditBuildIndex = -1;
     backupPickIndex = null;
+    equipSelectedSlot = 0;
     closeEquipMenu();
 }
 
@@ -1435,6 +1446,11 @@ async function fillEquipIntoSlot(index, equipName) {
     build.equips = normalizeEquips(build.equips);
     build.equips[index] = equipName;
     await saveBuildEdit(build);
+
+    /* 填入后自动移动到下一个空槽, 连续点击即可填满 */
+    const nextEmpty = build.equips.findIndex((item, i) => i > index && !item);
+    equipSelectedSlot = nextEmpty >= 0 ? nextEmpty : index;
+    renderEquipBar(build);
 }
 
 /* 删除某槽主装备; 有备用装备时按顺序顶替(备1→主, 备2→备1) */

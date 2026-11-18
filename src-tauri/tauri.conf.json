@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "曙光英雄梯度",
+  "version": "0.1.0",
+  "identifier": "com.shuguang.tierlist",
+  "build": {
+    "frontendDist": "../apps/web/dist"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "resources/server/sg-tierlist-server.exe": "server/sg-tierlist-server.exe",
+      "../apps/web/dist": "apps/web/dist",
+      "../data/tierlist.db": "data/tierlist.db",
+      "../data/blacklist.json": "data/blacklist.json",
+      "../data/player-flags.json": "data/player-flags.json",
+      "../英雄介绍.json": "英雄介绍.json",
+      "../config.json": "config.json",
+      "../data.json": "data.json",
+      "../equip.json": "equip.json",
+      "../备战.html": "备战.html",
+      "../备战.js": "备战.js",
+      "../runeicon": "runeicon",
+      "../equipicon": "equipicon",
+      "../HeadIcon": "HeadIcon"
+    }
+  }
+}

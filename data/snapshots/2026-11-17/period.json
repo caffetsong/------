@@ -10,7 +10,6 @@
   "heroes": [
     {
       "name": "貂蝉",
-      "profession": "游侠",
       "appearanceRank": 1,
       "winRate": 0.5407,
       "rankCount": 100,
@@ -24,7 +23,6 @@
     },
     {
       "name": "荆轲",
-      "profession": "游侠",
       "appearanceRank": 2,
       "winRate": 0.5035,
       "rankCount": 100,
@@ -38,7 +36,6 @@
     },
     {
       "name": "艾璐妮",
-      "profession": "辅助",
       "appearanceRank": 3,
       "winRate": 0.4782,
       "rankCount": 100,
@@ -52,7 +49,6 @@
     },
     {
       "name": "黄忠",
-      "profession": "射手",
       "appearanceRank": 4,
       "winRate": 0.5065,
       "rankCount": 100,
@@ -66,7 +62,6 @@
     },
     {
       "name": "刘备",
-      "profession": "战士",
       "appearanceRank": 5,
       "winRate": 0.5112,
       "rankCount": 100,
@@ -80,7 +75,6 @@
     },
     {
       "name": "赵云",
-      "profession": "游侠",
       "appearanceRank": 6,
       "winRate": 0.5214,
       "rankCount": 100,
@@ -94,7 +88,6 @@
     },
     {
       "name": "白浩",
-      "profession": "战士",
       "appearanceRank": 7,
       "winRate": 0.5343,
       "rankCount": 100,
@@ -108,7 +101,6 @@
     },
     {
       "name": "阿尔忒弥斯",
-      "profession": "射手",
       "appearanceRank": 8,
       "winRate": 0.5043,
       "rankCount": 100,
@@ -122,7 +114,6 @@
     },
     {
       "name": "黛西",
-      "profession": "法师",
       "appearanceRank": 9,
       "winRate": 0.5122,
       "rankCount": 100,
@@ -136,7 +127,6 @@
     },
     {
       "name": "桑榆",
-      "profession": "辅助",
       "appearanceRank": 10,
       "winRate": 0.5026,
       "rankCount": 100,
@@ -150,7 +140,6 @@
     },
     {
       "name": "铁扇公主",
-      "profession": "辅助",
       "appearanceRank": 11,
       "winRate": 0.5681,
       "rankCount": 100,
@@ -164,7 +153,6 @@
     },
     {
       "name": "张角",
-      "profession": "法师",
       "appearanceRank": 12,
       "winRate": 0.5497,
       "rankCount": 100,
@@ -178,7 +166,6 @@
     },
     {
       "name": "艾蒙",
-      "profession": "法师",
       "appearanceRank": 13,
       "winRate": 0.5362,
       "rankCount": 100,
@@ -192,7 +179,6 @@
     },
     {
       "name": "祝融",
-      "profession": "射手",
       "appearanceRank": 14,
       "winRate": 0.5129,
       "rankCount": 100,
@@ -206,7 +192,6 @@
     },
     {
       "name": "约修亚",
-      "profession": "射手",
       "appearanceRank": 15,
       "winRate": 0.4419,
       "rankCount": 100,
@@ -220,7 +205,6 @@
     },
     {
       "name": "露西亚",
-      "profession": "游侠",
       "appearanceRank": 16,
       "winRate": 0.5023,
       "rankCount": 100,
@@ -234,7 +218,6 @@
     },
     {
       "name": "敖璃",
-      "profession": "法师",
       "appearanceRank": 17,
       "winRate": 0.4347,
       "rankCount": 100,
@@ -248,7 +231,6 @@
     },
     {
       "name": "精卫",
-      "profession": "射手",
       "appearanceRank": 18,
       "winRate": 0.492,
       "rankCount": 100,
@@ -262,7 +244,6 @@
     },
     {
       "name": "羲和",
-      "profession": "法师",
       "appearanceRank": 19,
       "winRate": 0.463,
       "rankCount": 100,
@@ -276,7 +257,6 @@
     },
     {
       "name": "关羽",
-      "profession": "战士",
       "appearanceRank": 20,
       "winRate": 0.5397,
       "rankCount": 100,
@@ -290,7 +270,6 @@
     },
     {
       "name": "黄泉",
-      "profession": "法师",
       "appearanceRank": 21,
       "winRate": 0.4948,
       "rankCount": 100,
@@ -304,7 +283,6 @@
     },
     {
       "name": "黄月英",
-      "profession": "射手",
       "appearanceRank": 22,
       "winRate": 0.4713,
       "rankCount": 100,
@@ -318,7 +296,6 @@
     },
     {
       "name": "残影",
-      "profession": "游侠",
       "appearanceRank": 23,
       "winRate": 0.4468,
       "rankCount": 100,
@@ -332,7 +309,6 @@
     },
     {
       "name": "鲁班",
-      "profession": "辅助",
       "appearanceRank": 24,
       "winRate": 0.522,
       "rankCount": 100,
@@ -346,7 +322,6 @@
     },
     {
       "name": "班",
-      "profession": "战士",
       "appearanceRank": 25,
       "winRate": 0.5243,
       "rankCount": 100,
@@ -360,7 +335,6 @@
     },
     {
       "name": "布斯",
-      "profession": "射手",
       "appearanceRank": 26,
       "winRate": 0.4814,
       "rankCount": 100,
@@ -374,7 +348,6 @@
     },
     {
       "name": "南丁格尔",
-      "profession": "辅助",
       "appearanceRank": 27,
       "winRate": 0.5447,
       "rankCount": 100,
@@ -388,7 +361,6 @@
     },
     {
       "name": "齐格飞",
-      "profession": "战士",
       "appearanceRank": 28,
       "winRate": 0.4627,
       "rankCount": 100,
@@ -402,7 +374,6 @@
     },
     {
       "name": "李靖",
-      "profession": "战士",
       "appearanceRank": 29,
       "winRate": 0.4485,
       "rankCount": 100,
@@ -416,7 +387,6 @@
     },
     {
       "name": "西施",
-      "profession": "游侠",
       "appearanceRank": 30,
       "winRate": 0.5091,
       "rankCount": 100,
@@ -430,7 +400,6 @@
     },
     {
       "name": "女魃",
-      "profession": "法师",
       "appearanceRank": 31,
       "winRate": 0.4988,
       "rankCount": 100,
@@ -444,7 +413,6 @@
     },
     {
       "name": "爱丽丝",
-      "profession": "法师",
       "appearanceRank": 32,
       "winRate": 0.4388,
       "rankCount": 100,
@@ -458,7 +426,6 @@
     },
     {
       "name": "哪吒",
-      "profession": "战士",
       "appearanceRank": 33,
       "winRate": 0.5328,
       "rankCount": 100,
@@ -472,7 +439,6 @@
     },
     {
       "name": "忘川",
-      "profession": "法师",
       "appearanceRank": 34,
       "winRate": 0.4453,
       "rankCount": 100,
@@ -486,7 +452,6 @@
     },
     {
       "name": "岚",
-      "profession": "坦克",
       "appearanceRank": 35,
       "winRate": 0.5385,
       "rankCount": 100,
@@ -500,7 +465,6 @@
     },
     {
       "name": "望舒",
-      "profession": "法师",
       "appearanceRank": 36,
       "winRate": 0.4747,
       "rankCount": 100,
@@ -514,7 +478,6 @@
     },
     {
       "name": "张出尘",
-      "profession": "战士",
       "appearanceRank": 37,
       "winRate": 0.4981,
       "rankCount": 100,
@@ -528,7 +491,6 @@
     },
     {
       "name": "贞德",
-      "profession": "辅助",
       "appearanceRank": 38,
       "winRate": 0.5407,
       "rankCount": 100,
@@ -542,7 +504,6 @@
     },
     {
       "name": "雅典娜",
-      "profession": "战士",
       "appearanceRank": 39,
       "winRate": 0.4538,
       "rankCount": 100,
@@ -556,7 +517,6 @@
     },
     {
       "name": "杨戬",
-      "profession": "战士",
       "appearanceRank": 40,
       "winRate": 0.4398,
       "rankCount": 100,
@@ -570,7 +530,6 @@
     },
     {
       "name": "王昭君",
-      "profession": "射手",
       "appearanceRank": 41,
       "winRate": 0.4903,
       "rankCount": 100,
@@ -584,7 +543,6 @@
     },
     {
       "name": "法修",
-      "profession": "射手",
       "appearanceRank": 42,
       "winRate": 0.4493,
       "rankCount": 100,
@@ -598,7 +556,6 @@
     },
     {
       "name": "美杜莎",
-      "profession": "射手",
       "appearanceRank": 43,
       "winRate": 0.4675,
       "rankCount": 100,
@@ -612,7 +569,6 @@
     },
     {
       "name": "白玉堂",
-      "profession": "辅助",
       "appearanceRank": 44,
       "winRate": 0.5597,
       "rankCount": 100,
@@ -626,7 +582,6 @@
     },
     {
       "name": "北斗",
-      "profession": "战士",
       "appearanceRank": 45,
       "winRate": 0.4606,
       "rankCount": 100,
@@ -640,7 +595,6 @@
     },
     {
       "name": "花荣",
-      "profession": "射手",
       "appearanceRank": 46,
       "winRate": 0.5077,
       "rankCount": 100,
@@ -654,7 +608,6 @@
     },
     {
       "name": "孙悟空",
-      "profession": "战士",
       "appearanceRank": 47,
       "winRate": 0.4824,
       "rankCount": 100,
@@ -668,7 +621,6 @@
     },
     {
       "name": "李清照",
-      "profession": "法师",
       "appearanceRank": 48,
       "winRate": 0.472,
       "rankCount": 100,
@@ -682,7 +634,6 @@
     },
     {
       "name": "奥黛丽",
-      "profession": "战士",
       "appearanceRank": 49,
       "winRate": 0.4471,
       "rankCount": 100,
@@ -696,7 +647,6 @@
     },
     {
       "name": "奇奇",
-      "profession": "射手",
       "appearanceRank": 50,
       "winRate": 0.5058,
       "rankCount": 100,
@@ -710,7 +660,6 @@
     },
     {
       "name": "诸葛亮",
-      "profession": "法师",
       "appearanceRank": 51,
       "winRate": 0.5696,
       "rankCount": 100,
@@ -724,7 +673,6 @@
     },
     {
       "name": "亚历山大",
-      "profession": "战士",
       "appearanceRank": 52,
       "winRate": 0.537,
       "rankCount": 100,
@@ -738,7 +686,6 @@
     },
     {
       "name": "青木",
-      "profession": "射手",
       "appearanceRank": 53,
       "winRate": 0.5346,
       "rankCount": 100,
@@ -752,7 +699,6 @@
     },
     {
       "name": "夏尔美",
-      "profession": "游侠",
       "appearanceRank": 54,
       "winRate": 0.4816,
       "rankCount": 100,
@@ -766,7 +712,6 @@
     },
     {
       "name": "尤妮卡",
-      "profession": "战士",
       "appearanceRank": 55,
       "winRate": 0.4497,
       "rankCount": 100,
@@ -780,7 +725,6 @@
     },
     {
       "name": "嫦娥",
-      "profession": "法师",
       "appearanceRank": 56,
       "winRate": 0.5027,
       "rankCount": 100,
@@ -794,7 +738,6 @@
     },
     {
       "name": "张飞",
-      "profession": "辅助",
       "appearanceRank": 57,
       "winRate": 0.4469,
       "rankCount": 100,
@@ -808,7 +751,6 @@
     },
     {
       "name": "杨玉环",
-      "profession": "战士",
       "appearanceRank": 58,
       "winRate": 0.4597,
       "rankCount": 100,
@@ -822,7 +764,6 @@
     },
     {
       "name": "梅朵",
-      "profession": "法师",
       "appearanceRank": 59,
       "winRate": 0.4337,
       "rankCount": 100,
@@ -836,7 +777,6 @@
     },
     {
       "name": "白泽",
-      "profession": "法师",
       "appearanceRank": 60,
       "winRate": 0.5669,
       "rankCount": 100,
@@ -850,7 +790,6 @@
     },
     {
       "name": "妇好",
-      "profession": "战士",
       "appearanceRank": 61,
       "winRate": 0.4639,
       "rankCount": 100,
@@ -864,7 +803,6 @@
     },
     {
       "name": "伏羲",
-      "profession": "坦克",
       "appearanceRank": 62,
       "winRate": 0.4323,
       "rankCount": 100,
@@ -878,7 +816,6 @@
     },
     {
       "name": "阿尔弗雷德",
-      "profession": "战士",
       "appearanceRank": 63,
       "winRate": 0.5372,
       "rankCount": 100,
@@ -892,7 +829,6 @@
     },
     {
       "name": "猪八戒",
-      "profession": "战士",
       "appearanceRank": 64,
       "winRate": 0.4772,
       "rankCount": 100,
@@ -906,7 +842,6 @@
     },
     {
       "name": "弗兰肯斯坦",
-      "profession": "坦克",
       "appearanceRank": 65,
       "winRate": 0.5241,
       "rankCount": 100,
@@ -920,7 +855,6 @@
     },
     {
       "name": "乌雅",
-      "profession": "法师",
       "appearanceRank": 66,
       "winRate": 0.4741,
       "rankCount": 100,
@@ -934,7 +868,6 @@
     },
     {
       "name": "拉姆",
-      "profession": "战士",
       "appearanceRank": 67,
       "winRate": 0.4792,
       "rankCount": 100,
@@ -948,7 +881,6 @@
     },
     {
       "name": "玄奘",
-      "profession": "法师",
       "appearanceRank": 68,
       "winRate": 0.4359,
       "rankCount": 100,
@@ -962,7 +894,6 @@
     },
     {
       "name": "布伦希尔德",
-      "profession": "法师",
       "appearanceRank": 69,
       "winRate": 0.4873,
       "rankCount": 100,
@@ -976,7 +907,6 @@
     },
     {
       "name": "西王母",
-      "profession": "法师",
       "appearanceRank": 70,
       "winRate": 0.5204,
       "rankCount": 100,
@@ -990,7 +920,6 @@
     },
     {
       "name": "曹操",
-      "profession": "战士",
       "appearanceRank": 71,
       "winRate": 0.4589,
       "rankCount": 100,
@@ -1004,7 +933,6 @@
     },
     {
       "name": "胖达",
-      "profession": "战士",
       "appearanceRank": 72,
       "winRate": 0.4984,
       "rankCount": 100,
@@ -1018,7 +946,6 @@
     },
     {
       "name": "范蠡",
-      "profession": "法师",
       "appearanceRank": 73,
       "winRate": 0.5056,
       "rankCount": 100,
@@ -1032,7 +959,6 @@
     },
     {
       "name": "欧冶子",
-      "profession": "战士",
       "appearanceRank": 74,
       "winRate": 0.4672,
       "rankCount": 100,
@@ -1046,7 +972,6 @@
     },
     {
       "name": "瑞恩",
-      "profession": "游侠",
       "appearanceRank": 75,
       "winRate": 0.4821,
       "rankCount": 100,
@@ -1060,7 +985,6 @@
     },
     {
       "name": "帕提多",
-      "profession": "射手",
       "appearanceRank": 76,
       "winRate": 0.4365,
       "rankCount": 100,
@@ -1074,7 +998,6 @@
     },
     {
       "name": "吕洞宾",
-      "profession": "法师",
       "appearanceRank": 77,
       "winRate": 0.4859,
       "rankCount": 100,
@@ -1088,7 +1011,6 @@
     },
     {
       "name": "李文",
-      "profession": "战士",
       "appearanceRank": 78,
       "winRate": 0.455,
       "rankCount": 100,
@@ -1102,7 +1024,6 @@
     },
     {
       "name": "华佗",
-      "profession": "辅助",
       "appearanceRank": 79,
       "winRate": 0.4802,
       "rankCount": 100,
@@ -1116,7 +1037,6 @@
     },
     {
       "name": "火莲",
-      "profession": "法师",
       "appearanceRank": 80,
       "winRate": 0.5086,
       "rankCount": 100,
@@ -1130,7 +1050,6 @@
     },
     {
       "name": "蔡文姬",
-      "profession": "法师",
       "appearanceRank": 81,
       "winRate": 0.4308,
       "rankCount": 100,
@@ -1144,7 +1063,6 @@
     },
     {
       "name": "牛魔王",
-      "profession": "坦克",
       "appearanceRank": 82,
       "winRate": 0.4329,
       "rankCount": 100,
@@ -1158,7 +1076,6 @@
     },
     {
       "name": "姜子牙",
-      "profession": "法师",
       "appearanceRank": 83,
       "winRate": 0.4354,
       "rankCount": 99,
@@ -1172,7 +1089,6 @@
     },
     {
       "name": "陆逊",
-      "profession": "法师",
       "appearanceRank": 84,
       "winRate": 0.4992,
       "rankCount": 100,
@@ -1186,7 +1102,6 @@
     },
     {
       "name": "莱因哈特",
-      "profession": "战士",
       "appearanceRank": 85,
       "winRate": 0.5139,
       "rankCount": 100,
@@ -1200,7 +1115,6 @@
     },
     {
       "name": "飞廉",
-      "profession": "射手",
       "appearanceRank": 86,
       "winRate": 0.547,
       "rankCount": 95,
@@ -1214,7 +1128,6 @@
     },
     {
       "name": "花木兰",
-      "profession": "战士",
       "appearanceRank": 87,
       "winRate": 0.4708,
       "rankCount": 60,
@@ -1228,7 +1141,6 @@
     },
     {
       "name": "雷震子",
-      "profession": "游侠",
       "appearanceRank": 88,
       "winRate": 0.4936,
       "rankCount": 92,
@@ -1242,7 +1154,6 @@
     },
     {
       "name": "墨翟",
-      "profession": "战士",
       "appearanceRank": 89,
       "winRate": 0.4532,
       "rankCount": 67,
@@ -1256,7 +1167,6 @@
     },
     {
       "name": "马可波罗",
-      "profession": "辅助",
       "appearanceRank": 90,
       "winRate": 0.4555,
       "rankCount": 100,
@@ -1270,7 +1180,6 @@
     },
     {
       "name": "特斯拉",
-      "profession": "法师",
       "appearanceRank": 91,
       "winRate": 0.5132,
       "rankCount": 100,
@@ -1284,7 +1193,6 @@
     },
     {
       "name": "托尔",
-      "profession": "射手",
       "appearanceRank": 92,
       "winRate": 0.4816,
       "rankCount": 73,
@@ -1298,7 +1206,6 @@
     },
     {
       "name": "洛克",
-      "profession": "战士",
       "appearanceRank": 93,
       "winRate": 0.4894,
       "rankCount": 100,
@@ -1312,7 +1219,6 @@
     },
     {
       "name": "王羲之",
-      "profession": "法师",
       "appearanceRank": 94,
       "winRate": 0.4375,
       "rankCount": 99,
@@ -1326,7 +1232,6 @@
     },
     {
       "name": "孙武",
-      "profession": "法师",
       "appearanceRank": 95,
       "winRate": 0.4714,
       "rankCount": 100,
@@ -1340,7 +1245,6 @@
     },
     {
       "name": "展昭",
-      "profession": "战士",
       "appearanceRank": 96,
       "winRate": 0.4726,
       "rankCount": 68,
@@ -1354,7 +1258,6 @@
     },
     {
       "name": "鲁智深",
-      "profession": "战士",
       "appearanceRank": 97,
       "winRate": 0.4541,
       "rankCount": 57,
@@ -1368,7 +1271,6 @@
     },
     {
       "name": "许褚",
-      "profession": "",
       "appearanceRank": 98,
       "winRate": 0.4961,
       "rankCount": 70,
@@ -1382,7 +1284,6 @@
     },
     {
       "name": "梅林",
-      "profession": "法师",
       "appearanceRank": 99,
       "winRate": 0.4363,
       "rankCount": 70,
@@ -1396,7 +1297,6 @@
     },
     {
       "name": "穆桂英",
-      "profession": "战士",
       "appearanceRank": 100,
       "winRate": 0.4905,
       "rankCount": 86,
@@ -1410,7 +1310,6 @@
     },
     {
       "name": "鳗鳗",
-      "profession": "法师",
       "appearanceRank": 101,
       "winRate": 0.4315,
       "rankCount": 100,
@@ -1424,7 +1323,6 @@
     },
     {
       "name": "图坦卡蒙",
-      "profession": "法师",
       "appearanceRank": 102,
       "winRate": 0.4762,
       "rankCount": 40,
@@ -1438,7 +1336,6 @@
     },
     {
       "name": "尉迟炎",
-      "profession": "坦克",
       "appearanceRank": 103,
       "winRate": 0.5101,
       "rankCount": 20,

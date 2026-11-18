@@ -32,6 +32,8 @@ PORT=3003 ./server-rs/target/release/sg-tierlist-server.exe
 - `GET /api/profiles`
 - `GET/PUT /api/heroes/:name/profile`（常用分路 / 擅长选手，写回 `英雄介绍.json`）
 - `POST /api/players/lookup`（擅长选手 UID → 最新榜单用户名）
+- `GET /api/power-ranking?date=YYYY-MM-DD&hero=英雄`（玩家战力排行、失信状态、国前十英雄）
+- `POST /api/import-period`（JSON 数据 + 出场排名/胜率 → SQLite）
 - `GET/POST /api/blacklist`（UID + 失信原因；含 UID 审计、最新榜单用户名）
 - `/` 重定向到 `/app/`
 

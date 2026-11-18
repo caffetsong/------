@@ -178,3 +178,45 @@ body {
     min-height: 48px;
   }
 }
+
+/* 战力排行英雄筛选：正方形，复用 tier-hero-img-wrap 的裁切/底色 */
+.hero-filter-tile {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #21262d;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.hero-filter-tile:hover {
+  filter: brightness(1.15);
+}
+.hero-filter-tile .tier-hero-img-wrap {
+  width: 100%;
+  height: 100%;
+}
+.hero-filter-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hero-filter-tile .tier-hero-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.62);
+  color: #e6e6e6;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}

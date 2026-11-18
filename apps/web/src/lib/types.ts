@@ -123,6 +123,42 @@ export interface HeroHistoryResponse {
   periods: HeroHistoryPoint[];
 }
 
+export interface PowerRankingRow {
+  rank: number;
+  player: string;
+  playerKey: string;
+  uid: string;
+  power: number;
+  blacklisted: boolean;
+  reason: string;
+  publicRecord: boolean | null;
+  soloPlayed: boolean | null;
+  partyPlayed: boolean | null;
+  topHeroes: { hero: string; rank: number; power: number }[];
+}
+
+export interface PowerRankingResponse {
+  date: string;
+  hero: string;
+  count: number;
+  blacklistCount: number;
+  rows: PowerRankingRow[];
+}
+
+export interface PlayerDetailResponse {
+  date: string;
+  player: string;
+  uid: string;
+  playerKey: string;
+  blacklisted: boolean;
+  reason: string;
+  publicRecord: boolean | null;
+  soloPlayed: boolean | null;
+  partyPlayed: boolean | null;
+  topHeroes: { hero: string; rank: number; power: number }[];
+  current: { hero: string; rank: number; power: number } | null;
+}
+
 export interface PlayerLookupResponse {
   latestDate: string | null;
   appearances: Record<string, UidAppearance>;

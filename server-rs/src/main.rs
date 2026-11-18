@@ -1,13 +1,13 @@
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect, Response},
     routing::{get, post},
     Json, Router,
 };
 use chrono::Utc;
-use rusqlite::{params_from_iter, Connection, OptionalExtension};
-use serde::Serialize;
+use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Transaction};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{
     collections::{HashMap, HashSet},
@@ -24,6 +24,9 @@ use tower_http::{
 struct AppState {
     db: Arc<Mutex<Connection>>,
     root: PathBuf,
+    data_dir: PathBuf,
+    intro: PathBuf,
+    prepare_data: PathBuf,
     blacklist: PathBuf,
     legacy_base: String,
 }
@@ -74,7 +77,7 @@ fn read_json(path: &FsPath) -> Result<Value, ApiError> {
 }
 
 fn read_intro(state: &AppState) -> Result<Vec<Value>, ApiError> {
-    let path = state.root.join("英雄介绍.json");
+    let path = &state.intro;
     if !path.exists() {
         return Ok(Vec::new());
     }
@@ -629,6 +632,57 @@ async fn profiles(State(state): State<AppState>) -> Result<Json<Value>, ApiError
     Ok(Json(json!({ "profiles": items })))
 }
 
+fn intro_field_map(intro: &[Value], field: &str) -> Value {
+    let mut map = serde_json::Map::new();
+    for item in intro {
+        let Some(name) = item.get("name").and_then(Value::as_str) else { continue };
+        let values = item.get(field).and_then(Value::as_array).cloned().unwrap_or_default();
+        map.insert(name.to_string(), Value::Array(values));
+    }
+    Value::Object(map)
+}
+
+async fn legacy_heroes(State(state): State<AppState>) -> Result<Json<Value>, ApiError> {
+    let intro = read_intro(&state)?;
+    let heroes: Vec<String> = intro
+        .iter()
+        .filter_map(|item| item.get("name").and_then(Value::as_str).map(str::to_string))
+        .collect();
+    Ok(Json(json!({ "heroes": heroes })))
+}
+
+async fn legacy_lanes(State(state): State<AppState>) -> Result<Json<Value>, ApiError> {
+    let intro = read_intro(&state)?;
+    Ok(Json(json!({ "lanes": intro_field_map(&intro, "常用分路") })))
+}
+
+async fn legacy_players(State(state): State<AppState>) -> Result<Json<Value>, ApiError> {
+    let intro = read_intro(&state)?;
+    Ok(Json(json!({ "players": intro_field_map(&intro, "擅长选手") })))
+}
+
+async fn legacy_data(State(state): State<AppState>) -> Result<Json<Value>, ApiError> {
+    if !state.prepare_data.exists() {
+        return Ok(Json(json!({})));
+    }
+    Ok(Json(read_json(&state.prepare_data)?))
+}
+
+async fn save_legacy_data(
+    State(state): State<AppState>,
+    Json(payload): Json<Value>,
+) -> Result<Json<Value>, ApiError> {
+    if !payload.is_object() {
+        return Err(ApiError::new(StatusCode::BAD_REQUEST, "备战数据必须是对象"));
+    }
+    let text = serde_json::to_string_pretty(&payload)? + "\n";
+    let tmp = state.prepare_data.with_extension("json.tmp");
+    fs::write(&tmp, text)?;
+    fs::remove_file(&state.prepare_data).ok();
+    fs::rename(&tmp, &state.prepare_data)?;
+    Ok(Json(json!({ "ok": true })))
+}
+
 async fn profile(
     State(state): State<AppState>,
     Path(name): Path<String>,
@@ -665,7 +719,7 @@ async fn put_profile(
     }
 
     let text = serde_json::to_string_pretty(&intro)? + "\n";
-    let path = state.root.join("英雄介绍.json");
+    let path = state.intro.clone();
     let tmp = path.with_extension("json.tmp");
     fs::write(&tmp, text)?;
     fs::remove_file(&path).ok();
@@ -695,6 +749,484 @@ async fn lookup_players(
     let uids = normalize_uids(values);
     let conn = state.db.lock().unwrap();
     Ok(Json(audit_blacklist(&conn, &uids)?))
+}
+
+#[derive(Deserialize)]
+struct PowerRankingQuery {
+    date: Option<String>,
+    hero: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct PlayerDetailQuery {
+    date: Option<String>,
+    uid: Option<String>,
+    hero: Option<String>,
+}
+
+fn player_flags_path(state: &AppState) -> PathBuf {
+    state.data_dir.join("player-flags.json")
+}
+
+fn read_player_flags(state: &AppState) -> Result<HashMap<String, Value>, ApiError> {
+    let path = player_flags_path(state);
+    if !path.exists() {
+        return Ok(HashMap::new());
+    }
+    let raw = read_json(&path)?;
+    let mut out = HashMap::new();
+    if let Some(players) = raw.get("players").and_then(Value::as_object) {
+        for (key, value) in players {
+            out.insert(key.clone(), value.clone());
+        }
+    }
+    Ok(out)
+}
+
+async fn set_player_flags(
+    State(state): State<AppState>,
+    Json(payload): Json<Value>,
+) -> Result<Json<Value>, ApiError> {
+    let key = payload
+        .get("key")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    if key.is_empty() {
+        return Err(ApiError::new(StatusCode::BAD_REQUEST, "缺少 key"));
+    }
+    let path = player_flags_path(&state);
+    let mut doc = if path.exists() {
+        read_json(&path)?
+    } else {
+        json!({ "schema": 1, "players": {} })
+    };
+    if !doc.get("players").map(Value::is_object).unwrap_or(false) {
+        doc["players"] = json!({});
+    }
+    {
+        let entry = doc["players"]
+            .as_object_mut()
+            .unwrap()
+            .entry(key.clone())
+            .or_insert_with(|| json!({}));
+        for field in ["publicRecord", "soloPlayed", "partyPlayed"] {
+            if let Some(value) = payload.get(field) {
+                entry[field] = value.clone();
+            }
+        }
+    }
+    doc["updatedAt"] = json!(Utc::now().to_rfc3339());
+    let flags = doc["players"]
+        .get(&key)
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    let text = serde_json::to_string_pretty(&doc)? + "\n";
+    let tmp = path.with_extension("json.tmp");
+    fs::write(&tmp, text)?;
+    fs::remove_file(&path).ok();
+    fs::rename(&tmp, &path)?;
+    Ok(Json(json!({ "ok": true, "key": key, "flags": flags })))
+}
+
+async fn power_ranking(
+    State(state): State<AppState>,
+    Query(query): Query<PowerRankingQuery>,
+) -> Result<Json<Value>, ApiError> {    let hero = query.hero.unwrap_or_default().trim().to_string();
+    if hero.is_empty() {
+        return Err(ApiError::new(StatusCode::BAD_REQUEST, "缺少 hero 参数"));
+    }
+    let conn = state.db.lock().unwrap();
+    let date = query
+        .date
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| {
+            conn.query_row("SELECT date FROM periods ORDER BY date DESC LIMIT 1", [], |r| {
+                r.get::<_, String>(0)
+            })
+            .optional()
+            .ok()
+            .flatten()
+        })
+        .ok_or_else(|| ApiError::not_found("没有可用期数"))?;
+
+    let period_id: i64 = conn
+        .query_row("SELECT id FROM periods WHERE date = ?1", [&date], |r| r.get(0))
+        .optional()?
+        .ok_or_else(|| ApiError::not_found(format!("不存在该期: {date}")))?;
+
+    let (black_entries, blacklist) = read_blacklist(&state)?;
+    let black_names = blacklist_names(&conn, &blacklist)?;
+    let mut reasons: HashMap<String, String> = black_entries
+        .iter()
+        .map(|entry| (entry.uid.clone(), entry.reason.clone()))
+        .collect();
+    let mut name_reasons: HashMap<String, String> = HashMap::new();
+    if !blacklist.is_empty() {
+        let ids: Vec<&String> = blacklist.iter().collect();
+        let placeholders = std::iter::repeat("?").take(ids.len()).collect::<Vec<_>>().join(",");
+        let mut stmt = conn.prepare(&format!(
+            "SELECT DISTINCT rp.uid, rp.player FROM rank_power rp WHERE rp.uid IN ({placeholders}) AND rp.player IS NOT NULL"
+        ))?;
+        let rows = stmt.query_map(params_from_iter(ids.iter()), |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+        })?;
+        for row in rows {
+            let (uid, player) = row?;
+            if let Some(reason) = reasons.get(&uid) {
+                name_reasons.entry(player).or_insert_with(|| reason.clone());
+            }
+        }
+    }
+
+    let mut top_stmt = conn.prepare(
+        "SELECT h.name, rp.\"rank\", rp.power, rp.uid, rp.player
+         FROM rank_power rp JOIN heroes h ON h.id = rp.hero_id
+         WHERE rp.period_id = ?1 AND rp.\"rank\" <= 10
+         ORDER BY h.name, rp.\"rank\"",
+    )?;
+    let top_rows = top_stmt
+        .query_map([period_id], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, i64>(1)?,
+                r.get::<_, i64>(2)?,
+                r.get::<_, Option<String>>(3)?,
+                r.get::<_, Option<String>>(4)?,
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut top_by_player: HashMap<String, Vec<Value>> = HashMap::new();
+    for (hero_name, rank, power, uid, player) in top_rows {
+        let uid = uid.unwrap_or_default();
+        let player = player.unwrap_or_default();
+        let key = if !uid.trim().is_empty() {
+            format!("uid:{uid}")
+        } else {
+            format!("name:{player}")
+        };
+        top_by_player.entry(key).or_default().push(json!({
+            "hero": hero_name,
+            "rank": rank,
+            "power": power
+        }));
+    }
+    let player_flags = read_player_flags(&state)?;
+
+    let mut stmt = conn.prepare(
+        "SELECT rp.\"rank\", rp.player, rp.uid, rp.power
+         FROM rank_power rp JOIN heroes h ON h.id = rp.hero_id
+         WHERE rp.period_id = ?1 AND h.name = ?2
+         ORDER BY rp.\"rank\"",
+    )?;
+    let rank_rows = stmt
+        .query_map(params![period_id, hero.as_str()], |r| {
+            Ok((
+                r.get::<_, i64>(0)?,
+                r.get::<_, Option<String>>(1)?,
+                r.get::<_, Option<String>>(2)?,
+                r.get::<_, i64>(3)?,
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let mut rows = Vec::with_capacity(rank_rows.len());
+    for (rank, player, uid, power) in rank_rows {
+        let player = player.unwrap_or_default();
+        let uid = uid.unwrap_or_default();
+        let key = if !uid.trim().is_empty() {
+            format!("uid:{uid}")
+        } else {
+            format!("name:{player}")
+        };
+        let blacklisted = if !uid.trim().is_empty() {
+            blacklist.contains(&uid)
+        } else {
+            black_names.contains(&player)
+        };
+        let reason = if !uid.trim().is_empty() {
+            reasons.remove(&uid).unwrap_or_default()
+        } else {
+            name_reasons.get(&player).cloned().unwrap_or_default()
+        };
+        let flags = player_flags.get(&key).cloned().unwrap_or(Value::Null);
+        rows.push(json!({
+            "rank": rank,
+            "player": player,
+            "playerKey": key,
+            "uid": uid,
+            "power": power,
+            "blacklisted": blacklisted,
+            "reason": reason,
+            "publicRecord": flags.get("publicRecord").cloned().unwrap_or(Value::Null),
+            "soloPlayed": flags.get("soloPlayed").cloned().unwrap_or(Value::Null),
+            "partyPlayed": flags.get("partyPlayed").cloned().unwrap_or(Value::Null),
+            "topHeroes": top_by_player.get(&key).cloned().unwrap_or_default()
+        }));
+    }
+
+    Ok(Json(json!({
+        "date": date,
+        "hero": hero,
+        "count": rows.len(),
+        "blacklistCount": blacklist.len(),
+        "rows": rows
+    })))
+}
+
+fn json_i64(value: &Value) -> Option<i64> {
+    value
+        .as_i64()
+        .or_else(|| value.as_str().and_then(|raw| raw.trim().parse::<i64>().ok()))
+}
+
+fn json_rate(value: &Value) -> Option<f64> {
+    let raw = value
+        .as_f64()
+        .or_else(|| value.as_str().and_then(|text| text.trim().trim_end_matches('%').parse::<f64>().ok()))?;
+    if value.as_str().map(|text| text.contains('%')).unwrap_or(false) || raw > 1.0 {
+        Some(raw / 100.0)
+    } else {
+        Some(raw)
+    }
+}
+
+fn ensure_hero(tx: &Transaction<'_>, name: &str) -> Result<i64, ApiError> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Err(ApiError::new(StatusCode::BAD_REQUEST, "英雄名为空"));
+    }
+    if let Some(id) = tx
+        .query_row("SELECT id FROM heroes WHERE name = ?1", [name], |r| r.get::<_, i64>(0))
+        .optional()?
+    {
+        return Ok(id);
+    }
+    if let Some(id) = tx
+        .query_row(
+            "SELECT h.id FROM heroes h JOIN hero_aliases a ON a.hero_id = h.id WHERE a.alias = ?1",
+            [name],
+            |r| r.get::<_, i64>(0),
+        )
+        .optional()?
+    {
+        return Ok(id);
+    }
+    tx.execute(
+        "INSERT INTO heroes(name, active, created_at) VALUES(?1, 1, ?2)",
+        params![name, Utc::now().to_rfc3339()],
+    )?;
+    Ok(tx.last_insert_rowid())
+}
+
+async fn import_period(
+    State(state): State<AppState>,
+    Json(payload): Json<Value>,
+) -> Result<Json<Value>, ApiError> {
+    let date = payload
+        .get("date")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    if chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d").is_err() {
+        return Err(ApiError::new(StatusCode::BAD_REQUEST, "date 必须是 YYYY-MM-DD"));
+    }
+    let heroes = payload
+        .get("data")
+        .and_then(Value::as_array)
+        .ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "缺少 data 数组"))?;
+    if heroes.is_empty() {
+        return Err(ApiError::new(StatusCode::BAD_REQUEST, "data 为空"));
+    }
+
+    let mut conn = state.db.lock().unwrap();
+    let tx = conn.transaction()?;
+    let now = Utc::now().to_rfc3339();
+    let existing: Option<i64> = tx
+        .query_row("SELECT id FROM periods WHERE date = ?1", [&date], |r| r.get(0))
+        .optional()?;
+    let period_id = if let Some(id) = existing {
+        tx.execute("DELETE FROM rank_power WHERE period_id = ?1", [id])?;
+        tx.execute("DELETE FROM hero_stats WHERE period_id = ?1", [id])?;
+        tx.execute(
+            "UPDATE periods SET captured_at = ?1, source = ?2, updated_at = ?3 WHERE id = ?4",
+            params![now, json!({"type": "import"}).to_string(), now, id],
+        )?;
+        id
+    } else {
+        tx.execute(
+            "INSERT INTO periods(date, captured_at, source, source_hash, created_at, updated_at) VALUES(?1,?2,?3,'',?4,?4)",
+            params![date, now, json!({"type": "import"}).to_string(), now],
+        )?;
+        tx.last_insert_rowid()
+    };
+
+    let mut row_count = 0i64;
+    let mut has_power = 0i64;
+    for item in heroes {
+        let name = item
+            .get("heroName")
+            .or_else(|| item.get("name"))
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .trim();
+        if name.is_empty() {
+            return Err(ApiError::new(StatusCode::BAD_REQUEST, "存在没有英雄名的记录"));
+        }
+        let hero_id = ensure_hero(&tx, name)?;
+        let power: Vec<i64> = item
+            .get("power")
+            .and_then(Value::as_array)
+            .map(|values| values.iter().filter_map(json_i64).collect())
+            .unwrap_or_default();
+        let d = derived(&power);
+        let appearance_rank = item.get("appearanceRank").and_then(json_i64);
+        let win_rate = item.get("winRate").and_then(json_rate);
+        let legacy = item
+            .get("legacyGuo9")
+            .or_else(|| item.get("国9战力"))
+            .and_then(json_i64);
+        tx.execute(
+            "INSERT INTO hero_stats(period_id,hero_id,appearance_rank,win_rate,rank_count,power_top1,power_top9,power_top50,power_top100,power_median,legacy_guo9)
+             VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)",
+            params![
+                period_id, hero_id, appearance_rank, win_rate, d.rank_count,
+                d.top1, d.top9, d.top50, d.top100, d.median, legacy.or(d.top9).or(d.top1)
+            ],
+        )?;
+
+        let players = item.get("players").and_then(Value::as_array);
+        let mut by_rank: HashMap<i64, (Option<String>, Option<String>)> = HashMap::new();
+        if let Some(players) = players {
+            for player in players {
+                let Some(rank) = player.get("rank").and_then(json_i64) else { continue };
+                let name = player.get("player").and_then(Value::as_str).map(str::to_string);
+                let uid = player.get("uid").and_then(Value::as_str).map(str::to_string);
+                by_rank.insert(rank, (name, uid));
+            }
+        }
+        for (index, power) in power.iter().enumerate() {
+            let rank = (index + 1) as i64;
+            let (player, uid) = by_rank.get(&rank).cloned().unwrap_or((None, None));
+            tx.execute(
+                "INSERT INTO rank_power(period_id,hero_id,\"rank\",power,player,uid) VALUES(?1,?2,?3,?4,?5,?6)",
+                params![period_id, hero_id, rank, power, player, uid],
+            )?;
+        }
+        row_count += power.len() as i64;
+        if !power.is_empty() {
+            has_power = 1;
+        }
+    }
+
+    tx.execute(
+        "UPDATE periods SET hero_count = ?1, row_count = ?2, has_power = ?3, updated_at = ?4 WHERE id = ?5",
+        params![heroes.len() as i64, row_count, has_power, now, period_id],
+    )?;
+    tx.commit()?;
+    Ok(Json(json!({
+        "ok": true,
+        "date": date,
+        "heroCount": heroes.len(),
+        "rowCount": row_count
+    })))
+}
+
+async fn player_detail(
+    State(state): State<AppState>,
+    Query(query): Query<PlayerDetailQuery>,
+) -> Result<Json<Value>, ApiError> {
+    let uid = query.uid.unwrap_or_default().trim().to_string();
+    if uid.is_empty() {
+        return Err(ApiError::new(StatusCode::BAD_REQUEST, "缺少 uid"));
+    }
+    let conn = state.db.lock().unwrap();
+    let date = query
+        .date
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| {
+            conn.query_row("SELECT date FROM periods ORDER BY date DESC LIMIT 1", [], |r| {
+                r.get::<_, String>(0)
+            })
+            .optional()
+            .ok()
+            .flatten()
+        })
+        .ok_or_else(|| ApiError::not_found("没有可用期数"))?;
+    let period_id: i64 = conn
+        .query_row("SELECT id FROM periods WHERE date = ?1", [&date], |r| r.get(0))
+        .optional()?
+        .ok_or_else(|| ApiError::not_found(format!("不存在该期: {date}")))?;
+
+    let mut stmt = conn.prepare(
+        "SELECT h.name, rp.\"rank\", rp.power, rp.player
+         FROM rank_power rp JOIN heroes h ON h.id = rp.hero_id
+         WHERE rp.period_id = ?1 AND rp.uid = ?2
+         ORDER BY rp.\"rank\"",
+    )?;
+    let rows = stmt
+        .query_map(params![period_id, uid.as_str()], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, i64>(1)?,
+                r.get::<_, i64>(2)?,
+                r.get::<_, Option<String>>(3)?,
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    if rows.is_empty() {
+        return Err(ApiError::not_found("该玩家在当前期没有记录"));
+    }
+
+    let player = rows
+        .iter()
+        .find_map(|(_, _, _, player)| player.clone())
+        .unwrap_or_default();
+    let top_heroes: Vec<Value> = rows
+        .iter()
+        .filter(|(_, rank, _, _)| *rank <= 10)
+        .map(|(hero, rank, power, _)| json!({
+            "hero": hero,
+            "rank": rank,
+            "power": power
+        }))
+        .collect();
+    let current_hero = query.hero.unwrap_or_default();
+    let current = rows
+        .iter()
+        .find(|(hero, _, _, _)| hero == &current_hero)
+        .map(|(hero, rank, power, _)| json!({
+            "hero": hero,
+            "rank": rank,
+            "power": power
+        }));
+
+    let (entries, blacklist) = read_blacklist(&state)?;
+    let reason = entries
+        .iter()
+        .find(|entry| entry.uid == uid)
+        .map(|entry| entry.reason.clone())
+        .unwrap_or_default();
+    let flags = read_player_flags(&state)?
+        .get(&format!("uid:{uid}"))
+        .cloned()
+        .unwrap_or(Value::Null);
+
+    Ok(Json(json!({
+        "date": date,
+        "player": player,
+        "uid": uid,
+        "playerKey": format!("uid:{uid}"),
+        "blacklisted": blacklist.contains(&uid),
+        "reason": reason,
+        "publicRecord": flags.get("publicRecord").cloned().unwrap_or(Value::Null),
+        "soloPlayed": flags.get("soloPlayed").cloned().unwrap_or(Value::Null),
+        "partyPlayed": flags.get("partyPlayed").cloned().unwrap_or(Value::Null),
+        "topHeroes": top_heroes,
+        "current": current
+    })))
 }
 
 async fn legacy_editor(State(state): State<AppState>) -> Redirect {
@@ -768,9 +1300,40 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    let root = env::current_dir()?;
-    let db_path = root.join("data/tierlist.db");
-    let blacklist_path = root.join("data/blacklist.json");
+    let root = env::var("SG_RESOURCE_DIR")
+        .map(PathBuf::from)
+        .unwrap_or(env::current_dir()?);
+    let explicit_data_dir = env::var("SG_DATA_DIR").ok().map(PathBuf::from);
+    let data_dir = explicit_data_dir
+        .clone()
+        .unwrap_or_else(|| root.join("data"));
+    fs::create_dir_all(&data_dir)?;
+    let db_path = data_dir.join("tierlist.db");
+    let blacklist_path = data_dir.join("blacklist.json");
+    let intro = if explicit_data_dir.is_some() {
+        let intro = data_dir.join("英雄介绍.json");
+        if !intro.exists() {
+            let source_intro = root.join("英雄介绍.json");
+            if source_intro.exists() {
+                fs::copy(source_intro, &intro)?;
+            }
+        }
+        intro
+    } else {
+        root.join("英雄介绍.json")
+    };
+    let prepare_data = if explicit_data_dir.is_some() {
+        let prepare_data = data_dir.join("data.json");
+        if !prepare_data.exists() {
+            let source_data = root.join("data.json");
+            if source_data.exists() {
+                fs::copy(source_data, &prepare_data)?;
+            }
+        }
+        prepare_data
+    } else {
+        root.join("data.json")
+    };
     let web_dist = root.join("apps/web/dist");
 
     let conn = Connection::open(&db_path)?;
@@ -779,6 +1342,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let state = AppState {
         db: Arc::new(Mutex::new(conn)),
         root: root.clone(),
+        data_dir,
+        intro,
+        prepare_data,
         blacklist: blacklist_path,
         legacy_base: env::var("LEGACY_BASE").unwrap_or_else(|_| "http://127.0.0.1:3001".to_string()),
     };
@@ -791,7 +1357,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/index.html", get(|| async { Redirect::temporary("/app/") }))
         .route("/blacklist.html", get(|| async { Redirect::temporary("/app/blacklist") }))
         .route("/editor.html", get(legacy_editor))
-        .route("/备战.html", get(legacy_prep))
         .route("/api", get(api_index))
         .route("/api/config", get(config))
         .route("/api/periods", get(periods))
@@ -799,7 +1364,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/heroes/{name}/history", get(history))
         .route("/api/heroes/{name}/profile", get(profile).put(put_profile))
         .route("/api/profiles", get(profiles))
+        .route("/api/heroes", get(legacy_heroes))
+        .route("/api/lanes", get(legacy_lanes))
+        .route("/api/players", get(legacy_players))
+        .route("/api/data", get(legacy_data).post(save_legacy_data))
         .route("/api/players/lookup", post(lookup_players))
+        .route("/api/power-ranking", get(power_ranking))
+        .route("/api/player-detail", get(player_detail))
+        .route("/api/player-flags", post(set_player_flags))
+        .route("/api/import-period", post(import_period))
         .route("/api/blacklist", get(get_blacklist).post(post_blacklist))
         .nest_service("/app", app_service)
         .fallback_service(ServeDir::new(&root))

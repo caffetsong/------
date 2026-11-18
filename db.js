@@ -103,7 +103,6 @@ function initSchema() {
     CREATE TABLE IF NOT EXISTS heroes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
-      profession TEXT NOT NULL DEFAULT '',
       active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL
     );
@@ -129,7 +128,6 @@ function initSchema() {
     CREATE TABLE IF NOT EXISTS hero_stats (
       period_id INTEGER NOT NULL REFERENCES periods(id) ON DELETE CASCADE,
       hero_id INTEGER NOT NULL REFERENCES heroes(id),
-      profession TEXT NOT NULL DEFAULT '',
       appearance_rank INTEGER,
       win_rate REAL,
       rank_count INTEGER NOT NULL DEFAULT 0,
@@ -166,27 +164,25 @@ function resolveHeroId(name) {
   return alias ? alias.hero_id : null;
 }
 
-export function ensureHero(name, profession = "", aliases = []) {
+export function ensureHero(name, aliases = []) {
   getDb();
   const raw = String(name || "").trim();
   if (!raw) throw new Error("英雄名为空");
   const canon = canonicalName(raw);
-  let row = db.query("SELECT id, name, profession FROM heroes WHERE name = ?").get(canon);
+  let row = db.query("SELECT id, name FROM heroes WHERE name = ?").get(canon);
   if (!row) {
     const viaAlias = db.query(
-      "SELECT h.id, h.name, h.profession FROM heroes h JOIN hero_aliases a ON a.hero_id = h.id WHERE a.alias = ?"
+      "SELECT h.id, h.name FROM heroes h JOIN hero_aliases a ON a.hero_id = h.id WHERE a.alias = ?"
     ).get(canon);
     row = viaAlias || null;
   }
   const now = nowISO();
   if (!row) {
     const info = db.run(
-      "INSERT INTO heroes(name, profession, active, created_at) VALUES(?,?,?,?)",
-      [canon, profession || "", 1, now]
+      "INSERT INTO heroes(name, active, created_at) VALUES(?,?,?)",
+      [canon, 1, now]
     );
-    row = { id: Number(info.lastInsertRowid), name: canon, profession: profession || "" };
-  } else if (profession && profession !== row.profession) {
-    db.run("UPDATE heroes SET profession = ? WHERE id = ?", [profession, row.id]);
+    row = { id: Number(info.lastInsertRowid), name: canon };
   }
 
   const addAlias = (alias) => {
@@ -206,11 +202,11 @@ export function seedHeroes() {
   const intro = readIntro();
   for (const item of intro) {
     if (!item || typeof item.name !== "string") continue;
-    ensureHero(item.name, item["职业"] || "", item.aliases || []);
+    ensureHero(item.name, item.aliases || []);
   }
   try {
     for (const file of readdirSync(HEADICON_DIR)) {
-      if (/\.png$/i.test(file)) ensureHero(file.replace(/\.png$/i, ""), "", []);
+      if (/\.png$/i.test(file)) ensureHero(file.replace(/\.png$/i, ""), []);
     }
   } catch { /* 目录不存在则忽略 */ }
   invalidateAliases();
@@ -316,7 +312,7 @@ export function importPeriod(payload, opts = {}) {
         const rank = toIntOrNull(p.rank);
         if (rank !== null) playerByRank.set(rank, p);
       }
-      const heroId = ensureHero(name, item.profession || item["职业"] || "", item.aliases || []);
+      const heroId = ensureHero(name, item.aliases || []);
       const rate = toRate(item.winRate);
       const rank = toIntOrNull(item.appearanceRank);
       const d = derived(power);
@@ -325,11 +321,11 @@ export function importPeriod(payload, opts = {}) {
 
       db.run(
         `INSERT INTO hero_stats
-         (period_id,hero_id,profession,appearance_rank,win_rate,rank_count,
+         (period_id,hero_id,appearance_rank,win_rate,rank_count,
           power_top1,power_top9,power_top50,power_top100,power_median,legacy_guo9)
-         VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
+         VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
         [
-          periodId, heroId, item.profession || item["职业"] || "", rank, rate, d.rankCount,
+          periodId, heroId, rank, rate, d.rankCount,
           d.top1, d.top9, d.top50, d.top100, d.median, legacyGuo9
         ]
       );
@@ -368,7 +364,6 @@ export function importLegacyFile(filePath) {
   if (!Array.isArray(arr)) throw new Error("旧数据不是数组: " + fileName);
   const heroes = arr.map((h) => ({
     name: h.heroName || h.name,
-    profession: h["职业"] || h.profession || "",
     appearanceRank: h.appearanceRank,
     winRate: h.winRate,
     legacyGuo9: h["国9战力"] ?? h.combatPower ?? null,
@@ -392,7 +387,6 @@ export function importExperimentalFile(filePath) {
   if (!Array.isArray(arr)) throw new Error("实验数据不是数组: " + fileName);
   const heroes = arr.map((h) => ({
     name: h.heroName || h.name,
-    profession: h["职业"] || h.profession || "",
     appearanceRank: h.appearanceRank,
     winRate: h.winRate,
     legacyGuo9: h["国9战力"] ?? null,
@@ -437,7 +431,7 @@ export function saveLegacyRows(date, rows) {
     for (const row of rows) {
       const name = String(row.heroName || row.name || "").trim();
       if (!name) continue;
-      const heroId = ensureHero(name, row["职业"] || row.profession || "", row.aliases || []);
+      const heroId = ensureHero(name, row.aliases || []);
       keep.add(heroId);
       const rate = toRate(row.winRate);
       const rank = toIntOrNull(row.appearanceRank);
@@ -449,9 +443,8 @@ export function saveLegacyRows(date, rows) {
 
       if (current) {
         db.run(
-          "UPDATE hero_stats SET profession=?, appearance_rank=?, win_rate=?, legacy_guo9=? WHERE period_id=? AND hero_id=?",
+          "UPDATE hero_stats SET appearance_rank=?, win_rate=?, legacy_guo9=? WHERE period_id=? AND hero_id=?",
           [
-            row["职业"] || row.profession || "",
             rank, rate,
             hasPower ? current.legacy_guo9 : guo9,
             periodId, heroId
@@ -460,10 +453,10 @@ export function saveLegacyRows(date, rows) {
       } else {
         db.run(
           `INSERT INTO hero_stats
-           (period_id,hero_id,profession,appearance_rank,win_rate,rank_count,
+           (period_id,hero_id,appearance_rank,win_rate,rank_count,
             power_top1,power_top9,power_top50,power_top100,power_median,legacy_guo9)
-           VALUES(?,?,?,?,?,0,NULL,NULL,NULL,NULL,NULL,?)`,
-          [periodId, heroId, row["职业"] || row.profession || "", rank, rate, guo9]
+           VALUES(?,?,?,?,0,NULL,NULL,NULL,NULL,NULL,?)`,
+          [periodId, heroId, rank, rate, guo9]
         );
       }
     }
@@ -540,7 +533,6 @@ export function getPeriod(date) {
   if (!p) return null;
   const rows = db.query(`
     SELECT h.name,
-           COALESCE(NULLIF(hs.profession,''), h.profession) AS profession,
            hs.appearance_rank, hs.win_rate, hs.rank_count,
            hs.power_top1, hs.power_top9, hs.power_top50, hs.power_top100,
            hs.power_median, hs.legacy_guo9
@@ -560,7 +552,6 @@ export function getPeriod(date) {
     hasPower: !!p.has_power,
     heroes: rows.map((r) => ({
       name: r.name,
-      profession: r.profession || "",
       appearanceRank: r.appearance_rank,
       winRate: r.win_rate,
       rankCount: r.rank_count,
@@ -637,7 +628,6 @@ export function getLegacyRows(date) {
   if (!period) return null;
   return period.heroes.map((h) => ({
     heroName: h.name,
-    "职业": h.profession,
     appearanceRank: h.appearanceRank,
     "国9战力": h.powerTop9 ?? h.powerTop1 ?? h.legacyGuo9 ?? "",
     winRate: h.winRate === null || h.winRate === undefined
@@ -835,7 +825,6 @@ export function importSnapshotDir(dir) {
   }
   const heroes = period.heroes.map((h) => ({
     name: h.name,
-    profession: h.profession || "",
     appearanceRank: h.appearanceRank,
     winRate: h.winRate,
     legacyGuo9: h.legacyGuo9,

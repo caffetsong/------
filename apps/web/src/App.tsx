@@ -4,6 +4,8 @@ import { Toaster } from "sonner";
 import { Layout } from "./components/layout";
 import { RankingPage } from "./pages/ranking-page";
 import { BlacklistPage } from "./pages/blacklist-page";
+import { PowerRankingPage } from "./pages/power-ranking-page";
+import { PreparePage } from "./pages/prepare-page";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +24,8 @@ export default function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<RankingPage />} />
+            <Route path="power" element={<PowerRankingPage />} />
+            <Route path="prepare" element={<PreparePage />} />
             <Route path="blacklist" element={<BlacklistPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

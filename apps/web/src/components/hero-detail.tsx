@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ExternalLink, Pencil, Plus, Save, Swords, Trash2 } from "lucide-react";
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";import { Link } from "react-router-dom";
+import { Pencil, Plus, Save, Swords, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -12,9 +12,9 @@ import { formatNumber, formatPercent } from "../lib/utils";
 import { api } from "../lib/api";
 import { computeTierList } from "../lib/algorithm";
 import type { AppConfig, ComputedHero, HeroProfile, Period } from "../lib/types";
+import { PlayerDetailDialog } from "./player-detail";
 
 const LANES = ["赏金", "中单", "争锋", "辅助", "打野"];
-const LEGACY_BASE = import.meta.env.VITE_LEGACY_BASE || "http://127.0.0.1:3001";
 
 const statLabels: { key: keyof ComputedHero; label: string }[] = [
   { key: "leaderPower", label: "榜首" },
@@ -115,11 +115,13 @@ function buildTrend(periods: Period[] | undefined, config: AppConfig | undefined
 export function HeroDetail({
   hero,
   profile,
+  date,
   open,
   onOpenChange
 }: {
   hero: ComputedHero | null;
   profile?: HeroProfile;
+  date: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -128,7 +130,6 @@ export function HeroDetail({
   const [players, setPlayers] = useState<string[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [draftPlayers, setDraftPlayers] = useState<string[]>([]);
-  const [chartMode, setChartMode] = useState<"distribution" | "history">("distribution");
 
   const configQuery = useQuery({ queryKey: ["config"], queryFn: api.config });
   const periodsQuery = useQuery({ queryKey: ["periods"], queryFn: api.periods });
@@ -148,11 +149,6 @@ export function HeroDetail({
     () => buildTrend(fullPeriodsQuery.data, configQuery.data, hero?.name ?? ""),
     [fullPeriodsQuery.data, configQuery.data, hero?.name]
   );
-
-  useEffect(() => {
-    if (!trend.length) return;
-    setChartMode(trend.length > 1 ? "history" : "distribution");
-  }, [trend]);
 
   useEffect(() => {
     setLanes(profile?.lanes ?? []);
@@ -175,7 +171,6 @@ export function HeroDetail({
 
   if (!hero) return null;
 
-  const data = hero.power.map((power, index) => ({ rank: index + 1, power }));
   const dataReady = profile !== undefined;
 
   function toggleLane(lane: string) {
@@ -202,8 +197,6 @@ export function HeroDetail({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl overflow-x-hidden p-0">
-          <HeroBanner name={hero.name} />
-
           <div className="px-5 pb-5">
             <div className="mt-4 flex flex-wrap items-start gap-4">
               <HeroAvatar name={hero.name} size="lg" className="relative z-10 ring-4 ring-zinc-950" />
@@ -212,16 +205,14 @@ export function HeroDetail({
                   <DialogTitle className="text-xl">{hero.name}</DialogTitle>
                   <TierBadge tier={hero.tier} />
                   <span className="text-sm font-semibold text-sky-300">{hero.score.toFixed(1)}</span>
-                  <a
-                    href={`${LEGACY_BASE}/备战.html?hero=${encodeURIComponent(hero.name)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    to={`/prepare?hero=${encodeURIComponent(hero.name)}`}
+                    onClick={() => onOpenChange(false)}
                     className="ml-auto inline-flex items-center gap-1 rounded-lg border border-zinc-700 px-2.5 py-1.5 text-[11px] text-zinc-300 transition-colors hover:border-sky-500/50 hover:text-sky-300"
                   >
                     <Swords className="h-3 w-3" />
                     备战方案
-                    <ExternalLink className="h-3 w-3 opacity-60" />
-                  </a>
+                  </Link>
                 </div>
                 <DialogDescription className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
                   <span>出场排名 #{hero.appearanceRank ?? "—"}</span>
@@ -286,96 +277,20 @@ export function HeroDetail({
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <PlayerChips players={players} />
+                  <PlayerChips players={players} date={date} heroName={hero.name} />
                 </div>
               </section>
             </div>
 
             <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
-                <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-950/60 p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setChartMode("distribution")}
-                    className={`rounded-md px-2.5 py-1 text-[11px] transition-colors ${
-                      chartMode === "distribution" ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
-                    }`}
-                  >
-                    战力分布
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setChartMode("history")}
-                    className={`rounded-md px-2.5 py-1 text-[11px] transition-colors ${
-                      chartMode === "history" ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
-                    }`}
-                  >
-                    历史趋势
-                  </button>
-                </div>
+                <span className="text-xs font-medium text-zinc-300">历史趋势</span>
                 <span className="text-[10px] text-zinc-500">
-                  {chartMode === "distribution"
-                    ? `1–${hero.rankCount} 名`
-                    : `${trend.length} 期 · 全局归一化`}
+                  {trend.length} 期 · 全局归一化
                 </span>
               </div>
 
-              {chartMode === "distribution" ? (
-                data.length ? (
-                  <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="powerFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.35} />
-                            <stop offset="100%" stopColor="#38bdf8" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
-                        <XAxis
-                          dataKey="rank"
-                          stroke="#52525b"
-                          tick={{ fill: "#71717a", fontSize: 11 }}
-                          tickLine={false}
-                          axisLine={{ stroke: "#27272a" }}
-                        />
-                        <YAxis
-                          domain={["auto", "auto"]}
-                          stroke="#52525b"
-                          tick={{ fill: "#71717a", fontSize: 11 }}
-                          tickLine={false}
-                          axisLine={false}
-                          width={56}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: "#18181b",
-                            border: "1px solid #3f3f46",
-                            borderRadius: 10,
-                            fontSize: 12,
-                            color: "#e4e4e7"
-                          }}
-                          labelFormatter={(label) => `第 ${label} 名`}
-                          formatter={(value) => [`${Number(value).toLocaleString("zh-CN")}`, "战力"]}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="power"
-                          stroke="#38bdf8"
-                          strokeWidth={2}
-                          fill="url(#powerFill)"
-                          dot={false}
-                          activeDot={{ r: 3, fill: "#38bdf8" }}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="flex h-40 items-center justify-center text-sm text-zinc-600">
-                    暂无战力分布数据
-                  </div>
-                )
-              ) : fullPeriodsQuery.isLoading || configQuery.isLoading ? (
+              {fullPeriodsQuery.isLoading || configQuery.isLoading ? (
                 <div className="flex h-40 items-center justify-center text-sm text-zinc-600">读取历史数据…</div>
               ) : trend.length > 1 ? (
                 <div className="h-72 w-full">
@@ -453,22 +368,6 @@ export function HeroDetail({
   );
 }
 
-function HeroBanner({ name }: { name: string }) {
-  const [ext, setExt] = useState<"jpg" | "png" | "none">("jpg");
-  if (ext === "none") return <div className="h-20 bg-gradient-to-r from-sky-500/10 to-emerald-500/10" />;
-  return (
-    <div className="relative flex w-full justify-center bg-zinc-950">
-      <img
-        src={`/banner/${encodeURIComponent(name)}.${ext}`}
-        alt=""
-        className="block h-auto w-full"
-        onError={() => setExt(ext === "jpg" ? "png" : "none")}
-      />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-950 to-transparent" />
-    </div>
-  );
-}
-
 function extractUid(raw: string) {
   const matches = raw.match(/\d{9,15}/g);
   if (!matches?.length) return "";
@@ -476,7 +375,8 @@ function extractUid(raw: string) {
 }
 
 // 展示 UID 在最新榜单中的用户名；没有最新记录时回退 UID。
-function PlayerChips({ players }: { players: string[] }) {
+function PlayerChips({ players, date, heroName }: { players: string[]; date: string; heroName: string }) {
+  const [selectedUid, setSelectedUid] = useState("");
   const uids = [...new Set(players.map(extractUid).filter(Boolean))];
   const lookup = useQuery({
     queryKey: ["player-lookup", uids.join("|")],
@@ -489,21 +389,42 @@ function PlayerChips({ players }: { players: string[] }) {
     return <span className="text-[11px] text-zinc-600">待补充</span>;
   }
 
-  return players.map((raw, index) => {
-    const uid = extractUid(raw);
-    const info = uid ? lookup.data?.appearances?.[uid] : undefined;
-    const latestName = info?.latestNames?.length ? info.latestNames.join("、") : "";
-    const display = latestName || uid || raw;
-    return (
-      <span
-        key={`${uid || raw}-${index}`}
-        title={raw}
-        className="rounded-full border border-zinc-700/70 bg-zinc-800/60 px-2 py-0.5 text-[11px] text-zinc-300"
-      >
-        {display}
-      </span>
-    );
-  });
+  return (
+    <>
+      {players.map((raw, index) => {
+        const uid = extractUid(raw);
+        const info = uid ? lookup.data?.appearances?.[uid] : undefined;
+        const latestName = info?.latestNames?.length ? info.latestNames.join("、") : "";
+        const display = latestName || uid || raw;
+        return uid ? (
+          <button
+            key={`${uid || raw}-${index}`}
+            type="button"
+            onClick={() => setSelectedUid(uid)}
+            title="查看玩家详情"
+            className="rounded-full border border-zinc-700/70 bg-zinc-800/60 px-2 py-0.5 text-[11px] text-zinc-300 transition-colors hover:border-sky-500/50 hover:text-sky-200"
+          >
+            {display}
+          </button>
+        ) : (
+          <span
+            key={`${raw}-${index}`}
+            title={raw}
+            className="rounded-full border border-zinc-700/70 bg-zinc-800/60 px-2 py-0.5 text-[11px] text-zinc-300"
+          >
+            {display}
+          </span>
+        );
+      })}
+      <PlayerDetailDialog
+        open={Boolean(selectedUid)}
+        onOpenChange={(open) => { if (!open) setSelectedUid(""); }}
+        date={date}
+        uid={selectedUid}
+        hero={heroName}
+      />
+    </>
+  );
 }
 
 function PlayerEditor({

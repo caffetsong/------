@@ -13,7 +13,6 @@ if (!period) throw new Error("数据库中没有 " + DATE);
 
 const raw = period.heroes.map((h) => ({
   heroName: h.name,
-  "职业": h.profession,
   appearanceRank: h.appearanceRank,
   winRate: h.winRate,
   power: h.power
@@ -252,7 +251,6 @@ fs.writeFileSync(resolve(outDir, "2026-10-19-scores.json"), JSON.stringify({
     rank: h.rank,
     tier: h.tier,
     name: h.name,
-    profession: h.profession,
     appearanceRank: h.appearanceRank,
     winRate: h.winRate,
     rankCount: h.rankCount,

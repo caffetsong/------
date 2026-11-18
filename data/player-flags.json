@@ -1,0 +1,15 @@
+{
+  "players": {
+    "uid:124602182205": {
+      "publicRecord": true,
+      "soloPlayed": true
+    },
+    "uid:49088162205": {
+      "partyPlayed": true,
+      "publicRecord": true,
+      "soloPlayed": true
+    }
+  },
+  "schema": 1,
+  "updatedAt": "2026-11-17T17:55:32.697857900+00:00"
+}

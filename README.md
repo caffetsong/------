@@ -2,7 +2,7 @@
 
 > 数据驱动 · 算法透明 · React + Rust + SQLite
 
-曙光英雄（手游）英雄梯度排行仪表盘 + 备战管理器（符文/出装方案）。当前有效期为 **2026-11-17**；`2026-10-19` 已恢复为历史期，旧 UID 已全部清空，未用 10-26 的 UID 填充。旧 6 期数据封存在 `archive/legacy/`。
+曙光英雄（手游）英雄梯度排行仪表盘 + 备战管理器（符文/出装方案）。当前有效期为 **2026-11-17**；`2026-10-19` 已恢复为历史期，旧 UID 已全部清空，未用 10-26 的 UID 填充。
 
 ---
 
@@ -25,22 +25,59 @@ cd ../..
 ./server-rs/target/release/sg-tierlist-server.exe
 # 浏览器打开 http://127.0.0.1:3002/app/
 
-# 3. 旧编辑器/备战页仍由 Bun 提供（默认 3001）
+# 3. 备战页仍由 Bun 提供（默认 3001）
 bun server.js
 ```
 
-- 新前端：`/app/`（排行榜表格/网格 + 英雄详情 + 失信名单）
+- 新前端：`/app/`（排行榜表格/网格 + 英雄详情 + 战力排行 + 备战方案 + 失信名单）
+- 备战方案：`/app/prepare`，符文、出装、选手方案，来自 `data.json`
+- 数据导入：新版右上角「导入数据」选择 JSON，再粘贴出场排名/胜率文本，直接写入 SQLite
+- 战力排行：按英雄查看玩家名次、UID、战力、失信状态与国前十英雄；战绩公开/单排/组排暂为占位
 - 英雄详情支持常用分路、擅长选手编辑（写回 `英雄介绍.json`）与备战方案入口
 - 擅长选手按 UID 显示最新榜单用户名，查不到时回退 UID
 - 失信名单支持为每个 UID 填写失信原因
 - 所有日期均剔除失信名单；历史期 UID 为空时按黑名单用户名兜底
-- 表格上方展示「重大名次变化」（较上一期变化 ≥ 10）
+- 表格上方展示「梯度变化」（较上一期梯度变化，表格梯度胶囊同步显示旧→新）
 - 历史趋势按全局 min/max 归一化展示评分、胜率、头部均值、排名、出场排名
 - 已移除职业字段与新视图的职业筛选
-- 旧编辑器：`http://127.0.0.1:3001/editor.html`（保持原样，未迁移）
 - 旧备战页：`http://127.0.0.1:3001/备战.html`
-- Rust 已迁移：配置、期数、榜单读取、英雄历史、失信名单读写
-- 旧编辑器写回 `/api/save`、SSE `/api/watch` 仍由 Bun 负责
+- Rust 已迁移：配置、期数、榜单读取、数据导入、英雄历史、失信名单读写
+
+---
+
+## Tauri 桌面版
+
+```text
+src-tauri/          Tauri 2 桌面壳 + Rust sidecar
+```
+
+首次启动会把 `data/tierlist.db`、`blacklist.json`、`player-flags.json`、`英雄介绍.json` 复制到：
+
+```text
+%LOCALAPPDATA%\com.shuguang.tierlist\data\
+```
+
+运行时只写 AppData，不写安装目录。
+
+构建：
+
+```powershell
+cd apps/web
+pnpm build
+cd ..\..
+
+.\server-rs\build.ps1
+Copy-Item server-rs\target\release\sg-tierlist-server.exe src-tauri\resources\server\sg-tierlist-server.exe -Force
+cargo build --release --manifest-path src-tauri/Cargo.toml
+```
+
+输出：
+
+```text
+src-tauri\target\release\sg-tierlist-desktop.exe
+```
+
+当前环境下载 WiX/NSIS 工具超时，安装包暂未生成；桌面 exe 已可用。
 
 ---
 
@@ -54,7 +91,6 @@ bun server.js                        # 默认端口 3001
 # 浏览器打开：
 #   http://127.0.0.1:3001/            梯度排行（主页）
 #   http://127.0.0.1:3001/备战.html    备战管理器（符文 + 出装）
-#   http://127.0.0.1:3001/editor.html  数据编辑器
 #   http://127.0.0.1:3001/blacklist.html 失信名单（UID 黑名单）
 ```
 
@@ -89,12 +125,11 @@ python tools/merge_experimental.py <xlsx> --no-stats 曙光英雄_YYYY-MM-DD.jso
 ├── js/chart.min.js              # Chart.js（分布 / 趋势图）
 ├── config.json                  # 配置（算法权重、梯度阈值、表格列）
 ├── data/
-│   ├── tierlist.db              # SQLite 事实源（gitignore，可由快照重建）
+│   ├── tierlist.db              # SQLite 事实源（随安装包分发）
 │   ├── blacklist.json           # 失信 UID 名单（手动维护）
 │   ├── snapshots/2026-11-17/    # period.json / power.json / players.json.gz
 │   └── analysis/                # 导出的评分数据（10-19 已归档）
 ├── reports/                     # 实验期梯度分析报告
-├── archive/legacy/              # 封存的旧 6 期数据（不参与计算）
 ├── tools/                       # merge / db-setup / analyze 脚本
 ├── 曙光英雄_2026-11-17.json      # 当前有效期合并数据（含 power / players）
 ├── 英雄介绍.json                  # 英雄主数据（name / aliases / 常用分路 / 擅长选手）
@@ -201,6 +236,7 @@ js/algorithm.js（浏览器 / 分析脚本共用）→ 梯度表 / 详情分布�
 | `GET /api/games` | 单游戏信息（前端探测服务器是否可用） |
 | `GET /api/config` | config.json；`dates` / `defaultDate` 来自 SQLite |
 | `GET/POST /api/blacklist` | 读取 / 保存失信 UID 名单；榜单读取时动态过滤 |
+| `POST /api/import-period` | JSON 数据 + 出场排名/胜率文本导入 SQLite |
 | `GET /api/periods` | 期数索引（日期 / 英雄数 / 行数 / 是否有分布） |
 | `GET /api/periods/:date` | 一整期：103 英雄统计 + 每人 `power` 数组 |
 | `GET /api/heroes/:name/history` | 单个英雄的跨期统计（当前仅 1 期） |
@@ -243,7 +279,7 @@ js/algorithm.js（浏览器 / 分析脚本共用）→ 梯度表 / 详情分布�
 
 ## 备注
 
-- **旧数据封存**：`archive/legacy/` 下 6 期旧数据不参与当前计算，也不出现在日期列表。
+- **旧 6 期已删除**：不再保留 `archive/legacy/`，当前只保留 10-19 与 11-17 两期。
 - **10-19 已恢复**：该期 JSON / DB / 快照已恢复，9,025 个旧 UID 已全部清空，当前 9,167 行 UID 为空；日期列表包含 `2026-10-19` 与 `2026-11-17`。原始归档仍在 `archive/invalid/2026-10-19/`。
 - **一期 JSON 的容量**：合并后约 740 KB（含 9,167 行玩家明细），单期可以承载；多期会线性增长，长期存放走 SQLite + 快照。
 - **张角**：新英雄，头像、横幅与介绍均已补；`许禇` 已通过 alias 归一为 `许褚`。

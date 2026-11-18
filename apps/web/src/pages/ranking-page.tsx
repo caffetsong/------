@@ -56,19 +56,24 @@ export function RankingPage() {
     [previousQuery.data, configQuery.data]
   );
 
-  const movers = useMemo(() => {
-    if (!previousComputed.length) return [];
-    const previousRank = new Map(previousComputed.map((hero) => [hero.name, hero.rank]));
+  const previousTiers = useMemo(
+    () => new Map(previousComputed.map((hero) => [hero.name, hero.tier])),
+    [previousComputed]
+  );
+
+  const tierChanges = useMemo(() => {
+    if (!previousTiers.size) return [];
     return computed
       .map((hero) => {
-        const prevRank = previousRank.get(hero.name);
-        if (prevRank == null) return null;
-        const delta = hero.rank - prevRank;
-        return Math.abs(delta) >= 10 ? { hero, prevRank, delta } : null;
+        const from = previousTiers.get(hero.name);
+        if (!from || from === hero.tier) return null;
+        const fromIndex = TIER_ORDER.indexOf(from as (typeof TIER_ORDER)[number]);
+        const toIndex = TIER_ORDER.indexOf(hero.tier as (typeof TIER_ORDER)[number]);
+        return { hero, from, to: hero.tier, up: toIndex < fromIndex };
       })
-      .filter((item): item is { hero: ComputedHero; prevRank: number; delta: number } => Boolean(item))
-      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
-  }, [computed, previousComputed]);
+      .filter((item): item is { hero: ComputedHero; from: string; to: string; up: boolean } => Boolean(item))
+      .sort((a, b) => a.hero.rank - b.hero.rank);
+  }, [computed, previousTiers]);
 
   const profileMap = useMemo(
     () => new Map<string, HeroProfile>((profilesQuery.data?.profiles ?? []).map((p) => [p.name, p])),
@@ -204,36 +209,33 @@ export function RankingPage() {
             </div>
           </section>
 
-          {movers.length > 0 && (
+          {tierChanges.length > 0 && (
             <section className="mb-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-3">
               <div className="mb-2 flex flex-wrap items-center gap-2 px-1">
-                <span className="text-xs font-medium text-zinc-200">📊 重大名次变化</span>
-                <Badge variant="warning">{movers.length}</Badge>
+                <span className="text-xs font-medium text-zinc-200">📊 梯度变化</span>
+                <Badge variant="warning">{tierChanges.length}</Badge>
                 <span className="text-[10px] text-zinc-500">
-                  名次较上一期（{previousDate}）变化 ≥ 10
+                  较上一期（{previousDate}）梯度变化
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {movers.map(({ hero, prevRank, delta }) => {
-                  const up = delta < 0;
-                  return (
-                    <button
-                      key={hero.name}
-                      type="button"
-                      onClick={() => setSelected(hero)}
-                      title={`${hero.name}：${prevRank} → ${hero.rank}`}
-                      className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] transition-colors ${
-                        up
-                          ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
-                          : "border-rose-500/25 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
-                      }`}
-                    >
-                      <span className="font-medium">{hero.name}</span>
-                      <span className="text-zinc-400">{prevRank}→{hero.rank}</span>
-                      <span className="font-semibold">{up ? "▲" : "▼"}{Math.abs(delta)}</span>
-                    </button>
-                  );
-                })}
+                {tierChanges.map(({ hero, from, to, up }) => (
+                  <button
+                    key={hero.name}
+                    type="button"
+                    onClick={() => setSelected(hero)}
+                    title={`${hero.name}：${from} → ${to}`}
+                    className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] transition-colors ${
+                      up
+                        ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                        : "border-rose-500/25 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
+                    }`}
+                  >
+                    <span className="font-medium">{hero.name}</span>
+                    <span className="text-zinc-400">{from}→{to}</span>
+                    <span className="font-semibold">{up ? "▲" : "▼"}</span>
+                  </button>
+                ))}
               </div>
             </section>
           )}
@@ -241,7 +243,7 @@ export function RankingPage() {
           {viewMode === "grid" ? (
             <GridView heroes={filtered} onSelect={setSelected} />
           ) : (
-            <RankingTable heroes={filtered} onSelect={setSelected} />
+            <RankingTable heroes={filtered} previousTiers={previousTiers} onSelect={setSelected} />
           )}
 
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-zinc-600">
@@ -267,6 +269,7 @@ export function RankingPage() {
           <HeroDetail
             hero={selected}
             profile={selected ? profileMap.get(selected.name) : undefined}
+            date={activeDate}
             open={selected !== null}
             onOpenChange={(open) => { if (!open) setSelected(null); }}
           />

@@ -152,7 +152,6 @@ async function handleSave(body) {
           source: { type: "editor", file },
           heroes: data.map((row) => ({
             name: row.heroName || row.name,
-            profession: row["职业"] || row.profession || "",
             appearanceRank: row.appearanceRank,
             winRate: row.winRate,
             power: row.power,

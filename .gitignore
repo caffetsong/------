@@ -1,5 +1,4 @@
-# 运行时数据库（可由 data/snapshots 重建）
-data/tierlist.db
+# 运行时数据库（随安装包分发）
 data/tierlist.db-wal
 data/tierlist.db-shm
 data/tierlist.db-journal
@@ -15,6 +14,9 @@ data/imports/
 apps/web/node_modules/
 apps/web/dist/
 server-rs/target/
+src-tauri/target/
+src-tauri/gen/
+dist-tauri/
 
 # Python 缓存
 tools/__pycache__/
